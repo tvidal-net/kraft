@@ -4,6 +4,8 @@ import net.tvidal.kraft.domain.RaftNode
 
 interface Message {
 
-    val from: RaftNode
+    val type: MessageType
+
+    val source: RaftNode
 
 }

@@ -1,4 +1,8 @@
-package net.tvidal.kraft.domain
+package net.tvidal.kraft
+
+import net.tvidal.kraft.domain.DefaultRaftCluster
+import net.tvidal.kraft.domain.RaftCluster
+import net.tvidal.kraft.domain.RaftNode
 
 const val CLUSTER_NAME = "RAFT"
 
@@ -12,4 +16,3 @@ fun raftCluster(selfNodeIndex: Int, nodes: List<RaftNode>): RaftCluster {
     val others = nodes.filterNot { it == self }
     return raftCluster(self, others)
 }
-

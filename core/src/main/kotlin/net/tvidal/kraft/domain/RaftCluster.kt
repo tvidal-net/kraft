@@ -2,14 +2,14 @@ package net.tvidal.kraft.domain
 
 interface RaftCluster {
 
-    fun self(): RaftNode
+    val self: RaftNode
 
-    fun others(): List<RaftNode>
+    val others: List<RaftNode>
 
-    fun all() = listOf(self(), *others().toTypedArray())
+    val all get() = listOf(self, *others.toTypedArray())
 
-    fun size(): Int = others().size + 1
+    val size get() = others.size + 1
 
-    fun majority() = size() / 2 + 1
+    val majority get() = size / 2 + 1
 
 }
