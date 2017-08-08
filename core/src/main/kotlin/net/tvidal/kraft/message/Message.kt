@@ -1,0 +1,9 @@
+package net.tvidal.kraft.message
+
+import net.tvidal.kraft.domain.RaftNode
+
+interface Message {
+
+    val from: RaftNode
+
+}
