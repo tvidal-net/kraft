@@ -1,4 +1,4 @@
-package net.tvidal.kraft.domain
+package net.tvidal.kraft.storage
 
 interface RaftEntry {
 

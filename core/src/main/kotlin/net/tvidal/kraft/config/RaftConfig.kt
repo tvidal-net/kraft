@@ -8,8 +8,10 @@ interface RaftConfig {
 
     val timeout: TimeoutConfig
 
-    val transportConfig: TransportConfig<TransportNodeConfig>
+    val transport: TransportConfig<TransportNodeConfig>
 
-    val storageConfig: StorageConfig
+    val storage: StorageConfig
+
+    val size: SizeConfig
 
 }

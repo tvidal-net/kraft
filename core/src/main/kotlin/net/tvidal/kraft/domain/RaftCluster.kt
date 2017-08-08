@@ -6,10 +6,12 @@ interface RaftCluster {
 
     val others: List<RaftNode>
 
-    val all get() = listOf(self, *others.toTypedArray())
+    val all get() = setOf(self, *others.toTypedArray())
 
     val size get() = others.size + 1
 
     val majority get() = size / 2 + 1
+
+    fun containsNode(node: RaftNode) = all.contains(node)
 
 }

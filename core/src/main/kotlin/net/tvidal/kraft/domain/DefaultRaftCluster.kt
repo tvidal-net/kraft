@@ -7,7 +7,7 @@ internal class DefaultRaftCluster(
 
 ) : RaftCluster {
 
-    override val all = listOf(self, *others.toTypedArray())
+    override val all = setOf(self, *others.toTypedArray())
     override val size = all.size
 
 }
