@@ -1,3 +1,11 @@
 package net.tvidal.kraft.storage
 
-class EmptyEntry(override val term: Long) : KRaftEntry
+import net.tvidal.kraft.storage.KRaftEntry.Companion.EMPTY_BYTES
+
+class EmptyEntry(override val term: Long) : KRaftEntry {
+
+    override val bytes = EMPTY_BYTES
+
+    override val checksum = 0
+
+}

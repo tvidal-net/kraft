@@ -6,7 +6,14 @@ import net.tvidal.kraft.domain.RaftNode
 
 const val DEFAULT_CLUSTER_NAME = "RAFT"
 const val INFINITY = 253402300799999L // 9999-12-31 23:59:59.999
-const val NO_ELECTION = -1L
+const val NEVER = -1L
+
+const val BEFORE_LOG = 0L
+
+const val LONG_BYTES = 8
+const val INT_BYTES = 4
+const val SHORT_BYTES = 2
+const val BYTE_BYTES = 1
 
 fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME) = (1..size)
   .map { RaftNode(clusterName, it.toByte()) }

@@ -1,7 +1,9 @@
 package net.tvidal.kraft.storage
 
-interface KRaftEntryBatch<out T : KRaftEntry> {
+interface KRaftEntryBatch {
 
-    val entries: List<T>
+    val entries: List<KRaftEntry>
+
+    val bytes: Int
 
 }

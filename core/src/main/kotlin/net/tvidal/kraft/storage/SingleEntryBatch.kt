@@ -1,8 +1,10 @@
 package net.tvidal.kraft.storage
 
-class SingleEntryBatch<out T : KRaftEntry>(singleEntry: T) : KRaftEntryBatch<KRaftEntry> {
+class SingleEntryBatch(singleEntry: KRaftEntry) : KRaftEntryBatch {
 
-    override val entries: List<T> = listOf(singleEntry)
+    override val entries = listOf(singleEntry)
+
+    override val bytes = singleEntry.bytes
 
     companion object {
         fun empty(term: Long) = SingleEntryBatch(EmptyEntry(term))

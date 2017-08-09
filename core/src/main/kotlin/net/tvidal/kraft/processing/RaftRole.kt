@@ -31,7 +31,7 @@ enum class RaftRole {
         override fun handleAppend(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
             raft.resetElectionTimeout(now)
             raft.leaderCommitIndex = msg.leaderCommitIndex
-            val matchIndex = raft.log.append(msg.entries)
+            val matchIndex = raft.append(msg)
 
             raft.logConsistent = matchIndex > 0L
             if (raft.logConsistent) {
@@ -49,8 +49,8 @@ enum class RaftRole {
             val candidate = msg.from
 
             val grantVote = (raft.votedFor == null || raft.votedFor == candidate) &&
-              (raft.log.lastLogTerm < msg.lastLogTerm ||
-                (raft.log.lastLogTerm == msg.lastLogTerm && raft.log.lastLogIndex <= msg.lastLogIndex))
+              (raft.lastLogTerm < msg.lastLogTerm ||
+                (raft.lastLogTerm == msg.lastLogTerm && raft.lastLogIndex <= msg.lastLogIndex))
 
             if (grantVote) {
                 raft.votedFor = candidate

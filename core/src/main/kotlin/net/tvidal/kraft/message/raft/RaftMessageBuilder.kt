@@ -20,7 +20,7 @@ fun RaftEngine.nack(to: RaftNode, nackIndex: Long) {
 
 fun RaftEngine.requestVotes() {
     for (to in others) {
-        val msg = RequestVoteMessage(self, term, log.lastLogTerm, log.lastLogIndex)
+        val msg = RequestVoteMessage(self, term, lastLogTerm, lastLogIndex)
         transport.sender(to).send(msg)
     }
 }
