@@ -1,14 +1,14 @@
 package net.tvidal.kraft.message.raft
 
 import net.tvidal.kraft.domain.RaftNode
-import net.tvidal.kraft.message.raft.RaftMessageType.APPEND_ACK
+import net.tvidal.kraft.message.raft.RaftMessageType.*
 
-internal class AppendAckMessage(
+class AppendAckMessage(
 
-  override val source: RaftNode,
+  override val from: RaftNode,
   override val term: Long,
 
   val ack: Boolean,
   val matchIndex: Long
 
-) : AbstractRaftMessage(APPEND_ACK, source, term)
+) : AbstractRaftMessage(APPEND_ACK, from, term)

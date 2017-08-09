@@ -5,9 +5,9 @@ import net.tvidal.kraft.message.raft.RaftMessageType.APPEND
 import net.tvidal.kraft.storage.RaftEntry
 import net.tvidal.kraft.storage.RaftEntryBatch
 
-internal class AppendMessage(
+class AppendMessage(
 
-  override val source: RaftNode,
+  override val from: RaftNode,
   override val term: Long,
 
   val prevLogTerm: Long,
@@ -17,4 +17,4 @@ internal class AppendMessage(
 
   val entries: RaftEntryBatch<RaftEntry>
 
-) : AbstractRaftMessage(APPEND, source, term)
+) : AbstractRaftMessage(APPEND, from, term)

@@ -10,7 +10,7 @@ interface RaftConfig {
 
     val transport: TransportConfig<TransportNodeConfig>
 
-    val storage: StorageConfig
+    val log: RaftLogConfig
 
     val size: SizeConfig
 

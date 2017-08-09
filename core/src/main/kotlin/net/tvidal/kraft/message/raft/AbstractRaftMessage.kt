@@ -1,11 +1,12 @@
 package net.tvidal.kraft.message.raft
 
 import net.tvidal.kraft.domain.RaftNode
+import net.tvidal.kraft.message.AbstractMessage
 
-internal abstract class AbstractRaftMessage(
+abstract class AbstractRaftMessage(
 
   override val type: RaftMessageType,
-  override val source: RaftNode,
+  override val from: RaftNode,
   override val term: Long
 
-) : RaftMessage
+) : AbstractMessage(type, from), RaftMessage

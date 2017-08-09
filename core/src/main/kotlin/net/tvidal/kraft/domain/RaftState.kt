@@ -1,16 +1,12 @@
 package net.tvidal.kraft.domain
 
 import net.tvidal.kraft.processing.RaftRole
+import net.tvidal.kraft.processing.RaftRole.*
 
 data class RaftState(
 
-  val term: Long,
-  val self: RaftNode,
-  val leader: RaftNode,
-  val role: RaftRole
+  var role: RaftRole = FOLLOWER,
+  var term: Long = 0L,
+  var leader: RaftNode? = null
 
-) {
-
-    val isLeader get() = self == leader
-
-}
+)
