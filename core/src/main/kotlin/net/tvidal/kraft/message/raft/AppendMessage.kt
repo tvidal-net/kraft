@@ -2,8 +2,8 @@ package net.tvidal.kraft.message.raft
 
 import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.message.raft.RaftMessageType.APPEND
-import net.tvidal.kraft.storage.RaftEntry
-import net.tvidal.kraft.storage.RaftEntryBatch
+import net.tvidal.kraft.storage.KRaftEntry
+import net.tvidal.kraft.storage.KRaftEntryBatch
 
 class AppendMessage(
 
@@ -15,6 +15,6 @@ class AppendMessage(
 
   val leaderCommitIndex: Long,
 
-  val entries: RaftEntryBatch<RaftEntry>
+  val entries: KRaftEntryBatch<KRaftEntry>
 
 ) : AbstractRaftMessage(APPEND, from, term)

@@ -3,7 +3,7 @@ package net.tvidal.kraft.processing
 import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.message.raft.AppendAckMessage
 
-class RaftFollower(
+class RaftFollowerView(
 
   val follower: RaftNode
 

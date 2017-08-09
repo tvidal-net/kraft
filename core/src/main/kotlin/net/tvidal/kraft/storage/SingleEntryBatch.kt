@@ -1,6 +1,6 @@
 package net.tvidal.kraft.storage
 
-class SingleEntryBatch<out T : RaftEntry>(singleEntry: T) : RaftEntryBatch<RaftEntry> {
+class SingleEntryBatch<out T : KRaftEntry>(singleEntry: T) : KRaftEntryBatch<KRaftEntry> {
 
     override val entries: List<T> = listOf(singleEntry)
 

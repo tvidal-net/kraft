@@ -1,6 +1,6 @@
 package net.tvidal.kraft
 
-import net.tvidal.kraft.domain.DefaultRaftCluster
+import net.tvidal.kraft.domain.DefaultCluster
 import net.tvidal.kraft.domain.RaftCluster
 import net.tvidal.kraft.domain.RaftNode
 
@@ -11,7 +11,7 @@ const val NO_ELECTION = -1L
 fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME) = (1..size)
   .map { RaftNode(clusterName, it.toByte()) }
 
-fun raftCluster(self: RaftNode, others: List<RaftNode>): RaftCluster = DefaultRaftCluster(self, others)
+fun raftCluster(self: RaftNode, others: List<RaftNode>): RaftCluster = DefaultCluster(self, others)
 
 fun raftCluster(selfNodeIndex: Int, nodes: List<RaftNode>): RaftCluster {
     val self = nodes[selfNodeIndex]

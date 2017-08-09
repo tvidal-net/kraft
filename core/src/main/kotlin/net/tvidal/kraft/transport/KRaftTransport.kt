@@ -2,7 +2,7 @@ package net.tvidal.kraft.transport
 
 import net.tvidal.kraft.domain.RaftNode
 
-interface RaftTransport {
+interface KRaftTransport {
 
     fun sender(node: RaftNode): MessageSender
 

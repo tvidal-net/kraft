@@ -2,7 +2,7 @@ package net.tvidal.kraft.config
 
 import net.tvidal.kraft.domain.RaftCluster
 
-interface RaftConfig {
+interface KRaftConfig {
 
     val cluster: RaftCluster
 
@@ -10,7 +10,7 @@ interface RaftConfig {
 
     val transport: TransportConfig<TransportNodeConfig>
 
-    val log: RaftLogConfig
+    val log: LogConfig
 
     val size: SizeConfig
 

@@ -1,6 +1,6 @@
 package net.tvidal.kraft.storage
 
-interface RaftEntryBatch<out T : RaftEntry> {
+interface KRaftEntryBatch<out T : KRaftEntry> {
 
     val entries: List<T>
 

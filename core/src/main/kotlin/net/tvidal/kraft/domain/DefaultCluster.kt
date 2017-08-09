@@ -1,6 +1,6 @@
 package net.tvidal.kraft.domain
 
-internal class DefaultRaftCluster(
+internal class DefaultCluster(
 
   override val self: RaftNode,
   override val others: List<RaftNode>

@@ -1,15 +1,15 @@
 package net.tvidal.kraft.processing
 
 import net.tvidal.kraft.NO_ELECTION
-import net.tvidal.kraft.RaftError
-import net.tvidal.kraft.config.RaftConfig
+import net.tvidal.kraft.KRaftError
+import net.tvidal.kraft.config.KRaftConfig
 import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.domain.RaftState
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.AppendMessage
 import java.util.*
 
-class RaftEngine(config: RaftConfig) {
+class RaftEngine(config: KRaftConfig) {
 
     private var nextElectionTime = -1L
 
@@ -59,7 +59,7 @@ class RaftEngine(config: RaftConfig) {
         val nackIndex = when {
             leaderPrevIndex > lastLogIndex -> lastLogIndex
             leaderPrevIndex > 0 -> leaderPrevIndex - 1
-            else -> throw RaftError("received prevIndex=$leaderPrevIndex from ${msg.from}")
+            else -> throw KRaftError("received prevIndex=$leaderPrevIndex from ${msg.from}")
         }
         return nackIndex
     }
@@ -67,7 +67,7 @@ class RaftEngine(config: RaftConfig) {
     val followers = object : RaftFollowers {
 
         val followers = others
-          .map { RaftFollower(it) }
+          .map { RaftFollowerView(it) }
           .associateBy { it.follower }
 
         override fun reset() {

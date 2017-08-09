@@ -1,6 +1,6 @@
 package net.tvidal.kraft.storage
 
-interface RaftEntry {
+interface KRaftEntry {
 
     val term: Long
 
