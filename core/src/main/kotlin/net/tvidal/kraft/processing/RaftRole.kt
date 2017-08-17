@@ -132,7 +132,7 @@ enum class RaftRole {
         }
     };
 
-    protected val LOG = getLogger("${RaftRole::class.java}.$name")
+    protected val LOG = getLogger("${RaftRole::class.java.name}.$name")
 
     open fun work(now: Long, raft: RaftEngine) {}
 

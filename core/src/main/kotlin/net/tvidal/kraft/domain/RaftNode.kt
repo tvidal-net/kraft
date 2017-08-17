@@ -6,9 +6,7 @@ data class RaftNode(
   val nodeIndex: Byte
 
 ) {
-
     override fun toString(): String {
         return "$clusterName:$nodeIndex"
     }
-
 }

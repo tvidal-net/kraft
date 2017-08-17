@@ -102,7 +102,7 @@ class RaftEngine(config: KRaftConfig) {
     val followers = object : RaftFollowers {
 
         val followers = others
-          .map { RaftFollowerView(this@RaftEngine, it) }
+          .map { RaftFollowerState(this@RaftEngine, it) }
           .associateBy { it.follower }
 
         override fun reset() {

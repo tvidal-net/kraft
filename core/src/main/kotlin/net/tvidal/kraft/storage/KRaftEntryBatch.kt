@@ -5,6 +5,7 @@ class KRaftEntryBatch internal constructor(
 ) : Iterable<KRaftEntry> {
     val size = entries.size
     val bytes = entries.sumBy { it.bytes }
+    val isEmpty get() = size == 0
     override fun iterator() = entries.iterator()
 }
 

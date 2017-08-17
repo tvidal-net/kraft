@@ -1,6 +1,5 @@
 package net.tvidal.kraft
 
-import net.tvidal.kraft.domain.DefaultCluster
 import net.tvidal.kraft.domain.RaftCluster
 import net.tvidal.kraft.domain.RaftNode
 
@@ -18,10 +17,18 @@ const val BYTE_BYTES = java.lang.Byte.BYTES
 fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME) = (1..size)
   .map { RaftNode(clusterName, it.toByte()) }
 
-fun raftCluster(self: RaftNode, others: List<RaftNode>): RaftCluster = DefaultCluster(self, others)
+fun raftCluster(self: RaftNode, others: List<RaftNode>) = object : RaftCluster {
+    private val all = setOf(self, *others.toTypedArray())
+    override val self = self
+    override val others = others
+    override val majority = all.size / 2 + 1
+    override fun contains(node: RaftNode) = all.contains(node)
+}
 
-fun raftCluster(selfNodeIndex: Int, nodes: List<RaftNode>): RaftCluster {
-    val self = nodes[selfNodeIndex]
-    val others = nodes.filterNot { it == self }
-    return raftCluster(self, others)
+fun raftCluster(selfNodeIndex: Int, nodes: List<RaftNode>) = object : RaftCluster {
+    private val all = nodes.toSet()
+    override val self = nodes[selfNodeIndex]
+    override val others = nodes.filterNot { it == self }.toList()
+    override val majority = all.size / 2 + 1
+    override fun contains(node: RaftNode) = all.contains(node)
 }

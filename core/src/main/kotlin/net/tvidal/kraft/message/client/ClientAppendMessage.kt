@@ -6,7 +6,7 @@ import net.tvidal.kraft.storage.KRaftEntryBatch
 
 class ClientAppendMessage(
 
-  override val from: RaftNode,
+  from: RaftNode,
 
   val entries: KRaftEntryBatch
 

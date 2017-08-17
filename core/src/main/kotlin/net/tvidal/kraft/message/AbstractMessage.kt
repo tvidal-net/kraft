@@ -7,6 +7,4 @@ abstract class AbstractMessage(
   override val type: MessageType,
   override val from: RaftNode
 
-) : Message {
-
-}
+) : Message
