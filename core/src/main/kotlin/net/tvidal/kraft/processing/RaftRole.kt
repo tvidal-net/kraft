@@ -1,5 +1,6 @@
 package net.tvidal.kraft.processing
 
+import net.tvidal.kraft.BEFORE_LOG
 import net.tvidal.kraft.FOREVER
 import net.tvidal.kraft.message.client.ClientAppendMessage
 import net.tvidal.kraft.message.raft.AppendAckMessage
@@ -30,9 +31,9 @@ internal enum class RaftRole {
         override fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
             raft.resetElectionTimeout(now)
             raft.leaderCommitIndex = msg.leaderCommitIndex
-            val matchIndex = raft.appendEntries(msg)
+            val matchIndex = raft.append(msg)
 
-            raft.logConsistent = matchIndex > 0L
+            raft.logConsistent = matchIndex > BEFORE_LOG
             if (raft.logConsistent) {
                 raft.updateCommitIndex(matchIndex)
                 raft.ack(msg.from, matchIndex)

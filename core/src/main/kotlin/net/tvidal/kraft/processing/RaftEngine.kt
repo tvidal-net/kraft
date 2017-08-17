@@ -65,39 +65,36 @@ class RaftEngine(config: KRaftConfig) {
         }
     }
 
-    internal fun appendEntries(msg: AppendMessage): Long {
-
-        val nextLogIndex = appendLogIndex(msg.from, msg.prevTerm, msg.prevIndex)
-
-        return when {
-            nextLogIndex > BEFORE_LOG -> log.append(msg.data, nextLogIndex)
+    internal fun append(msg: AppendMessage) = appendLogIndex(msg).let {
+        when {
+            it > BEFORE_LOG -> log.append(msg.data, it)
             else -> NEVER
         }
     }
 
-    private fun appendLogIndex(from: RaftNode, prevTerm: Long, prevIndex: Long): Long {
-
+    private fun appendLogIndex(msg: AppendMessage): Long {
+        val prevTerm = msg.prevTerm
+        val prevIndex = msg.prevIndex
         val termAtPrevIndex = log.termAt(prevIndex)
-        fun log(msg: String) {
-            LOG.warn("from={} log={} prevIndex={} termAtPrevIndex=[{},from={}] - {}",
-              from, lastLogIndex, prevIndex, termAtPrevIndex, prevTerm, msg)
-        }
+
+        val logMessage = "from={} log={} prevIndex={} termAtPrevIndex=[{},from={}] - {}"
+        val logData = arrayOf(msg.from, lastLogIndex, prevIndex, termAtPrevIndex, prevTerm)
 
         if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {
 
             if (prevIndex < lastLogIndex) {
                 if (commitIndex > prevIndex) {
-                    log("CANNOT TRUNCATE BEFORE COMMIT_INDEX: $commitIndex")
+                    LOG.warn(logMessage, *logData, "CANNOT TRUNCATE BEFORE COMMIT_INDEX: $commitIndex")
                     return BEFORE_LOG
                 } else {
-                    log("TRUNCATE LOG")
+                    LOG.info(logMessage, *logData, "TRUNCATE LOG")
                 }
             } else {
-                log("OK")
+                LOG.debug(logMessage, *logData, "OK")
             }
             return prevIndex + 1
         }
-        log("LOG IS INCONSISTENT")
+        LOG.warn(logMessage, *logData, "LOG IS INCONSISTENT")
         return BEFORE_LOG
     }
 
@@ -108,7 +105,7 @@ class RaftEngine(config: KRaftConfig) {
           .associateBy { it.follower }
 
         override fun reset() {
-            followers.values.forEach { it.reset() }
+            followers.values.forEach(RaftFollowerState::reset)
         }
 
         override fun work(now: Long) {
@@ -116,11 +113,28 @@ class RaftEngine(config: KRaftConfig) {
         }
 
         override fun ack(msg: AppendAckMessage) {
-            followers[msg.from]?.ack(msg)
+            val follower = followers[msg.from]
+            if (follower != null) follower.ack(msg)
+            else LOG.error("There is no state for follower {}", msg.from)
         }
 
         override fun updateCommitIndex() {
+            val matchIndex = followers.values.map(RaftFollowerState::matchIndex) + lastLogIndex
+            val quorumCommitIndex = matchIndex.sorted().take(cluster.majority).last()
 
+            if (quorumCommitIndex > commitIndex) {
+
+                val quorumCommitTerm = log.termAt(quorumCommitIndex)
+                if (quorumCommitTerm == term) {
+                    LOG.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
+                    updateCommitIndex(quorumCommitIndex)
+                    followers.values.forEach(RaftFollowerState::commit)
+
+                } else {
+                    LOG.warn("SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
+                      quorumCommitIndex, quorumCommitTerm, term)
+                }
+            }
         }
 
     }
