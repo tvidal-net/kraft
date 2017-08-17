@@ -1,7 +1,7 @@
 package net.tvidal.kraft.storage.ringbuffer
 
+import net.tvidal.kraft.storage.KRaftEntries
 import net.tvidal.kraft.storage.KRaftEntry
-import net.tvidal.kraft.storage.KRaftEntryBatch
 
 class RingBufferLog(size: Int) : AbstractRingBufferLog(size) {
 
@@ -12,7 +12,7 @@ class RingBufferLog(size: Int) : AbstractRingBufferLog(size) {
         return lastLogIndex
     }
 
-    override fun read(fromIndex: Long, byteLimit: Int): KRaftEntryBatch {
+    override fun read(fromIndex: Long, byteLimit: Int): KRaftEntries {
         var size = 0
         var index = fromIndex
         while (index <= lastLogIndex) {
@@ -25,5 +25,4 @@ class RingBufferLog(size: Int) : AbstractRingBufferLog(size) {
         }
         return read(fromIndex..(index - 1))
     }
-
 }

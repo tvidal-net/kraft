@@ -8,7 +8,7 @@ import java.nio.charset.Charset.defaultCharset
 private val EMPTY_PAYLOAD = ByteArray(0)
 private val EMPTY_ENTRY = KRaftEntry(0L, EMPTY_PAYLOAD)
 
-private val EMPTY_BATCH = KRaftEntryBatch(listOf())
+private val EMPTY_BATCH = KRaftEntries(listOf())
 
 fun emptyEntry() = EMPTY_ENTRY
 
@@ -23,16 +23,16 @@ fun entryOf(term: Long, payload: Long) = entryOf(term, Longs.toByteArray(payload
 fun entryOf(term: Long, payload: String, charset: Charset = defaultCharset()) =
   entryOf(term, payload.toByteArray(charset))
 
-fun KRaftEntry.asBatch() = singleEntryBatch(this)
+fun KRaftEntry.asBatch() = singleEntry(this)
 
 fun KRaftEntry.longValue() = Longs.fromByteArray(payload)
 
 fun KRaftEntry.stringValue(charset: Charset = defaultCharset()) = String(payload, charset)
 
-fun emptyBatch() = EMPTY_BATCH
+fun emptyEntries() = EMPTY_BATCH
 
-fun singleEntryBatch(entry: KRaftEntry) = KRaftEntryBatch(listOf(entry))
+fun singleEntry(entry: KRaftEntry) = KRaftEntries(listOf(entry))
 
-fun flush(term: Long) = singleEntryBatch(emptyEntry(term))
+fun flush(term: Long) = singleEntry(emptyEntry(term))
 
 val KRaftLog.nextLogIndex get() = lastLogIndex + 1L

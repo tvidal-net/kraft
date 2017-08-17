@@ -11,14 +11,10 @@ import net.tvidal.kraft.message.raft.RaftMessageType.REQUEST_VOTE
 import net.tvidal.kraft.message.raft.RaftMessageType.VOTE
 import net.tvidal.kraft.message.raft.RequestVoteMessage
 import net.tvidal.kraft.message.raft.VoteMessage
-import net.tvidal.kraft.message.raft.ack
-import net.tvidal.kraft.message.raft.nack
-import net.tvidal.kraft.message.raft.requestVotes
-import net.tvidal.kraft.message.raft.vote
 import net.tvidal.kraft.storage.flush
 import org.slf4j.LoggerFactory.getLogger
 
-enum class RaftRole {
+internal enum class RaftRole {
 
     FOLLOWER {
         override fun enter(now: Long, raft: RaftEngine) {
@@ -31,10 +27,10 @@ enum class RaftRole {
             raft.leader = null
         }
 
-        override fun handleAppend(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
+        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
             raft.resetElectionTimeout(now)
             raft.leaderCommitIndex = msg.leaderCommitIndex
-            val matchIndex = raft.append(msg)
+            val matchIndex = raft.appendEntries(msg)
 
             raft.logConsistent = matchIndex > 0L
             if (raft.logConsistent) {
@@ -48,7 +44,7 @@ enum class RaftRole {
             return null
         }
 
-        override fun handleRequestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? {
+        override fun requestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? {
             val candidate = msg.from
 
             val grantVote = (raft.votedFor == null || raft.votedFor == candidate) &&
@@ -67,15 +63,17 @@ enum class RaftRole {
     CANDIDATE {
         override fun enter(now: Long, raft: RaftEngine) {
             super.enter(now, raft)
-            raft.term++
-            raft.votedFor = raft.self
-            raft.votesReceived.clear()
-            raft.votesReceived.add(raft.self)
-            raft.resetElectionTimeout(now)
-            raft.requestVotes()
+            raft.apply {
+                term++
+                votedFor = self
+                votesReceived.clear()
+                votesReceived.add(raft.self)
+                resetElectionTimeout(now)
+                requestVotes()
+            }
         }
 
-        override fun handleVote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? {
+        override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? {
             if (msg.vote) {
                 raft.votesReceived.add(msg.from)
                 if (raft.votesReceived.size >= raft.cluster.majority) {
@@ -85,7 +83,7 @@ enum class RaftRole {
             return null
         }
 
-        override fun handleAppend(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
+        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
             return FOLLOWER
         }
     },
@@ -112,7 +110,7 @@ enum class RaftRole {
         }
 
         override fun clientAppend(now: Long, msg: ClientAppendMessage, raft: RaftEngine): Long? {
-            val lastLogIndex = raft.log.append(msg.entries)
+            val lastLogIndex = raft.log.append(msg.data)
             if (raft.singleNodeCluster) {
                 raft.leaderCommitIndex = lastLogIndex
                 raft.updateCommitIndex(lastLogIndex)
@@ -120,7 +118,7 @@ enum class RaftRole {
             return lastLogIndex
         }
 
-        override fun handleAppendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? {
+        override fun appendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? {
             return null
         }
     },
@@ -134,33 +132,33 @@ enum class RaftRole {
 
     protected val LOG = getLogger("${RaftRole::class.java.name}.$name")
 
-    open fun work(now: Long, raft: RaftEngine) {}
+    protected open fun work(now: Long, raft: RaftEngine) {}
 
-    open fun enter(now: Long, raft: RaftEngine) {}
+    protected open fun enter(now: Long, raft: RaftEngine) {}
 
-    open fun exit(now: Long, raft: RaftEngine) {
+    protected open fun exit(now: Long, raft: RaftEngine) {
         raft.votedFor = null
         raft.votesReceived.clear()
     }
 
-    open fun clientAppend(now: Long, msg: ClientAppendMessage, raft: RaftEngine): Long? = null
+    protected open fun clientAppend(now: Long, msg: ClientAppendMessage, raft: RaftEngine): Long? = null
 
-    open fun handleAppend(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? = null
+    protected open fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? = null
 
-    open fun handleAppendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? = null
+    protected open fun appendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? = null
 
-    open fun handleRequestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? = null
+    protected open fun requestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? = null
 
-    open fun handleVote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? = null
+    protected open fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? = null
 
     private fun acceptMessage(now: Long, msg: RaftMessage, raft: RaftEngine) = when (msg.type) {
-        APPEND -> handleAppend(now, msg as AppendMessage, raft)
-        APPEND_ACK -> handleAppendAck(now, msg as AppendAckMessage, raft)
-        REQUEST_VOTE -> handleRequestVote(now, msg as RequestVoteMessage, raft)
-        VOTE -> handleVote(now, msg as VoteMessage, raft)
+        APPEND -> append(now, msg as AppendMessage, raft)
+        APPEND_ACK -> appendAck(now, msg as AppendAckMessage, raft)
+        REQUEST_VOTE -> requestVote(now, msg as RequestVoteMessage, raft)
+        VOTE -> vote(now, msg as VoteMessage, raft)
     }
 
-    fun handleMessage(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? {
+    fun accept(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? {
         val term = msg.term
 
         if (raft.term < term) {

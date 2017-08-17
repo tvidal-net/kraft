@@ -12,16 +12,16 @@ import java.util.*
 
 class RaftEngine(config: KRaftConfig) {
 
+    private val timeout = config.timeout
     private var nextElectionTime = NEVER
 
-    private val timeout = config.timeout
+    internal val transport = config.transport.create()
+    internal val log = config.log.create()
+    internal val size = config.size
 
-    val transport = config.transport.create()
-    val log = config.log.create()
     val cluster = config.cluster
-
-    var leader: RaftNode? = null
-    var votedFor: RaftNode? = null
+    var leader: RaftNode? = null; internal set
+    var votedFor: RaftNode? = null; internal set
     val votesReceived = mutableSetOf<RaftNode>()
 
     val self get() = cluster.self
@@ -31,30 +31,32 @@ class RaftEngine(config: KRaftConfig) {
     val lastLogTerm get() = log.lastLogTerm
     val lastLogIndex get() = log.lastLogIndex
 
-    var term = 0L
+    var term = 0L; internal set
     var commitIndex = 0L; private set
-    var leaderCommitIndex = 0L
-    var logConsistent = false
+    var leaderCommitIndex = 0L; internal set
+    var logConsistent = false; internal set
+
+    val heartbeatWindowMillis get() = timeout.heartbeat
 
     private fun nextElectionTimeout(baseTimeout: Int) = timeout.run {
         baseTimeout + RANDOM.nextInt(maxElectionTimeout - minElectionTimeout + 1)
     }
 
-    fun resetElectionTimeout(now: Long) {
+    internal fun resetElectionTimeout(now: Long) {
         nextElectionTime = now + nextElectionTimeout(timeout.minElectionTimeout)
     }
 
-    fun cancelElectionTimeout() {
+    internal fun cancelElectionTimeout() {
         nextElectionTime = NEVER
     }
 
-    fun updateCommitIndex(matchIndex: Long) {
+    internal fun updateCommitIndex(matchIndex: Long) {
         if (leaderCommitIndex > commitIndex) {
             commitIndex = minOf(leaderCommitIndex, matchIndex)
         }
     }
 
-    fun nackIndex(msg: AppendMessage): Long {
+    internal fun nackIndex(msg: AppendMessage): Long {
         val leaderPrevIndex = msg.prevIndex
         return when {
             leaderPrevIndex > lastLogIndex -> lastLogIndex
@@ -63,12 +65,12 @@ class RaftEngine(config: KRaftConfig) {
         }
     }
 
-    fun append(msg: AppendMessage): Long {
+    internal fun appendEntries(msg: AppendMessage): Long {
 
         val nextLogIndex = appendLogIndex(msg.from, msg.prevTerm, msg.prevIndex)
 
         return when {
-            nextLogIndex > BEFORE_LOG -> log.append(msg.entries, nextLogIndex)
+            nextLogIndex > BEFORE_LOG -> log.append(msg.data, nextLogIndex)
             else -> NEVER
         }
     }
@@ -99,10 +101,10 @@ class RaftEngine(config: KRaftConfig) {
         return BEFORE_LOG
     }
 
-    val followers = object : RaftFollowers {
+    internal val followers = object : RaftFollowers {
 
         val followers = others
-          .map { RaftFollowerState(this@RaftEngine, it) }
+          .map { RaftFollowerState(this@RaftEngine, transport.sender(it)) }
           .associateBy { it.follower }
 
         override fun reset() {
@@ -113,8 +115,8 @@ class RaftEngine(config: KRaftConfig) {
             followers.values.forEach { it.work(now) }
         }
 
-        override fun handleAck(msg: AppendAckMessage) {
-            followers[msg.from]?.handleAck(msg)
+        override fun ack(msg: AppendAckMessage) {
+            followers[msg.from]?.ack(msg)
         }
 
         override fun updateCommitIndex() {
