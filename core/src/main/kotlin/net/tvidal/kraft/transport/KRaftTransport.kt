@@ -6,6 +6,6 @@ interface KRaftTransport {
 
     fun sender(node: RaftNode): MessageSender
 
-    fun receive(node: RaftNode): MessageReceiver
+    fun register(node: RaftNode): MessageReceiver
 
 }

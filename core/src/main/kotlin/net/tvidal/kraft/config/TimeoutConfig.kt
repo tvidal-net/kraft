@@ -1,13 +1,13 @@
 package net.tvidal.kraft.config
 
-interface TimeoutConfig {
+data class TimeoutConfig(
 
-    val heartbeat: Int
+  val heartbeat: Int,
 
-    val minElectionTimeout: Int
+  val minElectionTimeout: Int,
 
-    val maxElectionTimeout: Int
+  val maxElectionTimeout: Int,
 
-    val firstElectionTimeout: Int
+  val firstElectionTimeout: Int
 
-}
+)

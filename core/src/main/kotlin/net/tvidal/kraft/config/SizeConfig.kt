@@ -1,11 +1,11 @@
 package net.tvidal.kraft.config
 
-interface SizeConfig {
+data class SizeConfig(
 
-    val maxEntrySize: Int
+  val maxEntrySize: Int,
 
-    val maxMessageBatchSize: Int
+  val maxMessageBatchSize: Int,
 
-    val maxUnackedBytesWindow: Int
+  val maxUnackedBytesWindow: Int
 
-}
+)

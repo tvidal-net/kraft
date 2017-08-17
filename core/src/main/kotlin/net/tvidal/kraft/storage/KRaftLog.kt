@@ -1,18 +1,15 @@
 package net.tvidal.kraft.storage
 
-interface KRaftLog<out T : KRaftEntry> {
+interface KRaftLog {
 
+    val firstLogIndex: Long
+    val lastLogIndex: Long
     val lastLogTerm: Long
 
-    val lastLogIndex: Long
+    fun append(entries: Iterable<KRaftEntry>, fromIndex: Long = nextLogIndex): Long
 
-    val nextLogIndex; get() = lastLogIndex + 1
-
-    fun append(entries: KRaftEntryBatch, fromIndex: Long = nextLogIndex): Long
-
-    fun read(fromIndex: Long, sizeLimit: Int): KRaftEntryBatch
+    fun read(fromIndex: Long, byteLimit: Int): KRaftEntryBatch
 
     // should be 0 for index 0
-    fun termAt(index: Long): Long?
-
+    fun termAt(index: Long): Long
 }

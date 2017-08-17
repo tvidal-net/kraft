@@ -1,19 +1,22 @@
 package net.tvidal.kraft.processing
 
-import net.tvidal.kraft.INFINITY
+import net.tvidal.kraft.FOREVER
 import net.tvidal.kraft.message.client.ClientAppendMessage
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.AppendMessage
 import net.tvidal.kraft.message.raft.RaftMessage
-import net.tvidal.kraft.message.raft.RaftMessageType.*
+import net.tvidal.kraft.message.raft.RaftMessageType.APPEND
+import net.tvidal.kraft.message.raft.RaftMessageType.APPEND_ACK
+import net.tvidal.kraft.message.raft.RaftMessageType.REQUEST_VOTE
+import net.tvidal.kraft.message.raft.RaftMessageType.VOTE
 import net.tvidal.kraft.message.raft.RequestVoteMessage
 import net.tvidal.kraft.message.raft.VoteMessage
 import net.tvidal.kraft.message.raft.ack
 import net.tvidal.kraft.message.raft.nack
 import net.tvidal.kraft.message.raft.requestVotes
 import net.tvidal.kraft.message.raft.vote
-import net.tvidal.kraft.storage.SingleEntryBatch
-import org.slf4j.LoggerFactory.*
+import net.tvidal.kraft.storage.flush
+import org.slf4j.LoggerFactory.getLogger
 
 enum class RaftRole {
 
@@ -99,7 +102,7 @@ enum class RaftRole {
             raft.followers.reset()
             raft.leader = raft.self
 
-            val flush = SingleEntryBatch.empty(raft.term)
+            val flush = flush(raft.term)
             raft.log.append(flush)
         }
 
@@ -125,7 +128,7 @@ enum class RaftRole {
     ERROR {
         override fun enter(now: Long, raft: RaftEngine) {
             super.enter(now, raft)
-            raft.resetElectionTimeout(INFINITY)
+            raft.resetElectionTimeout(FOREVER)
         }
     };
 
@@ -160,19 +163,19 @@ enum class RaftRole {
     fun handleMessage(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? {
         val term = msg.term
 
-        if (raft.state.term < term) {
+        if (raft.term < term) {
             raft.term = term
             return if (this == ERROR) ERROR else FOLLOWER
         }
 
-        if (raft.state.term == term) {
-            return acceptMessage(now, msg, raft)
+        return if (raft.term == term) {
+            acceptMessage(now, msg, raft)
 
         } else {
             if (msg.type == REQUEST_VOTE) {
                 raft.vote(msg.from, false)
             }
-            return null
+            null
         }
     }
 

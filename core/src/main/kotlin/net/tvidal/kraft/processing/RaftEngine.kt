@@ -5,39 +5,36 @@ import net.tvidal.kraft.KRaftError
 import net.tvidal.kraft.NEVER
 import net.tvidal.kraft.config.KRaftConfig
 import net.tvidal.kraft.domain.RaftNode
-import net.tvidal.kraft.domain.RaftState
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.AppendMessage
-import org.slf4j.LoggerFactory.*
+import org.slf4j.LoggerFactory.getLogger
 import java.util.*
 
 class RaftEngine(config: KRaftConfig) {
 
-    private var nextElectionTime = -1L
+    private var nextElectionTime = NEVER
+
+    private val timeout = config.timeout
 
     val transport = config.transport.create()
     val log = config.log.create()
-    val timeout = config.timeout
     val cluster = config.cluster
-    val state = RaftState()
+
+    var leader: RaftNode? = null
     var votedFor: RaftNode? = null
     val votesReceived = mutableSetOf<RaftNode>()
-    val self; get() = cluster.self
-    val others; get() = cluster.others
-    val singleNodeCluster; get() = others.isEmpty()
-    val lastLogTerm; get() = log.lastLogTerm
-    val lastLogIndex; get() = log.lastLogIndex
+
+    val self get() = cluster.self
+    val others get() = cluster.others
+    val singleNodeCluster get() = others.isEmpty()
+
+    val lastLogTerm get() = log.lastLogTerm
+    val lastLogIndex get() = log.lastLogIndex
+
+    var term = 0L
     var commitIndex = 0L; private set
     var leaderCommitIndex = 0L
     var logConsistent = false
-
-    var term; get() = state.term; set(value) {
-        state.term = value
-    }
-
-    var leader; get() = state.leader; set(value) {
-        state.leader = value
-    }
 
     private fun nextElectionTimeout(baseTimeout: Int) = timeout.run {
         baseTimeout + RANDOM.nextInt(maxElectionTimeout - minElectionTimeout + 1)
@@ -59,31 +56,29 @@ class RaftEngine(config: KRaftConfig) {
 
     fun nackIndex(msg: AppendMessage): Long {
         val leaderPrevIndex = msg.prevIndex
-        val nackIndex = when {
+        return when {
             leaderPrevIndex > lastLogIndex -> lastLogIndex
             leaderPrevIndex > 0 -> leaderPrevIndex - 1
             else -> throw KRaftError("received prevIndex=$leaderPrevIndex from ${msg.from}")
         }
-        return nackIndex
     }
 
     fun append(msg: AppendMessage): Long {
 
-        val nextLogIndex = checkLogConsistency(msg.from, msg.prevTerm, msg.prevIndex)
+        val nextLogIndex = appendLogIndex(msg.from, msg.prevTerm, msg.prevIndex)
 
-        return if (nextLogIndex > BEFORE_LOG) {
-            log.append(msg.entries, nextLogIndex)
-        } else {
-            NEVER
+        return when {
+            nextLogIndex > BEFORE_LOG -> log.append(msg.entries, nextLogIndex)
+            else -> NEVER
         }
     }
 
-    private fun checkLogConsistency(leader: RaftNode, prevTerm: Long, prevIndex: Long): Long {
+    private fun appendLogIndex(from: RaftNode, prevTerm: Long, prevIndex: Long): Long {
 
         val termAtPrevIndex = log.termAt(prevIndex)
         fun log(msg: String) {
-            LOG.warn("leader={} log={} prevIndex={} termAtPrevIndex=[{},leader={}] - {}",
-              leader, lastLogIndex, prevIndex, termAtPrevIndex, prevTerm, msg)
+            LOG.warn("from={} log={} prevIndex={} termAtPrevIndex=[{},from={}] - {}",
+              from, lastLogIndex, prevIndex, termAtPrevIndex, prevTerm, msg)
         }
 
         if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {

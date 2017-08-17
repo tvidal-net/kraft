@@ -1,18 +1,13 @@
 package net.tvidal.kraft.storage
 
-import net.tvidal.kraft.INT_BYTES
-import net.tvidal.kraft.LONG_BYTES
-
-interface KRaftEntry {
-
-    val bytes: Int
-
-    val term: Long
-
-    val checksum: Int
-
-    companion object {
-        const val EMPTY_BYTES = LONG_BYTES + INT_BYTES
-    }
-
+class KRaftEntry internal constructor(
+  val term: Long,
+  val payload: ByteArray
+) {
+    val bytes get() = payload.size
+    operator fun component1() = term
+    operator fun component2() = payload
+    operator fun component3() = bytes
+    override fun toString() = "{($term) $payload}"
 }
+

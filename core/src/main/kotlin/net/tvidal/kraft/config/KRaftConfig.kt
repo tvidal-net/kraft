@@ -2,16 +2,16 @@ package net.tvidal.kraft.config
 
 import net.tvidal.kraft.domain.RaftCluster
 
-interface KRaftConfig {
+data class KRaftConfig(
 
-    val cluster: RaftCluster
+  val cluster: RaftCluster,
 
-    val timeout: TimeoutConfig
+  val timeout: TimeoutConfig,
 
-    val transport: TransportConfig<TransportNodeConfig>
+  val transport: TransportFactory,
 
-    val log: LogConfig
+  val log: LogFactory,
 
-    val size: SizeConfig
+  val size: SizeConfig
 
-}
+)
