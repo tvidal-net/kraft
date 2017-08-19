@@ -69,6 +69,10 @@ private fun executeTool(toolName: String, vararg args: String): Int {
     }
     return try {
         tool.execute(op)
+    } catch (e: OptionException) {
+        System.err.println("$ERROR ${e.message}\n")
+        parser.printHelpOn(System.err)
+        SIMPLE_ERROR
     } catch (e: Throwable) {
         e.printStackTrace()
         SEVERE_ERROR

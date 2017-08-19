@@ -19,20 +19,17 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
                 appendln()
                 appendln("Available Tools:")
                 for ((toolName, toolClass) in TOOLS) {
-                    appendln(" - $toolName:  ${description(toolClass)}")
+                    appendln(" - $toolName:  ${toolClass.description}")
                 }
                 toString()
             }
         }
     }
 
-    private fun description(toolClass: KClass<*>): String {
-        val description = toolClass.annotations
+    private val KClass<*>.description
+        get() = annotations
           .filterIsInstance<Description>()
-          .firstOrNull()
-
-        return description?.text ?: toolClass.java.simpleName!!
-    }
+          .firstOrNull()?.text ?: simpleName!!
 
     override fun execute(op: OptionSet): Int {
         parser.printHelpOn(System.err)

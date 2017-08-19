@@ -5,7 +5,7 @@ import joptsimple.OptionDescriptor
 import joptsimple.internal.Strings
 import joptsimple.internal.Strings.EMPTY
 
-object KRaftHelpFormatter : HelpFormatter {
+internal object KRaftHelpFormatter : HelpFormatter {
 
     private const val OPTION = "Option"
     private const val DESCRIPTION = "Description"
@@ -18,7 +18,7 @@ object KRaftHelpFormatter : HelpFormatter {
         val options = allOptions.values
           .filterNot { it.representsNonOptions() }
 
-        val width = maxOf(width(options.map { optionText(it) }), MIN_WIDTH)
+        val width = maxOf(width(options.map { it.text }), MIN_WIDTH)
         fun align(text: String) {
             append(align(text, width))
         }
@@ -30,8 +30,8 @@ object KRaftHelpFormatter : HelpFormatter {
         appendln(dashes(DESCRIPTION))
 
         for (spec in options) {
-            align(optionText(spec))
-            appendln(optionDescription(spec))
+            align(spec.text)
+            appendln(spec.description)
         }
         toString()
     }
@@ -40,18 +40,22 @@ object KRaftHelpFormatter : HelpFormatter {
       .map(String::length)
       .max() ?: DEFAULT_WIDTH) + MARGIN
 
-    fun argumentType(spec: OptionDescriptor) = Class.forName(spec.argumentTypeIndicator()).kotlin.simpleName
+    private val OptionDescriptor.argumentType
+        get() = Class.forName(argumentTypeIndicator()).kotlin.simpleName
 
-    fun optionText(spec: OptionDescriptor) = dashes(2) + spec.options().last() +
-      if (spec.requiresArgument()) " <${argumentType(spec)}>" else EMPTY +
-        if (spec.acceptsArguments()) " [${argumentType(spec)}]" else EMPTY
+    private val OptionDescriptor.text
+        get() = dashes(2) + options().last() +
+          if (requiresArgument()) " <$argumentType>" else EMPTY +
+            if (acceptsArguments()) " [$argumentType]" else EMPTY
 
-    fun optionDescription(spec: OptionDescriptor) = spec.description() +
-      if (!spec.defaultValues().isEmpty()) " (default: ${spec.defaultValues()})" else EMPTY
+    private val OptionDescriptor.description
+        get() = description() +
+          if (!defaultValues().isEmpty()) " (default: ${defaultValues()})"
+          else EMPTY
 
-    fun align(text: String, width: Int) = text + spaces(width - text.length)
+    private fun align(text: String, width: Int) = text + spaces(width - text.length)
 
-    fun dashes(text: String) = dashes(text.length)
-    fun dashes(count: Int) = Strings.repeat('-', count)
-    fun spaces(count: Int) = Strings.repeat(' ', count)
+    private fun dashes(text: String) = dashes(text.length)
+    private fun dashes(count: Int) = Strings.repeat('-', count)
+    private fun spaces(count: Int) = Strings.repeat(' ', count)
 }

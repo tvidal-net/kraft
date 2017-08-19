@@ -5,25 +5,24 @@ import joptsimple.OptionSet
 import net.tvidal.kraft.Description
 import net.tvidal.kraft.KRaftTool
 import net.tvidal.kraft.SUCCESS
+import net.tvidal.kraft.intArgument
+import net.tvidal.kraft.longArgument
+import net.tvidal.kraft.option
 
 @Description("Test tool")
 class TestTool(parser: OptionParser) : KRaftTool {
 
-    private val flag = parser.accepts("flag", "Flag usage")
+    private val flag = parser.option("Flag", "flag")
 
-    private val int = parser.accepts("int", "Integer argument")
-      .withRequiredArg()
-      .ofType(Int::class.java)
+    private val int = parser.intArgument("Something Integer", "int")
 
-    private val lop = parser.accepts("op", "optional long")
-      .withOptionalArg()
-      .ofType(Long::class.java)
+    private val lop = parser.longArgument("Something long", "long")
       .defaultsTo(0L)
 
     override fun execute(op: OptionSet): Int {
         println("flag is set ${op.has(flag)}")
         println("int is ${op.valueOf(int)}")
-        println("op is ${op.valueOf(lop)}")
+        println("lop is ${op.valueOf(lop)}")
         return SUCCESS
     }
 
