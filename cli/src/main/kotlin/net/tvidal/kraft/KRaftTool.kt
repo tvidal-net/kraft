@@ -2,8 +2,7 @@ package net.tvidal.kraft
 
 import joptsimple.OptionSet
 
+@FunctionalInterface
 interface KRaftTool {
-
-    fun run(op: OptionSet)
-
+    fun execute(op: OptionSet): Int
 }
