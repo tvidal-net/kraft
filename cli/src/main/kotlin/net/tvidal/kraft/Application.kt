@@ -4,6 +4,7 @@ import com.google.common.reflect.ClassPath
 import joptsimple.OptionException
 import joptsimple.OptionParser
 import joptsimple.OptionSet
+import joptsimple.internal.Strings
 import java.lang.System.exit
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.isSuperclassOf
@@ -33,7 +34,7 @@ val TOOLS = classPath.getTopLevelClasses(TOOLS_PACKAGE)
   .filter { KRaftTool::class.isSuperclassOf(it) }
   .associateBy {
       it.simpleName!!
-        .let { regexTool.replace(it, "") }
+        .let { regexTool.replace(it, Strings.EMPTY) }
         .let { regexCamel.replace(it, REPLACE_CAMEL) }
         .toLowerCase()
   }
@@ -41,6 +42,7 @@ val TOOLS = classPath.getTopLevelClasses(TOOLS_PACKAGE)
 private fun optionParser(allowsUnrecognizedOptions: Boolean = false) = OptionParser().apply {
     if (allowsUnrecognizedOptions) allowsUnrecognizedOptions()
     accepts(HELP, HELP_DESCRIPTION).forHelp()
+    formatHelpWith(KRaftHelpFormatter)
 }
 
 private operator fun OptionParser.invoke(vararg args: String) = try {

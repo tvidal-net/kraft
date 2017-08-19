@@ -16,7 +16,7 @@ class TestTool(parser: OptionParser) : KRaftTool {
       .ofType(Int::class.java)
 
     private val lop = parser.accepts("op", "optional long")
-      .withRequiredArg()
+      .withOptionalArg()
       .ofType(Long::class.java)
       .defaultsTo(0L)
 
