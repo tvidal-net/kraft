@@ -3,8 +3,8 @@ package net.tvidal.kraft.tools
 import joptsimple.OptionParser
 import joptsimple.OptionSet
 import net.tvidal.kraft.Description
+import net.tvidal.kraft.ERROR_SIMPLE
 import net.tvidal.kraft.KRaftTool
-import net.tvidal.kraft.SUCCESS
 import net.tvidal.kraft.TOOLS
 import kotlin.reflect.KClass
 
@@ -33,6 +33,6 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     override fun execute(op: OptionSet): Int {
         parser.printHelpOn(System.err)
-        return SUCCESS
+        return ERROR_SIMPLE
     }
 }
