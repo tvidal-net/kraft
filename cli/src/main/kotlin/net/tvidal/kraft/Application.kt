@@ -5,6 +5,7 @@ import joptsimple.OptionException
 import joptsimple.OptionParser
 import joptsimple.OptionSet
 import joptsimple.internal.Strings
+import net.tvidal.kraft.ansi.AnsiColor
 import java.lang.System.exit
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.isSuperclassOf
@@ -18,7 +19,7 @@ const val ERROR_SEVERE = 127
 const val HELP = "help"
 const val HELP_DESCRIPTION = "Shows usage information"
 
-const val ERROR = "[ERROR]"
+val ERROR = AnsiColor.RED.format("[ERROR]")
 
 private val CLASS_PATH = ClassPath.from(ClassLoader.getSystemClassLoader())!!
 
