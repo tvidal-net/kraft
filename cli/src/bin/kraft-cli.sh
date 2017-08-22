@@ -11,3 +11,5 @@ kraft() {
         "net.tvidal.kraft.ApplicationKt" \
         $*
 }
+
+kraft --help

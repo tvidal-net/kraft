@@ -3,6 +3,7 @@ package net.tvidal.kraft.ansi
 import joptsimple.internal.Strings.EMPTY
 
 enum class AnsiMove(private val id: Char) {
+
     UP('A'),
     DOWN('B'),
     RIGHT('C'),

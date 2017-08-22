@@ -1,6 +1,7 @@
 package net.tvidal.kraft.ansi
 
 enum class AnsiColor(private val id: Int) {
+
     BLACK(0),
     RED(1),
     GREEN(2),
@@ -10,8 +11,8 @@ enum class AnsiColor(private val id: Int) {
     CYAN(6),
     WHITE(7);
 
-    private val foreground by lazy { tput("setaf", "$id") }
-    private val background by lazy { tput("setab", "$id") }
+    private val fg by lazy { tput("setaf", "$id") }
+    private val bg by lazy { tput("setab", "$id") }
 
-    fun format(text: String) = if (hasAnsiSupport) foreground + text + ANSI_RESET else text
+    fun format(text: String) = if (hasAnsiSupport) ANSI_BOLD + fg + text + ANSI_RESET else text
 }

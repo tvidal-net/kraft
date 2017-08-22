@@ -6,9 +6,10 @@ import net.tvidal.kraft.Description
 import net.tvidal.kraft.ERROR_SIMPLE
 import net.tvidal.kraft.KRaftTool
 import net.tvidal.kraft.TOOLS
+import net.tvidal.kraft.ansi.hasAnsiSupport
 import kotlin.reflect.KClass
 
-@Description("Usage:")
+@Description("Prints this help text")
 class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     init {
@@ -18,6 +19,7 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
                 appendln("- Tool help: <tool-name> --help")
                 appendln()
                 appendln("Available Tools:")
+                appendln("hasAnsiSupport: $hasAnsiSupport")
                 for ((toolName, toolClass) in TOOLS) {
                     appendln(" - $toolName:  ${toolClass.description}")
                 }
