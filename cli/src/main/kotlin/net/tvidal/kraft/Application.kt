@@ -4,10 +4,9 @@ import com.google.common.reflect.ClassPath
 import joptsimple.OptionException
 import joptsimple.OptionParser
 import joptsimple.OptionSet
-import joptsimple.internal.Strings
 import net.tvidal.kraft.ansi.AnsiColor.RED
+import net.tvidal.kraft.ansi.AnsiColor.YELLOW
 import java.lang.System.exit
-import kotlin.reflect.full.cast
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.primaryConstructor
 import kotlin.text.RegexOption.IGNORE_CASE
@@ -35,7 +34,7 @@ val TOOLS = CLASS_PATH.getTopLevelClasses(TOOLS_PACKAGE)
   .filter { KRaftTool::class.isSuperclassOf(it) }
   .associateBy {
       it.simpleName!!
-        .let { REGEX_TOOL.replace(it, Strings.EMPTY) }
+        .let { REGEX_TOOL.replace(it, EMPTY) }
         .let { REGEX_CAMEL.replace(it, REPLACE_CAMEL) }
         .toLowerCase()
   }
@@ -50,7 +49,7 @@ private fun createTool(toolName: String, parser: OptionParser): KRaftTool {
     val toolClass = TOOLS[toolName]!!
     val ctor = toolClass.primaryConstructor!!
     val tool = ctor.call(parser)
-    return KRaftTool::class.cast(tool)
+    return tool as KRaftTool
 }
 
 private fun executeTool(toolName: String, vararg args: String): Int {
@@ -83,7 +82,7 @@ fun execute(op: OptionSet): Int {
         executeTool(toolName, *toolArgs.toTypedArray())
 
     } else {
-        System.err.println("$ERROR The tool '$toolName' does not exist.\n")
+        System.err.println("$ERROR The tool '${YELLOW.format(toolName)}' does not exist.\n")
         executeTool(HELP)
     }
 }

@@ -1,3 +1,7 @@
 package net.tvidal.kraft
 
-annotation class Description(val text: String)
+annotation class Description(
+
+  val text: String
+
+)

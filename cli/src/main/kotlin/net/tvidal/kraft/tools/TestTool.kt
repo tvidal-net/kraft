@@ -25,5 +25,4 @@ class TestTool(parser: OptionParser) : KRaftTool {
         println("lop is ${op.valueOf(lop)}")
         return SUCCESS
     }
-
 }

@@ -17,11 +17,12 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     init {
         parser.formatHelpWith {
+            val width = (TOOLS.keys.map { it.length + 4 }.max() ?: DEFAULT_WIDTH) + DEFAULT_MARGIN
+
             StringBuffer().run {
                 appendln("Usage: kraft <tool-name> [args] (or --help)")
                 appendln()
                 appendln("Available Tools:")
-                val width = (TOOLS.keys.map { it.length + 4 }.max() ?: DEFAULT_WIDTH) + DEFAULT_MARGIN
                 for ((toolName, toolClass) in TOOLS) {
                     append(" - $toolName:".padEnd(width, SPACE))
                     appendln(toolClass.description)

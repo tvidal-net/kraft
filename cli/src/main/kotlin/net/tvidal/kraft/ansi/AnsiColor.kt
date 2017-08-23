@@ -11,8 +11,8 @@ enum class AnsiColor(private val id: Int) {
     CYAN(6),
     WHITE(7);
 
-    private val fg by lazy { tput("setaf", "$id") }
-    private val bg by lazy { tput("setab", "$id") }
+    private val fg by lazy { tput("setaf", id.toString()) }
+    private val bg by lazy { tput("setab", id.toString()) }
 
     fun format(text: String) = if (HAS_ANSI_SUPPORT) ANSI_BOLD + fg + text + ANSI_RESET else text
 }

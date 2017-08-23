@@ -2,7 +2,6 @@ package net.tvidal.kraft
 
 import joptsimple.HelpFormatter
 import joptsimple.OptionDescriptor
-import joptsimple.internal.Strings.EMPTY
 
 internal object KRaftHelpFormatter : HelpFormatter {
 
