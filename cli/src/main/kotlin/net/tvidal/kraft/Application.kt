@@ -5,7 +5,7 @@ import joptsimple.OptionException
 import joptsimple.OptionParser
 import joptsimple.OptionSet
 import joptsimple.internal.Strings
-import net.tvidal.kraft.ansi.AnsiColor
+import net.tvidal.kraft.ansi.AnsiColor.RED
 import java.lang.System.exit
 import kotlin.reflect.full.cast
 import kotlin.reflect.full.isSuperclassOf
@@ -17,15 +17,15 @@ const val ERROR_SIMPLE = 1
 const val ERROR_SEVERE = 127
 
 const val HELP = "help"
-const val HELP_DESCRIPTION = "Shows usage information"
+const val HELP_DESCRIPTION = "Prints usage information"
 
-val ERROR = AnsiColor.RED.format("[ERROR]")
+val ERROR = RED.format("[ERROR]")
 
 private val CLASS_PATH = ClassPath.from(ClassLoader.getSystemClassLoader())!!
 
 private val REGEX_TOOL = Regex("Tool$", IGNORE_CASE)
 private val REGEX_CAMEL = Regex("([a-z])([A-Z])")
-private const val REPLACE_CAMEL = "\$1-\$2"
+private val REPLACE_CAMEL = "\$1-\$2"
 
 private const val TOOLS_PACKAGE = "net.tvidal.kraft.tools"
 

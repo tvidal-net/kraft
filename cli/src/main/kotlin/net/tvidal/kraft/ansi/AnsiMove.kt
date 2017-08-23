@@ -11,5 +11,5 @@ enum class AnsiMove(private val id: Char) {
     COL('G'),
     ROW('H');
 
-    fun move(n: Int) = if (hasAnsiSupport) "$ESC[$n$id" else EMPTY
+    fun move(n: Int) = if (HAS_ANSI_SUPPORT) "$ESC[$n$id" else EMPTY
 }

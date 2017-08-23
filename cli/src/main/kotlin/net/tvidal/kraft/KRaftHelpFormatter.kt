@@ -2,46 +2,48 @@ package net.tvidal.kraft
 
 import joptsimple.HelpFormatter
 import joptsimple.OptionDescriptor
-import joptsimple.internal.Strings
 import joptsimple.internal.Strings.EMPTY
 
 internal object KRaftHelpFormatter : HelpFormatter {
 
-    internal const val OPTION = "Option"
-    internal const val DESCRIPTION = "Description"
+    private const val OPTION = "Option"
+    private const val DESCRIPTION = "Description"
+
+    private val OPTION_PREFIX = dashes(2)
+
+    private const val MIN_WIDTH = OPTION.length + DEFAULT_MARGIN
 
     override fun format(allOptions: Map<String, OptionDescriptor>) = StringBuffer().run {
         val options = allOptions.values
           .filterNot { it.representsNonOptions() }
 
         val width = maxOf(colWidth(options.map { it.text }), MIN_WIDTH)
-        fun align(text: String) {
-            append(align(text, xwidth))
+        fun appendColumn(text: String) {
+            append(text.padEnd(width, SPACE))
         }
 
-        align(OPTION)
+        appendColumn(OPTION)
         appendln(DESCRIPTION)
 
-        align(dashes(OPTION))
+        appendColumn(dashes(OPTION))
         appendln(dashes(DESCRIPTION))
 
         for (spec in options) {
-            align(spec.text)
+            appendColumn(spec.text)
             appendln(spec.description)
         }
-        toString()
+        String(this)
     }
 
     private val OptionDescriptor.argumentType
         get() = Class.forName(argumentTypeIndicator()).kotlin.simpleName
 
     private val OptionDescriptor.text
-        get() = dashes(2) + options().last() +
+        get() = OPTION_PREFIX + options().last() +
           if (requiresArgument()) " <$argumentType>" else EMPTY +
             if (acceptsArguments()) " [$argumentType]" else EMPTY
 
     private val OptionDescriptor.description
         get() = description() +
-          if (!defaultValues().isEmpty()) " (default: ${defaultValues()})"
-          else EMPTY
+          if (!defaultValues().isEmpty()) " (default: ${defaultValues()})" else EMPTY
 }

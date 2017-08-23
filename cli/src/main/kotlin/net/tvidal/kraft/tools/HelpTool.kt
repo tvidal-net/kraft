@@ -2,28 +2,31 @@ package net.tvidal.kraft.tools
 
 import joptsimple.OptionParser
 import joptsimple.OptionSet
+import net.tvidal.kraft.DEFAULT_MARGIN
+import net.tvidal.kraft.DEFAULT_WIDTH
 import net.tvidal.kraft.Description
 import net.tvidal.kraft.ERROR_SIMPLE
+import net.tvidal.kraft.HELP_DESCRIPTION
 import net.tvidal.kraft.KRaftTool
+import net.tvidal.kraft.SPACE
 import net.tvidal.kraft.TOOLS
-import net.tvidal.kraft.ansi.hasAnsiSupport
 import kotlin.reflect.KClass
 
-@Description("Prints this help text")
+@Description(HELP_DESCRIPTION)
 class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     init {
         parser.formatHelpWith {
             StringBuffer().run {
-                appendln("Usage: <tool-name> [args]")
-                appendln("- Tool help: <tool-name> --help")
+                appendln("Usage: kraft <tool-name> [args] (or --help)")
                 appendln()
                 appendln("Available Tools:")
-                appendln("hasAnsiSupport: $hasAnsiSupport")
+                val width = (TOOLS.keys.map { it.length + 4 }.max() ?: DEFAULT_WIDTH) + DEFAULT_MARGIN
                 for ((toolName, toolClass) in TOOLS) {
-                    appendln(" - $toolName:  ${toolClass.description}")
+                    append(" - $toolName:".padEnd(width, SPACE))
+                    appendln(toolClass.description)
                 }
-                toString()
+                String(this)
             }
         }
     }

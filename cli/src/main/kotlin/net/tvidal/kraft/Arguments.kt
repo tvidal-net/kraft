@@ -22,5 +22,5 @@ fun OptionParser.longArgument(description: String, vararg options: String) =
 fun OptionParser.intArgument(description: String, vararg options: String) =
   typeArgument<Int>(description, *options)
 
-fun ArgumentAcceptingOptionSpec<*>.multipleValues() =
+fun ArgumentAcceptingOptionSpec<*>.acceptsMultipleValues() =
   withValuesSeparatedBy(SEPARATOR)
