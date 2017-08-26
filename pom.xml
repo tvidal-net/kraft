@@ -6,6 +6,7 @@
 
     <groupId>net.tvidal</groupId>
     <artifactId>kraft-parent</artifactId>
+    <name>KRaft</name>
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -28,7 +29,7 @@
     <modules>
         <module>core</module>
         <module>cli</module>
-        <module>kraft-local</module>
+        <module>local</module>
     </modules>
 
     <dependencyManagement>
@@ -164,7 +165,7 @@
         </pluginManagement>
 
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>${project.basedir}/src/main/kotlin</testSourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
     </build>
 
     <profiles>

@@ -5,6 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kraft-cli</artifactId>
+    <name>KRaft CLI</name>
 
     <parent>
         <artifactId>kraft-parent</artifactId>
@@ -20,6 +21,11 @@
         <dependency>
             <groupId>net.tvidal</groupId>
             <artifactId>kraft-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.tvidal</groupId>
+            <artifactId>kraft-local</artifactId>
         </dependency>
 
         <dependency>
