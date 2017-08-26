@@ -9,4 +9,8 @@ abstract class AbstractRaftMessage(
   override val from: RaftNode,
   override val term: Long
 
-) : AbstractMessage(type, from), RaftMessage
+) : AbstractMessage(type, from), RaftMessage {
+
+    override fun toString() = "$type:$term (from: $from)"
+
+}

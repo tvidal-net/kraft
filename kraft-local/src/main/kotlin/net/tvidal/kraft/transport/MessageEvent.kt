@@ -2,8 +2,8 @@ package net.tvidal.kraft.transport
 
 import net.tvidal.kraft.message.Message
 
-interface MessageReceiver {
+internal class MessageEvent(
 
-    fun poll(): Message
+  var message: Message = Message.EMPTY
 
-}
+)

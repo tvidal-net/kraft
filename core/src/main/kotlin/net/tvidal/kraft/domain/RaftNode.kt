@@ -1,11 +1,17 @@
 package net.tvidal.kraft.domain
 
+import net.tvidal.kraft.DEFAULT_CLUSTER_NAME
+
 data class RaftNode(
 
-  val clusterName: String,
-  val nodeIndex: Byte
+  val nodeIndex: Byte,
+  val clusterName: String = DEFAULT_CLUSTER_NAME
 
 ) {
+    companion object {
+        val EMPTY = RaftNode(0, "NONE")
+    }
+
     override fun toString(): String {
         return "$clusterName:$nodeIndex"
     }

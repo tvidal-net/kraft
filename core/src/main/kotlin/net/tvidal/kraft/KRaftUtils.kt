@@ -18,7 +18,7 @@ const val BYTE_BYTES = java.lang.Byte.BYTES
 fun raftMajority(clusterSize: Int) = clusterSize / 2 + 1
 
 fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME) = (1..size)
-  .map { RaftNode(clusterName, it.toByte()) }
+  .map { RaftNode(it.toByte(), clusterName) }
 
 fun raftCluster(self: RaftNode, others: List<RaftNode>) = object : RaftCluster {
     private val all = setOf(self, *others.toTypedArray())
