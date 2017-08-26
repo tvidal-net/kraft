@@ -23,7 +23,7 @@ fun entryOf(term: Long, payload: Long) = entryOf(term, Longs.toByteArray(payload
 fun entryOf(term: Long, payload: String, charset: Charset = defaultCharset()) =
   entryOf(term, payload.toByteArray(charset))
 
-fun KRaftEntry.asBatch() = singleEntry(this)
+fun KRaftEntry.toEntries() = singleEntry(this)
 
 fun KRaftEntry.longValue() = Longs.fromByteArray(payload)
 

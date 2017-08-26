@@ -8,10 +8,10 @@ data class KRaftConfig(
 
   val timeout: TimeoutConfig,
 
-  val transport: TransportFactory,
+  val transportFactory: KRaftTransportFactory,
 
-  val log: LogFactory,
+  val logFactory: KRaftLogFactory,
 
-  val size: SizeConfig
+  val sizes: SizeConfig
 
 )

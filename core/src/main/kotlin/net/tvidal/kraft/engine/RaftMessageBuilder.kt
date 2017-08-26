@@ -1,4 +1,4 @@
-package net.tvidal.kraft.processing
+package net.tvidal.kraft.engine
 
 import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.message.raft.AppendAckMessage
