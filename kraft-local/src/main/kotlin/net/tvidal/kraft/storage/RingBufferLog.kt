@@ -20,6 +20,6 @@ class RingBufferLog(size: Int) : AbstractRingBufferLog(size) {
                 index += 1
             } else break
         }
-        return read(fromIndex..(index - 1))
+        return read(fromIndex until index)
     }
 }
