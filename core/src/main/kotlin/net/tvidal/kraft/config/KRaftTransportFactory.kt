@@ -2,7 +2,7 @@ package net.tvidal.kraft.config
 
 import net.tvidal.kraft.transport.KRaftTransport
 
-interface TransportFactory {
+interface KRaftTransportFactory {
 
     fun create(): KRaftTransport
 

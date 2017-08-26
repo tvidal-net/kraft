@@ -7,22 +7,22 @@ import net.tvidal.kraft.message.raft.RequestVoteMessage
 import net.tvidal.kraft.message.raft.VoteMessage
 import net.tvidal.kraft.storage.KRaftEntries
 
-internal fun RaftEngine.vote(to: RaftNode, vote: Boolean) {
+internal fun RaftEngine.sendVote(to: RaftNode, vote: Boolean) {
     val msg = VoteMessage(self, term, vote)
     transport.sender(to).send(msg)
 }
 
-internal fun RaftEngine.ack(to: RaftNode, matchIndex: Long) {
+internal fun RaftEngine.sendAck(to: RaftNode, matchIndex: Long) {
     val msg = AppendAckMessage(self, term, true, matchIndex)
     transport.sender(to).send(msg)
 }
 
-internal fun RaftEngine.nack(to: RaftNode, nackIndex: Long) {
+internal fun RaftEngine.sendNack(to: RaftNode, nackIndex: Long) {
     val msg = AppendAckMessage(self, term, false, nackIndex)
     transport.sender(to).send(msg)
 }
 
-internal fun RaftEngine.requestVotes() {
+internal fun RaftEngine.sendRequestVotes() {
     for (to in others) {
         val msg = RequestVoteMessage(self, term, lastLogTerm, lastLogIndex)
         transport.sender(to).send(msg)

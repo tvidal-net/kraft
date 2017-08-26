@@ -1,7 +1,4 @@
-package net.tvidal.kraft.storage.ringbuffer
-
-import net.tvidal.kraft.storage.KRaftEntries
-import net.tvidal.kraft.storage.KRaftEntry
+package net.tvidal.kraft.storage
 
 class RingBufferLog(size: Int) : AbstractRingBufferLog(size) {
 

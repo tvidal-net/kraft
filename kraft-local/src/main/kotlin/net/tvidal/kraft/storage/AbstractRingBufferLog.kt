@@ -1,18 +1,10 @@
-package net.tvidal.kraft.storage.ringbuffer
+package net.tvidal.kraft.storage
 
-import net.tvidal.kraft.storage.KRaftEntries
-import net.tvidal.kraft.storage.KRaftEntry
-import net.tvidal.kraft.storage.KRaftLog
-import net.tvidal.kraft.storage.emptyEntries
-import net.tvidal.kraft.storage.emptyEntry
-import net.tvidal.kraft.storage.nextLogIndex
-import net.tvidal.kraft.storage.singleEntry
-
-abstract class AbstractRingBufferLog(val size: Int) : KRaftLog {
+abstract class AbstractRingBufferLog protected constructor(protected val size: Int) : KRaftLog {
 
     private val data = Array(size) { emptyEntry() }
 
-    final override val firstLogIndex get() = maxOf(lastLogIndex - size, 1L)
+    final override val firstLogIndex get() = maxOf(lastLogIndex - size, 0) + 1
     final override var lastLogIndex = 0L; private set
     final override var lastLogTerm = 0L; private set
 

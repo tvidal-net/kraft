@@ -15,9 +15,9 @@ class RaftEngine(config: KRaftConfig) {
     private val timeout = config.timeout
     private var nextElectionTime = NEVER
 
-    internal val transport = config.transport.create()
-    internal val log = config.log.create()
-    internal val size = config.size
+    internal val transport = config.transportFactory.create()
+    internal val log = config.logFactory.create()
+    internal val sizes = config.sizes
 
     val cluster = config.cluster
     var leader: RaftNode? = null; internal set
@@ -38,12 +38,14 @@ class RaftEngine(config: KRaftConfig) {
 
     val heartbeatWindowMillis get() = timeout.heartbeat
 
-    private fun nextElectionTimeout(baseTimeout: Int) = timeout.run {
+    val followers = Followers()
+
+    private fun nextElectionTimeout(baseTimeout: Int = timeout.minElectionTimeout) = timeout.run {
         baseTimeout + RANDOM.nextInt(maxElectionTimeout - minElectionTimeout + 1)
     }
 
     internal fun resetElectionTimeout(now: Long) {
-        nextElectionTime = now + nextElectionTimeout(timeout.minElectionTimeout)
+        nextElectionTime = now + nextElectionTimeout()
     }
 
     internal fun cancelElectionTimeout() {
@@ -98,27 +100,27 @@ class RaftEngine(config: KRaftConfig) {
         return BEFORE_LOG
     }
 
-    internal val followers = object : RaftFollowers {
+    inner class Followers {
 
-        val followers = others
+        private val followers = others
           .map { RaftFollowerState(this@RaftEngine, transport.sender(it)) }
           .associateBy { it.follower }
 
-        override fun reset() {
+        fun reset() {
             followers.values.forEach(RaftFollowerState::reset)
         }
 
-        override fun work(now: Long) {
-            followers.values.forEach { it.work(now) }
+        fun run(now: Long) {
+            followers.values.forEach { it.run(now) }
         }
 
-        override fun ack(msg: AppendAckMessage) {
+        fun ack(msg: AppendAckMessage) {
             val follower = followers[msg.from]
             if (follower != null) follower.ack(msg)
             else LOG.error("There is no state for follower {}", msg.from)
         }
 
-        override fun updateCommitIndex() {
+        fun updateCommitIndex() {
             val matchIndex = followers.values.map(RaftFollowerState::matchIndex) + lastLogIndex
             val quorumCommitIndex = matchIndex.sorted().take(cluster.majority).last()
 

@@ -36,10 +36,10 @@ internal enum class RaftRole {
             raft.logConsistent = matchIndex > BEFORE_LOG
             if (raft.logConsistent) {
                 raft.updateCommitIndex(matchIndex)
-                raft.ack(msg.from, matchIndex)
+                raft.sendAck(msg.from, matchIndex)
             } else {
                 val nackIndex = raft.nackIndex(msg)
-                raft.nack(msg.from, nackIndex)
+                raft.sendNack(msg.from, nackIndex)
             }
             raft.leader = msg.from
             return null
@@ -56,7 +56,7 @@ internal enum class RaftRole {
                 raft.votedFor = candidate
                 raft.resetElectionTimeout(now)
             }
-            raft.vote(candidate, grantVote)
+            raft.sendVote(candidate, grantVote)
             return null
         }
     },
@@ -70,14 +70,16 @@ internal enum class RaftRole {
                 votesReceived.clear()
                 votesReceived.add(raft.self)
                 resetElectionTimeout(now)
-                requestVotes()
+                sendRequestVotes()
             }
         }
 
         override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? {
+            LOG.info("vote from={} term={}", msg.from, msg.term)
             if (msg.vote) {
                 raft.votesReceived.add(msg.from)
-                if (raft.votesReceived.size >= raft.cluster.majority) {
+                val votesReceived = raft.votesReceived.size
+                if (votesReceived >= raft.cluster.majority) {
                     return LEADER
                 }
             }
@@ -90,9 +92,9 @@ internal enum class RaftRole {
     },
 
     LEADER {
-        override fun work(now: Long, raft: RaftEngine) {
-            super.work(now, raft)
-            raft.followers.work(now)
+        override fun run(now: Long, raft: RaftEngine) {
+            super.run(now, raft)
+            raft.followers.run(now)
         }
 
         override fun enter(now: Long, raft: RaftEngine) {
@@ -133,7 +135,7 @@ internal enum class RaftRole {
 
     protected val LOG = getLogger("${RaftRole::class.java.name}.$name")
 
-    protected open fun work(now: Long, raft: RaftEngine) {}
+    protected open fun run(now: Long, raft: RaftEngine) {}
 
     protected open fun enter(now: Long, raft: RaftEngine) {}
 
@@ -152,14 +154,14 @@ internal enum class RaftRole {
 
     protected open fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? = null
 
-    private fun acceptMessage(now: Long, msg: RaftMessage, raft: RaftEngine) = when (msg.type) {
+    private fun processMessage(now: Long, msg: RaftMessage, raft: RaftEngine) = when (msg.type) {
         APPEND -> append(now, msg as AppendMessage, raft)
         APPEND_ACK -> appendAck(now, msg as AppendAckMessage, raft)
         REQUEST_VOTE -> requestVote(now, msg as RequestVoteMessage, raft)
         VOTE -> vote(now, msg as VoteMessage, raft)
     }
 
-    fun accept(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? {
+    fun process(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? {
         val term = msg.term
 
         if (raft.term < term) {
@@ -168,12 +170,10 @@ internal enum class RaftRole {
         }
 
         return if (raft.term == term) {
-            acceptMessage(now, msg, raft)
+            processMessage(now, msg, raft)
 
         } else {
-            if (msg.type == REQUEST_VOTE) {
-                raft.vote(msg.from, false)
-            }
+            if (msg.type == REQUEST_VOTE) raft.sendVote(msg.from, false)
             null
         }
     }

@@ -38,7 +38,7 @@ internal class RaftFollowerState(
 
     }
 
-    fun work(now: Long) {
+    fun run(now: Long) {
         if (streaming) {
             val data = raft.log.read(nextIndex, byteLimit.get())
             if (data.isEmpty) return // not enough bytes to send the next entry
@@ -92,7 +92,7 @@ internal class RaftFollowerState(
     }
 
     private fun resetByteWindow() {
-        byteLimit.set(raft.size.maxUnackedBytesWindow)
+        byteLimit.set(raft.sizes.maxUnackedBytesWindow)
     }
 
     private fun updateHeartbeat(now: Long) {

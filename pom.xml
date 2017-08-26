@@ -28,6 +28,7 @@
     <modules>
         <module>core</module>
         <module>cli</module>
+        <module>kraft-local</module>
     </modules>
 
     <dependencyManagement>
@@ -36,6 +37,12 @@
             <dependency>
                 <groupId>net.tvidal</groupId>
                 <artifactId>kraft-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.tvidal</groupId>
+                <artifactId>kraft-local</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
