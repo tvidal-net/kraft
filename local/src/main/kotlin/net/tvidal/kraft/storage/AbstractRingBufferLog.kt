@@ -19,10 +19,7 @@ abstract class AbstractRingBufferLog protected constructor(protected val size: I
     protected operator fun get(index: Long) = when (index) {
         0L -> emptyEntry()
         nextLogIndex -> data[pos(Long.MAX_VALUE)] // force exception
-        else -> {
-            val pos = pos(index)
-            data[pos]
-        }
+        else -> data[pos(index)]
     }
 
     protected operator fun set(index: Long, value: KRaftEntry) {
@@ -42,5 +39,5 @@ abstract class AbstractRingBufferLog protected constructor(protected val size: I
         else -> (index % data.size).toInt()
     }
 
-    override fun toString() = "[($firstLogIndex:$lastLogIndex) nextLogIndex=$nextLogIndex size=$size"
+    override fun toString() = "[($firstLogIndex:$lastLogIndex) nextLogIndex=$nextLogIndex size=$size]"
 }
