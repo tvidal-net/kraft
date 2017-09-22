@@ -38,7 +38,7 @@ class RaftEngine(config: KRaftConfig) {
 
     val heartbeatWindowMillis get() = timeout.heartbeat
 
-    val followers = Followers()
+    internal val followers = Followers()
 
     private fun nextElectionTimeout(baseTimeout: Int = timeout.minElectionTimeout) = timeout.run {
         baseTimeout + RANDOM.nextInt(maxElectionTimeout - minElectionTimeout + 1)
@@ -100,7 +100,7 @@ class RaftEngine(config: KRaftConfig) {
         return BEFORE_LOG
     }
 
-    inner class Followers {
+    internal inner class Followers {
 
         private val followers = others
           .map { RaftFollowerState(this@RaftEngine, transport.sender(it)) }

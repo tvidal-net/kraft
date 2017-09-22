@@ -1,9 +1,9 @@
 package net.tvidal.kraft.ansi
 
-val HAS_ANSI_SUPPORT by lazy { System.console() != null && terminalColors() > 2 }
+val hasAnsiSupport by lazy { System.console() != null && terminalColors() > 2 }
 
-internal val ANSI_RESET by lazy { tput("sgr0") }
-internal val ANSI_BOLD by lazy { tput("bold") }
+internal val ansiReset by lazy { tput("sgr0") }
+internal val ansiBold by lazy { tput("bold") }
 
 internal const val ESC = 0x1B.toChar()
 
