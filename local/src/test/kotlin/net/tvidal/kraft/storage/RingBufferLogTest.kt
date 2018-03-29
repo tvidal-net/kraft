@@ -24,7 +24,7 @@ class RingBufferLogTest {
     }
 
     @Test
-    fun shouldReturnZeroForTermAtIndexZero() {
+    fun `should return zero for term at index zero`() {
         assertEquals(0, log.termAt(0))
 
         log.append(SINGLE_ENTRY)
@@ -32,18 +32,18 @@ class RingBufferLogTest {
     }
 
     @Test
-    fun shouldStartWithInitialParameters() {
+    fun `should start with initial parameters`() {
         assertState(1, 0, 0)
     }
 
     @Test
-    fun shouldUpdateParametersWhenDataIsAppended() {
+    fun `should update parameters when data is appended`() {
         assertEquals(3, log.append(ENTRIES))
         assertState(1, 3, 1)
     }
 
     @Test
-    fun shouldUpdateFirstLogIndexWhenAppendedPastTheBufferSize() {
+    fun `should update first log index when appended past the buffer size`() {
         log.append(ENTRIES)
         log.append(longEntries(2, 4..20L))
 
@@ -51,57 +51,57 @@ class RingBufferLogTest {
     }
 
     @Test
-    fun shouldTruncateIfAppendBeforeTheLastLogIndex() {
+    fun `should truncate if append before the last log index`() {
         log.append(ENTRIES)
         log.append(longEntries(2, 2..5L), 2)
         assertState(1, 5, 2)
     }
 
     @Test
-    fun shouldTruncateFromFirstLogIndex() {
+    fun `should truncate from first log index`() {
         log.append(ENTRIES)
         log.append(SINGLE_ENTRY, 1)
         assertState(1, 1, 2)
     }
 
-    @Test(expectedExceptions = arrayOf(IllegalArgumentException::class))
-    fun shouldNotAppendBeforeFirstLogIndex() {
+    @Test(expectedExceptions = [IllegalArgumentException::class])
+    fun `should not append before first log index`() {
         log.append(longEntries(1, 1..17L))
         log.append(SINGLE_ENTRY, 1)
     }
 
-    @Test(expectedExceptions = arrayOf(IllegalArgumentException::class))
-    fun shouldNotAppendAfterLastLogIndex() {
+    @Test(expectedExceptions = [IllegalArgumentException::class])
+    fun `should not append after last log index`() {
         log.append(ENTRIES, 2)
     }
 
     @Test
-    fun shouldReadBackAppendedData() {
+    fun `should read back appended data`() {
         log.append(ENTRIES)
         assertEquals(ENTRIES, log.read(1, Int.MAX_VALUE))
     }
 
     @Test
-    fun shouldRespectTheByteLimiteWhenReadingData() {
+    fun `should respect the byte limite when reading data`() {
         log.append(ENTRIES)
         val read = log.read(1, LONG_BYTES * 2 + 2)
         assertEquals(ENTRIES.take(2), read.toList())
     }
 
     @Test
-    fun shouldReturnEmptyIfEntryCannotFitByteLimit() {
+    fun `should return empty if entry cannot fit byte limit`() {
         log.append(ENTRIES)
         assertTrue(log.read(1, LONG_BYTES - 1).isEmpty)
     }
 
-    @Test(expectedExceptions = arrayOf(IllegalArgumentException::class))
-    fun shouldNotReadBeforeFirstLogIndex() {
+    @Test(expectedExceptions = [IllegalArgumentException::class])
+    fun `should not read before first log index`() {
         log.append(longEntries(1, 1..17L))
         log.read(1, Int.MAX_VALUE)
     }
 
     @Test
-    fun shouldReturnEmptyOnReadAfterLastLogIndex() {
+    fun `should return empty on read after last log index`() {
         log.append(ENTRIES)
         assertTrue(log.read(4, Int.MAX_VALUE).isEmpty)
     }
