@@ -8,14 +8,14 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.SynchronousQueue
 
-class DualQueueMessageReceiver(raftQueueSize: Int, clientQueueSize: Int, private val maxDrainCount: Int) : MessageReceiver {
+class DualQueueMessageReceiver(raftQueueSize: Int = 0, clientQueueSize: Int = 0, private val maxDrainCount: Int = 10) : MessageReceiver {
 
     private val raftQueue = createIncomingMessageQueue(raftQueueSize)
     private val clientQueue = createIncomingMessageQueue(clientQueueSize)
     private val messages = ArrayDeque<Message>(maxDrainCount)
 
     companion object {
-        fun createIncomingMessageQueue(queueSize: Int): BlockingQueue<Message> = when {
+        private fun createIncomingMessageQueue(queueSize: Int): BlockingQueue<Message> = when {
             queueSize <= 0 -> SynchronousQueue(true)
             else -> ArrayBlockingQueue(queueSize, true)
         }
