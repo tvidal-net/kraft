@@ -75,7 +75,7 @@ internal enum class RaftRole {
         }
 
         override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? {
-            LOG.info("vote from={} term={}", msg.from, msg.term)
+            log.info("vote from={} term={}", msg.from, msg.term)
             if (msg.vote) {
                 raft.votesReceived.add(msg.from)
                 val votesReceived = raft.votesReceived.size
@@ -133,7 +133,7 @@ internal enum class RaftRole {
         }
     };
 
-    protected val LOG = getLogger("${RaftRole::class.java.name}.$name")
+    protected val log = getLogger("${RaftRole::class.java.name}.$name")!!
 
     protected open fun run(now: Long, raft: RaftEngine) {}
 
