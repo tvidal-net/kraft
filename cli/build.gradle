@@ -2,5 +2,5 @@ dependencies {
     implementation project(':kraft-core')
     implementation project(':kraft-local')
 
-    implementation "net.sf.jopt-simple:jopt-simple:5.0.4"
+    implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
 }

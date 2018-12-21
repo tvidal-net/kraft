@@ -40,13 +40,13 @@ subprojects {
         implementation "org.jetbrains.kotlin:kotlin-stdlib"
         implementation "org.jetbrains.kotlin:kotlin-reflect"
 
-        implementation "org.slf4j:slf4j-api:1.7.25"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
 
-        implementation "com.google.guava:guava:22.0"
+        implementation "com.google.guava:guava:$guavaVersion"
 
         testImplementation "org.jetbrains.kotlin:kotlin-test"
-        testImplementation "org.testng:testng:6.11"
-        testImplementation "org.mockito:mockito-core:2.8.47"
+        testImplementation "org.testng:testng:$testngVersion"
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
     }
 
     jar {
