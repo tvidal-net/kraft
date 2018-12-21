@@ -29,15 +29,15 @@ private val REPLACE_CAMEL = "\$1-\$2"
 private const val TOOLS_PACKAGE = "net.tvidal.kraft.tools"
 
 val TOOLS = CLASS_PATH.getTopLevelClasses(TOOLS_PACKAGE)
-  .filter { REGEX_TOOL.containsMatchIn(it.name) }
-  .map { it.load().kotlin }
-  .filter { KRaftTool::class.isSuperclassOf(it) }
-  .associateBy {
-      it.simpleName!!
-        .let { REGEX_TOOL.replace(it, EMPTY) }
-        .let { REGEX_CAMEL.replace(it, REPLACE_CAMEL) }
-        .toLowerCase()
-  }
+    .filter { REGEX_TOOL.containsMatchIn(it.name) }
+    .map { it.load().kotlin }
+    .filter { KRaftTool::class.isSuperclassOf(it) }
+    .associateBy {
+        it.simpleName!!
+            .let { REGEX_TOOL.replace(it, EMPTY) }
+            .let { REGEX_CAMEL.replace(it, REPLACE_CAMEL) }
+            .toLowerCase()
+    }
 
 private fun optionParser(allowsUnrecognizedOptions: Boolean = false) = OptionParser().apply {
     if (allowsUnrecognizedOptions) allowsUnrecognizedOptions()
@@ -62,11 +62,9 @@ private fun executeTool(toolName: String, vararg args: String): Int {
 
         if (op.has(HELP)) printHelp()
         else tool.execute(op)
-
     } catch (e: OptionException) {
         System.err.println("$ERROR ${e.message}\n")
         printHelp()
-
     } catch (e: Throwable) {
         e.printStackTrace()
         ERROR_SEVERE
@@ -80,7 +78,6 @@ fun execute(op: OptionSet): Int {
     return if (TOOLS.containsKey(toolName)) {
         val toolArgs = if (op.has(HELP)) listOf("--$HELP") else args.drop(1)
         executeTool(toolName, *toolArgs.toTypedArray())
-
     } else {
         System.err.println("$ERROR The tool '${YELLOW.format(toolName)}' does not exist.\n")
         executeTool(HELP)

@@ -16,10 +16,10 @@ fun terminalColors() = tput("colors").toInt()
 internal fun tput(vararg args: String) = exec("tput", *args)
 
 private fun exec(vararg args: String) = ProcessBuilder()
-  .redirectErrorStream(true)
-  .command(*args)
-  .start()!!
-  .inputStream
-  .reader()
-  .buffered()
-  .use { it.readLine() }
+    .redirectErrorStream(true)
+    .command(*args)
+    .start()!!
+    .inputStream
+    .reader()
+    .buffered()
+    .use { it.readLine() }

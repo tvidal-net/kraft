@@ -6,8 +6,8 @@ import net.tvidal.kraft.storage.KRaftEntries
 
 class ClientAppendMessage(
 
-  from: RaftNode,
+    from: RaftNode,
 
-  val data: KRaftEntries
+    val data: KRaftEntries
 
 ) : AbstractClientMessage(CLIENT_APPEND, from)

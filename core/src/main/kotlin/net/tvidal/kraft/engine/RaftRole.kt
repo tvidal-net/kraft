@@ -49,8 +49,8 @@ internal enum class RaftRole {
             val candidate = msg.from
 
             val grantVote = (raft.votedFor == null || raft.votedFor == candidate) &&
-              (raft.lastLogTerm < msg.lastLogTerm ||
-                (raft.lastLogTerm == msg.lastLogTerm && raft.lastLogIndex <= msg.lastLogIndex))
+                (raft.lastLogTerm < msg.lastLogTerm ||
+                    (raft.lastLogTerm == msg.lastLogTerm && raft.lastLogIndex <= msg.lastLogIndex))
 
             if (grantVote) {
                 raft.votedFor = candidate
@@ -171,11 +171,9 @@ internal enum class RaftRole {
 
         return if (raft.term == term) {
             processMessage(now, msg, raft)
-
         } else {
             if (msg.type == REQUEST_VOTE) raft.sendVote(msg.from, false)
             null
         }
     }
-
 }

@@ -5,9 +5,9 @@ import net.tvidal.kraft.message.raft.RaftMessageType.VOTE
 
 class VoteMessage(
 
-  override val from: RaftNode,
-  override val term: Long,
+    override val from: RaftNode,
+    override val term: Long,
 
-  val vote: Boolean
+    val vote: Boolean
 
 ) : AbstractRaftMessage(VOTE, from, term)

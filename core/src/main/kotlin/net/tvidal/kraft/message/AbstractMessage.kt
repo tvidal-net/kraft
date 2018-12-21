@@ -4,7 +4,7 @@ import net.tvidal.kraft.domain.RaftNode
 
 abstract class AbstractMessage(
 
-  override val type: MessageType,
-  override val from: RaftNode
+    override val type: MessageType,
+    override val from: RaftNode
 
 ) : Message

@@ -10,5 +10,4 @@ interface MessageSender {
     fun send(message: Message)
 
     fun respond(message: Message)
-
 }

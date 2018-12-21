@@ -9,5 +9,4 @@ interface MessageReceiver {
     fun poll(): Message
 
     fun offer(message: Message): Boolean
-
 }

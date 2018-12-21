@@ -22,35 +22,31 @@ class TwoNodeTool : KRaftTool {
             override fun create(): KRaftTransport {
                 TODO("not implemented")
             }
-
         }
 
         val logFactory = RingBufferLogFactory(size = 0x40)
 
         val sizes = SizeConfig(
-          maxEntrySize = 100,
-          maxMessageBatchSize = 5,
-          maxUnackedBytesWindow = 3000
+            maxEntrySize = 100,
+            maxMessageBatchSize = 5,
+            maxUnackedBytesWindow = 3000
         )
 
         val timeout = TimeoutConfig(
-          heartbeat = 500,
-          minElectionTimeout = 2000,
-          maxElectionTimeout = 3000,
-          firstElectionTimeout = 5000
+            heartbeat = 500,
+            election = 2000..3000,
+            firstElection = 5000
         )
 
         val nodes = raftNodes(2)
 
         val clusters = (0 until nodes.size)
-          .map { raftCluster(it, nodes) }
+            .map { raftCluster(it, nodes) }
 
         val configs = clusters.map { KRaftConfig(it, timeout, transportFactory, logFactory, sizes) }
 
         val engines = configs.map { RaftEngine(it) }
 
         return 0
-
     }
-
 }

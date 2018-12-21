@@ -17,7 +17,7 @@ class TestTool(parser: OptionParser) : KRaftTool {
     private val int = parser.intArgument("Something Integer", "int")
 
     private val lop = parser.longArgument("Something long", "long")
-      .defaultsTo(0L)
+        .defaultsTo(0L)
 
     override fun execute(op: OptionSet): Int {
         println("flag is set ${op.has(flag)}")

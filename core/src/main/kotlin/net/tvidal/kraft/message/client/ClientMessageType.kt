@@ -11,5 +11,4 @@ enum class ClientMessageType : MessageType {
     CONSUME_DATA,
 
     CLIENT_ERROR
-
 }

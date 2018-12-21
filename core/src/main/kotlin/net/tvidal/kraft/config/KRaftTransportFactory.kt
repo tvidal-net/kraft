@@ -6,4 +6,5 @@ interface KRaftTransportFactory {
 
     fun create(): KRaftTransport
 
+    operator fun invoke() = create()
 }

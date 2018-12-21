@@ -21,7 +21,7 @@ fun entryOf(term: Long, payload: ByteBuffer) = entryOf(term, payload.array())
 fun entryOf(term: Long, payload: Long) = entryOf(term, Longs.toByteArray(payload))
 
 fun entryOf(term: Long, payload: String, charset: Charset = defaultCharset()) =
-  entryOf(term, payload.toByteArray(charset))
+    entryOf(term, payload.toByteArray(charset))
 
 fun KRaftEntry.toEntries() = singleEntry(this)
 

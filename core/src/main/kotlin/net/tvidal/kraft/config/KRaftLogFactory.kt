@@ -6,4 +6,5 @@ interface KRaftLogFactory {
 
     fun create(): KRaftLog
 
+    operator fun invoke() = create()
 }

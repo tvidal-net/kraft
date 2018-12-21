@@ -34,8 +34,8 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     private val KClass<*>.description
         get() = annotations
-          .filterIsInstance<Description>()
-          .firstOrNull()?.text ?: simpleName!!
+            .filterIsInstance<Description>()
+            .firstOrNull()?.text ?: simpleName!!
 
     override fun execute(op: OptionSet): Int {
         parser.printHelpOn(System.err)

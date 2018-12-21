@@ -30,4 +30,4 @@ internal fun RaftEngine.sendRequestVotes() {
 }
 
 internal fun RaftEngine.heartbeat(prevIndex: Long, prevTerm: Long, data: KRaftEntries) =
-  AppendMessage(self, term, prevTerm, prevIndex, commitIndex, data)
+    AppendMessage(self, term, prevTerm, prevIndex, commitIndex, data)

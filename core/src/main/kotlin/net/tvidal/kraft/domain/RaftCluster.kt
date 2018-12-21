@@ -7,5 +7,4 @@ interface RaftCluster {
     val majority: Int
 
     fun contains(node: RaftNode): Boolean
-
 }

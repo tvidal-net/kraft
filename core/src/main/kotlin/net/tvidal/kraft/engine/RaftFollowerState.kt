@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 internal class RaftFollowerState(
 
-  val raft: RaftEngine,
-  private val sender: MessageSender
+    val raft: RaftEngine,
+    private val sender: MessageSender
 
 ) {
 
@@ -35,7 +35,6 @@ internal class RaftFollowerState(
     }
 
     fun reset() {
-
     }
 
     fun run(now: Long) {
@@ -46,7 +45,6 @@ internal class RaftFollowerState(
             if (sendHeartbeat(data)) {
                 updateHeartbeat(now)
             }
-
         } else heartbeat(now)
     }
 
@@ -98,5 +96,4 @@ internal class RaftFollowerState(
     private fun updateHeartbeat(now: Long) {
         nextHeartbeat = now + raft.heartbeatWindowMillis
     }
-
 }

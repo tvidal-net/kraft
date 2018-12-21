@@ -1,8 +1,8 @@
 package net.tvidal.kraft.storage
 
 class KRaftEntry internal constructor(
-  val term: Long,
-  val payload: ByteArray
+    val term: Long,
+    val payload: ByteArray
 
 ) {
     val bytes get() = payload.size

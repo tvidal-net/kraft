@@ -8,7 +8,7 @@ import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.AppendMessage
 import org.slf4j.LoggerFactory.getLogger
-import java.util.*
+import java.util.Random
 
 class RaftEngine(config: KRaftConfig) {
 
@@ -40,8 +40,8 @@ class RaftEngine(config: KRaftConfig) {
 
     internal val followers = Followers()
 
-    private fun nextElectionTimeout(baseTimeout: Int = timeout.minElectionTimeout) = timeout.run {
-        baseTimeout + RANDOM.nextInt(maxElectionTimeout - minElectionTimeout + 1)
+    private fun nextElectionTimeout(baseTimeout: Int = timeout.minElection) = timeout.run {
+        baseTimeout + RANDOM.nextInt(maxElection - minElection + 1)
     }
 
     internal fun resetElectionTimeout(now: Long) {
@@ -103,8 +103,8 @@ class RaftEngine(config: KRaftConfig) {
     internal inner class Followers {
 
         private val followers = others
-          .map { RaftFollowerState(this@RaftEngine, transport.sender(it)) }
-          .associateBy { it.follower }
+            .map { RaftFollowerState(this@RaftEngine, transport.sender(it)) }
+            .associateBy { it.follower }
 
         fun reset() {
             followers.values.forEach(RaftFollowerState::reset)
@@ -131,14 +131,14 @@ class RaftEngine(config: KRaftConfig) {
                     LOG.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
                     updateCommitIndex(quorumCommitIndex)
                     followers.values.forEach(RaftFollowerState::commit)
-
                 } else {
-                    LOG.warn("SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
-                      quorumCommitIndex, quorumCommitTerm, term)
+                    LOG.warn(
+                        "SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
+                        quorumCommitIndex, quorumCommitTerm, term
+                    )
                 }
             }
         }
-
     }
 
     companion object {

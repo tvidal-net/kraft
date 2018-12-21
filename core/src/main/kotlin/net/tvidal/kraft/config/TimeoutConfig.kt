@@ -1,13 +1,14 @@
 package net.tvidal.kraft.config
 
 data class TimeoutConfig(
+    val heartbeat: Int,
+    val election: IntRange,
+    val firstElection: Int
+) {
 
-  val heartbeat: Int,
+    val minElection: Int
+        get() = election.first
 
-  val minElectionTimeout: Int,
-
-  val maxElectionTimeout: Int,
-
-  val firstElectionTimeout: Int
-
-)
+    val maxElection: Int
+        get() = election.last
+}

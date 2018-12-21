@@ -5,5 +5,4 @@ import net.tvidal.kraft.message.Message
 interface ClientMessage : Message {
 
     override val type: ClientMessageType
-
 }

@@ -7,5 +7,4 @@ interface RaftMessage : Message {
     override val type: RaftMessageType
 
     val term: Long
-
 }

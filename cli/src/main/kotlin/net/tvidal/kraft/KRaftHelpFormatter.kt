@@ -14,7 +14,7 @@ internal object KRaftHelpFormatter : HelpFormatter {
 
     override fun format(allOptions: Map<String, OptionDescriptor>) = StringBuffer().run {
         val options = allOptions.values
-          .filterNot { it.representsNonOptions() }
+            .filterNot { it.representsNonOptions() }
 
         val width = maxOf(colWidth(options.map { it.text }), MIN_WIDTH)
         fun appendColumn(text: String) {
@@ -39,10 +39,10 @@ internal object KRaftHelpFormatter : HelpFormatter {
 
     private val OptionDescriptor.text
         get() = OPTION_PREFIX + options().last() +
-          if (requiresArgument()) " <$argumentType>" else EMPTY +
-            if (acceptsArguments()) " [$argumentType]" else EMPTY
+            if (requiresArgument()) " <$argumentType>" else EMPTY +
+                if (acceptsArguments()) " [$argumentType]" else EMPTY
 
     private val OptionDescriptor.description
         get() = description() +
-          if (!defaultValues().isEmpty()) " (default: ${defaultValues()})" else EMPTY
+            if (!defaultValues().isEmpty()) " (default: ${defaultValues()})" else EMPTY
 }

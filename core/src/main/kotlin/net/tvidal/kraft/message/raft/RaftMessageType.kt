@@ -11,5 +11,4 @@ enum class RaftMessageType : MessageType {
     REQUEST_VOTE,
 
     VOTE
-
 }

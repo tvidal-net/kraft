@@ -3,7 +3,7 @@ package net.tvidal.kraft.transport
 import net.tvidal.kraft.message.Message
 import net.tvidal.kraft.message.raft.RaftMessage
 import java.lang.Thread.currentThread
-import java.util.*
+import java.util.ArrayDeque
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.SynchronousQueue
@@ -40,5 +40,4 @@ class DualQueueMessageReceiver(raftQueueSize: Int = 0, clientQueueSize: Int = 0,
         currentThread().interrupt()
         false
     }
-
 }
