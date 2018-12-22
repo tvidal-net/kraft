@@ -2,6 +2,7 @@ package net.tvidal.kraft.engine
 
 import net.tvidal.kraft.NEVER
 import net.tvidal.kraft.NOW
+import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.RaftMessage
 import net.tvidal.kraft.storage.KRaftEntries
@@ -11,22 +12,25 @@ import org.slf4j.LoggerFactory.getLogger
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class RaftFollowerState(
-
     val raft: RaftEngine,
     private val sender: MessageSender
-
 ) {
 
     private val LOG = getLogger("${RaftFollowerState::class.java.name}.${sender.node}")
 
-    val follower = sender.node
+    val follower: RaftNode = sender.node
 
-    var nextHeartbeat = NEVER; private set
-    var streaming = false; private set
+    var nextHeartbeat = NEVER
+        private set
 
-    var nextIndex = 0L; private set
+    var streaming = false
+        private set
 
-    var matchIndex = 0L; private set
+    var nextIndex = 0L
+        private set
+
+    var matchIndex = 0L
+        private set
 
     private val byteLimit = AtomicInteger()
 

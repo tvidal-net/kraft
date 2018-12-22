@@ -8,9 +8,8 @@ import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.AppendMessage
 import org.slf4j.LoggerFactory.getLogger
-import java.util.Random
 
-class RaftEngine(config: KRaftConfig) {
+internal class RaftEngine(config: KRaftConfig) {
 
     private val timeout = config.timeout
     private var nextElectionTime = NEVER
@@ -20,32 +19,41 @@ class RaftEngine(config: KRaftConfig) {
     internal val sizes = config.size
 
     val cluster = config.cluster
-    var leader: RaftNode? = null; internal set
-    var votedFor: RaftNode? = null; internal set
+
+    var leader: RaftNode? = null
+        internal set
+
+    var votedFor: RaftNode? = null
+        internal set
+
     val votesReceived = mutableSetOf<RaftNode>()
 
     val self get() = cluster.self
     val others get() = cluster.others
-    val singleNodeCluster get() = others.isEmpty()
+    val singleNodeCluster get() = cluster.single
 
     val lastLogTerm get() = storage.lastLogTerm
     val lastLogIndex get() = storage.lastLogIndex
 
-    var term = 0L; internal set
-    var commitIndex = 0L; private set
-    var leaderCommitIndex = 0L; internal set
-    var logConsistent = false; internal set
+    var term = 0L
+        internal set
 
-    val heartbeatWindowMillis get() = timeout.heartbeatTimeout
+    var commitIndex = 0L
+        private set
+
+    var leaderCommitIndex = 0L
+        internal set
+
+    var logConsistent = false
+        internal set
+
+    val heartbeatWindowMillis
+        get() = timeout.heartbeatTimeout
 
     internal val followers = Followers()
 
-    private fun nextElectionTimeout(baseTimeout: Int = timeout.minElectionTimeout) = timeout.run {
-        baseTimeout + RANDOM.nextInt(maxElectionTimeout - minElectionTimeout + 1)
-    }
-
     internal fun resetElectionTimeout(now: Long) {
-        nextElectionTime = now + nextElectionTimeout()
+        nextElectionTime = timeout.nextElectionTime(now)
     }
 
     internal fun cancelElectionTimeout() {
@@ -142,7 +150,6 @@ class RaftEngine(config: KRaftConfig) {
     }
 
     companion object {
-        private val RANDOM = Random()
         private val LOG = getLogger(RaftEngine::class.java)
     }
 }
