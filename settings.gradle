@@ -1,6 +1,8 @@
 rootProject.name = 'kraft'
 
 include ':cli'
+include ':client'
+include ':codec'
 include ':protocol'
 include ':server'
 include ':local'

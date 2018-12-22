@@ -9,6 +9,9 @@ dependencies {
     implementation project(':kraft-protocol')
     implementation project(':kraft-server')
     implementation project(':kraft-local')
+    implementation project(':kraft-codec')
+    implementation project(':kraft-client')
+    
     implementation("com.google.guava:guava:$guavaVersion") { transitive = false }
     implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
 
