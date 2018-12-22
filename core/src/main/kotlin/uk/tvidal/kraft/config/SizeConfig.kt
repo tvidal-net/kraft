@@ -1,4 +1,4 @@
-package net.tvidal.kraft.config
+package uk.tvidal.kraft.config
 
 data class SizeConfig(
     val maxEntrySize: Int = 4 * 1024 * 1024,

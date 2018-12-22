@@ -1,11 +1,11 @@
-package net.tvidal.kraft.engine
+package uk.tvidal.kraft.engine
 
-import net.tvidal.kraft.domain.RaftNode
-import net.tvidal.kraft.message.raft.AppendAckMessage
-import net.tvidal.kraft.message.raft.AppendMessage
-import net.tvidal.kraft.message.raft.RequestVoteMessage
-import net.tvidal.kraft.message.raft.VoteMessage
-import net.tvidal.kraft.storage.KRaftEntries
+import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.message.raft.AppendAckMessage
+import uk.tvidal.kraft.message.raft.AppendMessage
+import uk.tvidal.kraft.message.raft.RequestVoteMessage
+import uk.tvidal.kraft.message.raft.VoteMessage
+import uk.tvidal.kraft.storage.KRaftEntries
 
 internal fun RaftEngine.sendVote(to: RaftNode, vote: Boolean) {
     val msg = VoteMessage(self, term, vote)

@@ -1,13 +1,13 @@
-package net.tvidal.kraft.tools
+package uk.tvidal.kraft.tools
 
 import joptsimple.OptionParser
 import joptsimple.OptionSet
-import net.tvidal.kraft.Description
-import net.tvidal.kraft.KRaftTool
-import net.tvidal.kraft.SUCCESS
-import net.tvidal.kraft.intArgument
-import net.tvidal.kraft.longArgument
-import net.tvidal.kraft.option
+import uk.tvidal.kraft.Description
+import uk.tvidal.kraft.KRaftTool
+import uk.tvidal.kraft.SUCCESS
+import uk.tvidal.kraft.intArgument
+import uk.tvidal.kraft.longArgument
+import uk.tvidal.kraft.option
 
 @Description("Test tool")
 class TestTool(parser: OptionParser) : KRaftTool {

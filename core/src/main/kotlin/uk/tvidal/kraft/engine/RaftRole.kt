@@ -1,19 +1,19 @@
-package net.tvidal.kraft.engine
+package uk.tvidal.kraft.engine
 
-import net.tvidal.kraft.BEFORE_LOG
-import net.tvidal.kraft.FOREVER
-import net.tvidal.kraft.logging.KRaftLogger
-import net.tvidal.kraft.message.client.ClientAppendMessage
-import net.tvidal.kraft.message.raft.AppendAckMessage
-import net.tvidal.kraft.message.raft.AppendMessage
-import net.tvidal.kraft.message.raft.RaftMessage
-import net.tvidal.kraft.message.raft.RaftMessageType.APPEND
-import net.tvidal.kraft.message.raft.RaftMessageType.APPEND_ACK
-import net.tvidal.kraft.message.raft.RaftMessageType.REQUEST_VOTE
-import net.tvidal.kraft.message.raft.RaftMessageType.VOTE
-import net.tvidal.kraft.message.raft.RequestVoteMessage
-import net.tvidal.kraft.message.raft.VoteMessage
-import net.tvidal.kraft.storage.flush
+import uk.tvidal.kraft.BEFORE_LOG
+import uk.tvidal.kraft.FOREVER
+import uk.tvidal.kraft.logging.KRaftLogger
+import uk.tvidal.kraft.message.client.ClientAppendMessage
+import uk.tvidal.kraft.message.raft.AppendAckMessage
+import uk.tvidal.kraft.message.raft.AppendMessage
+import uk.tvidal.kraft.message.raft.RaftMessage
+import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND
+import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND_ACK
+import uk.tvidal.kraft.message.raft.RaftMessageType.REQUEST_VOTE
+import uk.tvidal.kraft.message.raft.RaftMessageType.VOTE
+import uk.tvidal.kraft.message.raft.RequestVoteMessage
+import uk.tvidal.kraft.message.raft.VoteMessage
+import uk.tvidal.kraft.storage.flush
 
 internal enum class RaftRole {
 

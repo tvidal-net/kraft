@@ -1,6 +1,6 @@
-package net.tvidal.kraft.storage
+package uk.tvidal.kraft.storage
 
-import net.tvidal.kraft.LONG_BYTES
+import uk.tvidal.kraft.LONG_BYTES
 import java.nio.ByteBuffer
 import java.nio.ByteBuffer.allocate
 import java.nio.ByteBuffer.wrap

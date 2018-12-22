@@ -1,6 +1,6 @@
-package net.tvidal.kraft.message.client
+package uk.tvidal.kraft.message.client
 
-import net.tvidal.kraft.message.MessageType
+import uk.tvidal.kraft.message.MessageType
 
 enum class ClientMessageType : MessageType {
 

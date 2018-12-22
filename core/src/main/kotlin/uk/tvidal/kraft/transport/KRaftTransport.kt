@@ -1,6 +1,6 @@
-package net.tvidal.kraft.transport
+package uk.tvidal.kraft.transport
 
-import net.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.domain.RaftNode
 
 interface KRaftTransport {
 

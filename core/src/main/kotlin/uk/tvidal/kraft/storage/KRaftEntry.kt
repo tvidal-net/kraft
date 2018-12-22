@@ -1,4 +1,4 @@
-package net.tvidal.kraft.storage
+package uk.tvidal.kraft.storage
 
 import java.util.Arrays
 

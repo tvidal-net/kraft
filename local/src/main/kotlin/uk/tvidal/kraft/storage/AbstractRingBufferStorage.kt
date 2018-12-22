@@ -1,4 +1,4 @@
-package net.tvidal.kraft.storage
+package uk.tvidal.kraft.storage
 
 abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage {
 

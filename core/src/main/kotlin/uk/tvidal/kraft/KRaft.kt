@@ -1,7 +1,7 @@
-package net.tvidal.kraft
+package uk.tvidal.kraft
 
-import net.tvidal.kraft.domain.RaftCluster
-import net.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.domain.RaftCluster
+import uk.tvidal.kraft.domain.RaftNode
 
 const val DEFAULT_CLUSTER_NAME = "KRAFT"
 const val FOREVER = 253402300799999L // 9999-12-31 23:59:59.999

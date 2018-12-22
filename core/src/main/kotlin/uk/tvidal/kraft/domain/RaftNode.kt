@@ -1,6 +1,6 @@
-package net.tvidal.kraft.domain
+package uk.tvidal.kraft.domain
 
-import net.tvidal.kraft.DEFAULT_CLUSTER_NAME
+import uk.tvidal.kraft.DEFAULT_CLUSTER_NAME
 
 data class RaftNode(
     val index: Byte,

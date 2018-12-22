@@ -1,4 +1,4 @@
-package net.tvidal.kraft.ansi
+package uk.tvidal.kraft.ansi
 
 enum class AnsiColor(private val id: Int) {
 

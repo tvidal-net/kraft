@@ -1,4 +1,4 @@
-package net.tvidal.kraft.logging
+package uk.tvidal.kraft.logging
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

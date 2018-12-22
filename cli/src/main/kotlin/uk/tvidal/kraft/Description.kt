@@ -1,4 +1,4 @@
-package net.tvidal.kraft
+package uk.tvidal.kraft
 
 annotation class Description(
 

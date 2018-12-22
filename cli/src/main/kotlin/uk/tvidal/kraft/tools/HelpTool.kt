@@ -1,15 +1,15 @@
-package net.tvidal.kraft.tools
+package uk.tvidal.kraft.tools
 
 import joptsimple.OptionParser
 import joptsimple.OptionSet
-import net.tvidal.kraft.DEFAULT_MARGIN
-import net.tvidal.kraft.DEFAULT_WIDTH
-import net.tvidal.kraft.Description
-import net.tvidal.kraft.ERROR_SIMPLE
-import net.tvidal.kraft.HELP_DESCRIPTION
-import net.tvidal.kraft.KRaftTool
-import net.tvidal.kraft.SPACE
-import net.tvidal.kraft.TOOLS
+import uk.tvidal.kraft.DEFAULT_MARGIN
+import uk.tvidal.kraft.DEFAULT_WIDTH
+import uk.tvidal.kraft.Description
+import uk.tvidal.kraft.ERROR_SIMPLE
+import uk.tvidal.kraft.HELP_DESCRIPTION
+import uk.tvidal.kraft.KRaftTool
+import uk.tvidal.kraft.SPACE
+import uk.tvidal.kraft.TOOLS
 import kotlin.reflect.KClass
 
 @Description(HELP_DESCRIPTION)

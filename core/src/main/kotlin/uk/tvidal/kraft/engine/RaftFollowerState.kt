@@ -1,14 +1,14 @@
-package net.tvidal.kraft.engine
+package uk.tvidal.kraft.engine
 
-import net.tvidal.kraft.NEVER
-import net.tvidal.kraft.NOW
-import net.tvidal.kraft.domain.RaftNode
-import net.tvidal.kraft.logging.KRaftLogger
-import net.tvidal.kraft.message.raft.AppendAckMessage
-import net.tvidal.kraft.message.raft.RaftMessage
-import net.tvidal.kraft.storage.KRaftEntries
-import net.tvidal.kraft.storage.emptyEntries
-import net.tvidal.kraft.transport.MessageSender
+import uk.tvidal.kraft.NEVER
+import uk.tvidal.kraft.NOW
+import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.logging.KRaftLogger
+import uk.tvidal.kraft.message.raft.AppendAckMessage
+import uk.tvidal.kraft.message.raft.RaftMessage
+import uk.tvidal.kraft.storage.KRaftEntries
+import uk.tvidal.kraft.storage.emptyEntries
+import uk.tvidal.kraft.transport.MessageSender
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class RaftFollowerState(

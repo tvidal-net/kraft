@@ -1,4 +1,4 @@
-package net.tvidal.kraft.storage
+package uk.tvidal.kraft.storage
 
 class KRaftEntries constructor(
     private val data: Collection<KRaftEntry>

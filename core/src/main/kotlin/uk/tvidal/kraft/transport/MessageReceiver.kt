@@ -1,6 +1,6 @@
-package net.tvidal.kraft.transport
+package uk.tvidal.kraft.transport
 
-import net.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.Message
 
 interface MessageReceiver {
 

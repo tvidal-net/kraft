@@ -1,13 +1,13 @@
-package net.tvidal.kraft.engine
+package uk.tvidal.kraft.engine
 
-import net.tvidal.kraft.BEFORE_LOG
-import net.tvidal.kraft.KRaftError
-import net.tvidal.kraft.NEVER
-import net.tvidal.kraft.config.KRaftConfig
-import net.tvidal.kraft.domain.RaftNode
-import net.tvidal.kraft.logging.KRaftLogging
-import net.tvidal.kraft.message.raft.AppendAckMessage
-import net.tvidal.kraft.message.raft.AppendMessage
+import uk.tvidal.kraft.BEFORE_LOG
+import uk.tvidal.kraft.KRaftError
+import uk.tvidal.kraft.NEVER
+import uk.tvidal.kraft.config.KRaftConfig
+import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.logging.KRaftLogging
+import uk.tvidal.kraft.message.raft.AppendAckMessage
+import uk.tvidal.kraft.message.raft.AppendMessage
 
 internal class RaftEngine(config: KRaftConfig) {
 

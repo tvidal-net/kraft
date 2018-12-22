@@ -1,4 +1,4 @@
-package net.tvidal.kraft.ansi
+package uk.tvidal.kraft.ansi
 
 val hasAnsiSupport by lazy { System.console() != null && terminalColors() > 2 }
 

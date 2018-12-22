@@ -1,7 +1,7 @@
-package net.tvidal.kraft.storage
+package uk.tvidal.kraft.storage
 
-import net.tvidal.kraft.LONG_BYTES
-import net.tvidal.kraft.longEntries
+import uk.tvidal.kraft.LONG_BYTES
+import uk.tvidal.kraft.longEntries
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

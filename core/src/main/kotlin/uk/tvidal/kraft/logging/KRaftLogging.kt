@@ -1,4 +1,4 @@
-package net.tvidal.kraft.logging
+package uk.tvidal.kraft.logging
 
 abstract class KRaftLogging {
 

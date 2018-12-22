@@ -1,8 +1,8 @@
-package net.tvidal.kraft.config
+package uk.tvidal.kraft.config
 
-import net.tvidal.kraft.domain.RaftCluster
-import net.tvidal.kraft.storage.KRaftStorage
-import net.tvidal.kraft.transport.KRaftTransport
+import uk.tvidal.kraft.domain.RaftCluster
+import uk.tvidal.kraft.storage.KRaftStorage
+import uk.tvidal.kraft.transport.KRaftTransport
 
 data class KRaftConfig(
     val cluster: RaftCluster,

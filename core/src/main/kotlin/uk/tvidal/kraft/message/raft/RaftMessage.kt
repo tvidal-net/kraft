@@ -1,6 +1,6 @@
-package net.tvidal.kraft.message.raft
+package uk.tvidal.kraft.message.raft
 
-import net.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.Message
 
 interface RaftMessage : Message {
 

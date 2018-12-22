@@ -1,6 +1,6 @@
-package net.tvidal.kraft.message.client
+package uk.tvidal.kraft.message.client
 
-import net.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.Message
 
 interface ClientMessage : Message {
 

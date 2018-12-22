@@ -1,4 +1,4 @@
-package net.tvidal.kraft.config
+package uk.tvidal.kraft.config
 
 import java.util.Random
 

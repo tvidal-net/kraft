@@ -1,10 +1,10 @@
-package net.tvidal.kraft
+package uk.tvidal.kraft
 
-import net.tvidal.kraft.domain.RaftCluster
-import net.tvidal.kraft.message.Message
-import net.tvidal.kraft.message.raft.VoteMessage
-import net.tvidal.kraft.transport.LocalTransportFactory
-import net.tvidal.kraft.transport.MessageReceiver
+import uk.tvidal.kraft.domain.RaftCluster
+import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.raft.VoteMessage
+import uk.tvidal.kraft.transport.LocalTransportFactory
+import uk.tvidal.kraft.transport.MessageReceiver
 import org.junit.jupiter.api.Test
 import kotlin.test.assertSame
 

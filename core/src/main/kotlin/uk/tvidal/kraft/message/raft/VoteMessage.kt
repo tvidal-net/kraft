@@ -1,7 +1,7 @@
-package net.tvidal.kraft.message.raft
+package uk.tvidal.kraft.message.raft
 
-import net.tvidal.kraft.domain.RaftNode
-import net.tvidal.kraft.message.raft.RaftMessageType.VOTE
+import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.message.raft.RaftMessageType.VOTE
 
 class VoteMessage(
 

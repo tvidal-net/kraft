@@ -1,6 +1,6 @@
-package net.tvidal.kraft.message.raft
+package uk.tvidal.kraft.message.raft
 
-import net.tvidal.kraft.message.MessageType
+import uk.tvidal.kraft.message.MessageType
 
 enum class RaftMessageType : MessageType {
 

@@ -1,4 +1,4 @@
-package net.tvidal.kraft.storage
+package uk.tvidal.kraft.storage
 
 class RingBufferStorage(size: Int = 4096) : AbstractRingBufferStorage(size) {
 

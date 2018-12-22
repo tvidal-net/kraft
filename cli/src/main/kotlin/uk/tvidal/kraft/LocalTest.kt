@@ -1,6 +1,6 @@
-package net.tvidal.kraft
+package uk.tvidal.kraft
 
-import net.tvidal.kraft.logging.KRaftLogger
+import uk.tvidal.kraft.logging.KRaftLogger
 import java.util.logging.Level
 
 fun main(args: Array<String>) {

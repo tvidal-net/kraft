@@ -1,8 +1,8 @@
-package net.tvidal.kraft.message.raft
+package uk.tvidal.kraft.message.raft
 
-import net.tvidal.kraft.domain.RaftNode
-import net.tvidal.kraft.message.raft.RaftMessageType.APPEND
-import net.tvidal.kraft.storage.KRaftEntries
+import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND
+import uk.tvidal.kraft.storage.KRaftEntries
 
 class AppendMessage(
 

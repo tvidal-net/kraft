@@ -1,11 +1,11 @@
-package net.tvidal.kraft
+package uk.tvidal.kraft
 
 import com.google.common.reflect.ClassPath
 import joptsimple.OptionException
 import joptsimple.OptionParser
 import joptsimple.OptionSet
-import net.tvidal.kraft.ansi.AnsiColor.RED
-import net.tvidal.kraft.ansi.AnsiColor.YELLOW
+import uk.tvidal.kraft.ansi.AnsiColor.RED
+import uk.tvidal.kraft.ansi.AnsiColor.YELLOW
 import java.lang.System.exit
 import java.lang.System.getProperty
 import java.lang.System.setProperty
@@ -32,7 +32,7 @@ private val REGEX_TOOL = Regex("Tool$", IGNORE_CASE)
 private val REGEX_CAMEL = Regex("([a-z])([A-Z])")
 private const val REPLACE_CAMEL = "\$1-\$2"
 
-private const val TOOLS_PACKAGE = "net.tvidal.kraft.tools"
+private const val TOOLS_PACKAGE = "uk.tvidal.kraft.tools"
 
 var logbackConfigurationFile: String
     get() = getProperty(LOGBACK_CONFIG)

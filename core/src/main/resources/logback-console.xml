@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <logger name="net.tvidal" level="DEBUG" />
+    <logger name="uk.tvidal" level="DEBUG" />
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

@@ -1,6 +1,6 @@
-package net.tvidal.kraft.message
+package uk.tvidal.kraft.message
 
-import net.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.domain.RaftNode
 
 abstract class AbstractMessage(
 
