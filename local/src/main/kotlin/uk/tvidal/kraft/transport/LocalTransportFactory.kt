@@ -12,7 +12,7 @@ class LocalTransportFactory {
 
     private val transport = object : KRaftTransport {
 
-        override fun sender(node: RaftNode) = senders.getOrPut(node) { LocalSender(node) }
+        override fun sender(node: RaftNode) = senders.computeIfAbsent(node) { LocalSender(node) }
 
         override fun register(node: RaftNode, receiver: MessageReceiver) {
             receivers[node] = receiver

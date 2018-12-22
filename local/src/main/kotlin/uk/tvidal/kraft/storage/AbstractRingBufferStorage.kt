@@ -27,11 +27,14 @@ abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage
         else -> data[pos(index)]
     }
 
-    protected operator fun set(index: Long, value: KRaftEntry) {
-        val pos = pos(index)
-        data[pos] = value
+    protected fun truncateAt(index: Long) {
         lastLogIndex = index
-        lastLogTerm = value.term
+    }
+
+    protected fun append(entry: KRaftEntry) {
+        val index = pos(++lastLogIndex)
+        data[index] = entry
+        lastLogTerm = entry.term
     }
 
     private fun pos(index: Long) = when {
