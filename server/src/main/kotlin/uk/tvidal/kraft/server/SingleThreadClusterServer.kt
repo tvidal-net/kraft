@@ -1,14 +1,14 @@
-package uk.tvidal.kraft.runner
+package uk.tvidal.kraft.server
 
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftEngineImpl
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.concurrent.atomic.AtomicReference
 
-internal class SingleThreadClusterRunner(
+internal class SingleThreadClusterServer(
     clusterConfig: List<KRaftConfig>,
     private val loopTolerance: LoopToleranceController = LoopToleranceController()
-) : KRaftRunner, Runnable {
+) : KRaftServer, Runnable {
 
     private companion object : KRaftLogging()
 
@@ -21,7 +21,7 @@ internal class SingleThreadClusterRunner(
 
     override fun start() {
         if (!running) {
-            val newThread = Thread(this, THREAD_NAME)
+            val newThread = singleThread(this)
             if (thread.compareAndSet(null, newThread)) {
                 newThread.start()
             }

@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.runner
+package uk.tvidal.kraft.server
 
 import java.lang.System.currentTimeMillis
 
