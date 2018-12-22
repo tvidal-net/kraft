@@ -6,7 +6,9 @@ interface MessageReceiver {
 
     val size: Int
 
-    fun poll(): Message
+    fun poll(): Message?
 
     fun offer(message: Message): Boolean
+
+    fun removeIf(predicate: (Message) -> Boolean)
 }

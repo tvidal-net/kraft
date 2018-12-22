@@ -1,11 +1,11 @@
 package uk.tvidal.kraft
 
+import org.junit.jupiter.api.Test
 import uk.tvidal.kraft.domain.RaftCluster
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.raft.VoteMessage
 import uk.tvidal.kraft.transport.LocalTransportFactory
 import uk.tvidal.kraft.transport.MessageReceiver
-import org.junit.jupiter.api.Test
 import kotlin.test.assertSame
 
 class LocalTransportTest {
@@ -22,13 +22,15 @@ class LocalTransportTest {
 
         override val size = 0
 
-        override fun poll() = message!!
+        override fun poll() = message
 
         override fun offer(message: Message): Boolean {
             this.message = message
             println(message)
             return true
         }
+
+        override fun removeIf(predicate: (Message) -> Boolean) = TODO()
     }
 
     @Test

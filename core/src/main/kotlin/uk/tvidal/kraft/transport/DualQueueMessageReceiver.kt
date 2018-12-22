@@ -8,13 +8,26 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.SynchronousQueue
 
-class DualQueueMessageReceiver(raftQueueSize: Int = 0, clientQueueSize: Int = 0, private val maxDrainCount: Int = 10) : MessageReceiver {
+class DualQueueMessageReceiver(
+    private val raftQueue: BlockingQueue<Message>,
+    private val clientQueue: BlockingQueue<Message>,
+    private val maxDrainCount: Int = MAX_DRAIN_COUNT
+) : MessageReceiver {
 
-    private val raftQueue = createIncomingMessageQueue(raftQueueSize)
-    private val clientQueue = createIncomingMessageQueue(clientQueueSize)
+    constructor(
+        raftQueueSize: Int = 64,
+        clientQueueSize: Int = 4096,
+        maxDrainCount: Int = MAX_DRAIN_COUNT
+    ) : this(
+        raftQueue = createIncomingMessageQueue(raftQueueSize),
+        clientQueue = createIncomingMessageQueue(clientQueueSize),
+        maxDrainCount = maxDrainCount
+    )
+
     private val messages = ArrayDeque<Message>(maxDrainCount)
 
     companion object {
+        private const val MAX_DRAIN_COUNT = 10
         private fun createIncomingMessageQueue(queueSize: Int): BlockingQueue<Message> = when {
             queueSize <= 0 -> SynchronousQueue(true)
             else -> ArrayBlockingQueue(queueSize, true)
@@ -22,9 +35,9 @@ class DualQueueMessageReceiver(raftQueueSize: Int = 0, clientQueueSize: Int = 0,
     }
 
     override val size: Int
-        get() = raftQueue.size + clientQueue.size
+        get() = raftQueue.size + clientQueue.size + messages.size
 
-    override fun poll(): Message {
+    override fun poll(): Message? {
         if (messages.isEmpty()) {
             raftQueue.drainTo(messages, maxDrainCount - messages.size)
             clientQueue.drainTo(messages, maxDrainCount - messages.size)
@@ -39,5 +52,11 @@ class DualQueueMessageReceiver(raftQueueSize: Int = 0, clientQueueSize: Int = 0,
     } catch (e: InterruptedException) {
         currentThread().interrupt()
         false
+    }
+
+    override fun removeIf(predicate: (Message) -> Boolean) {
+        messages.removeIf(predicate)
+        raftQueue.removeIf(predicate)
+        clientQueue.removeIf(predicate)
     }
 }
