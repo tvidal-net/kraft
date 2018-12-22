@@ -32,17 +32,13 @@ subprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
         kotlinOptions {
             jvmTarget = project.targetCompatibility
-//            allWarningsAsErrors = true
+            allWarningsAsErrors = true
         }
     }
 
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib"
         implementation "org.jetbrains.kotlin:kotlin-reflect"
-
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-
-        implementation "com.google.guava:guava:$guavaVersion"
 
         testImplementation "org.jetbrains.kotlin:kotlin-test"
         testImplementation "org.testng:testng:$testngVersion"

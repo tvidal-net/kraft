@@ -1,6 +1,7 @@
 dependencies {
     implementation project(':kraft-core')
     implementation project(':kraft-local')
+    implementation "com.google.guava:guava:$guavaVersion"
     implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
 
     runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
