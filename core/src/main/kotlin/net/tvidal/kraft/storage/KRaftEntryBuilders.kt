@@ -16,12 +16,12 @@ fun emptyEntry(term: Long) = KRaftEntry(term, EMPTY_PAYLOAD)
 
 fun entryOf(term: Long, payload: ByteArray) = KRaftEntry(term, payload)
 
-fun entryOf(term: Long, payload: ByteBuffer) = entryOf(term, payload.array())
+fun entryOf(term: Long, payload: ByteBuffer) = KRaftEntry(term, payload.array())
 
-fun entryOf(term: Long, payload: Long) = entryOf(term, Longs.toByteArray(payload))
+fun entryOf(term: Long, payload: Long) = KRaftEntry(term, Longs.toByteArray(payload))
 
 fun entryOf(term: Long, payload: String, charset: Charset = defaultCharset()) =
-    entryOf(term, payload.toByteArray(charset))
+    KRaftEntry(term, payload.toByteArray(charset))
 
 fun KRaftEntry.longValue() = Longs.fromByteArray(payload)
 
@@ -30,5 +30,9 @@ fun KRaftEntry.stringValue(charset: Charset = defaultCharset()) = String(payload
 fun emptyEntries() = EMPTY_ENTRIES
 
 fun singleEntry(entry: KRaftEntry) = KRaftEntries(listOf(entry))
+
+fun entries(entries: Collection<KRaftEntry>) = KRaftEntries(entries)
+
+fun entries(vararg entries: KRaftEntry) = entries(entries.toList())
 
 fun flush(term: Long) = singleEntry(emptyEntry(term))

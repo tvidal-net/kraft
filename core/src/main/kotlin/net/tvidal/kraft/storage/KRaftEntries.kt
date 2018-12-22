@@ -1,6 +1,6 @@
 package net.tvidal.kraft.storage
 
-class KRaftEntries internal constructor(
+class KRaftEntries constructor(
     private val data: Collection<KRaftEntry>
 ) : Iterable<KRaftEntry> {
 

@@ -2,7 +2,7 @@ package net.tvidal.kraft.storage
 
 import java.util.Arrays
 
-class KRaftEntry internal constructor(
+class KRaftEntry constructor(
     val term: Long,
     val payload: ByteArray
 ) {
