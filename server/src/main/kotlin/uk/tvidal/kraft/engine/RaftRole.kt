@@ -1,7 +1,6 @@
 package uk.tvidal.kraft.engine
 
 import uk.tvidal.kraft.BEFORE_LOG
-import uk.tvidal.kraft.FOREVER
 import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
@@ -13,8 +12,13 @@ import uk.tvidal.kraft.message.raft.VoteMessage
 enum class RaftRole {
 
     FOLLOWER {
-        override fun enter(now: Long, raft: RaftEngine) =
-            raft.resetElectionTimeout(now)
+        override fun run(now: Long, raft: RaftEngine) = with(raft) {
+            if (now >= nextElectionTime) CANDIDATE
+            else null
+        }
+
+        override fun RaftEngine.enterRole(now: Long) =
+            resetElectionTimeout(now)
 
         override fun RaftEngine.exitRole(now: Long) {
             leader = null
@@ -27,7 +31,7 @@ enum class RaftRole {
 
             logConsistent = matchIndex > BEFORE_LOG
             if (logConsistent) {
-                updateCommitIndex(matchIndex)
+                commitIndex = matchIndex
                 ack(msg.from, matchIndex)
             } else {
                 val nackIndex = nackIndex(msg)
@@ -53,7 +57,7 @@ enum class RaftRole {
     },
 
     CANDIDATE {
-        override fun enter(now: Long, raft: RaftEngine) = with(raft) {
+        override fun RaftEngine.enterRole(now: Long) {
             term++
             votedFor = self
             votesReceived.clear()
@@ -63,11 +67,10 @@ enum class RaftRole {
         }
 
         override fun RaftEngine.vote(now: Long, msg: VoteMessage): RaftRole? {
-            log.info { "vote from=${msg.from} term=${msg.term}" }
+            log.info { "vote=${msg.vote} from=${msg.from} term=${msg.term}" }
             if (msg.vote) {
-                votesReceived.add(msg.from)
-                val votesReceived = votesReceived.size
-                if (votesReceived >= cluster.majority) {
+                votesReceived += msg.from
+                if (votesReceived.size >= cluster.majority) {
                     return LEADER
                 }
             }
@@ -78,15 +81,16 @@ enum class RaftRole {
     },
 
     LEADER {
-        override fun run(now: Long, raft: RaftEngine) = raft.updateFollowers(now)
+        override fun run(now: Long, raft: RaftEngine): RaftRole? {
+            raft.updateFollowers(now)
+            return null
+        }
 
-        override fun enter(now: Long, raft: RaftEngine) {
-            with(raft) {
-                cancelElectionTimeout()
-                resetFollowers()
-                leader = self
-                flush()
-            }
+        override fun RaftEngine.enterRole(now: Long) {
+            cancelElectionTimeout()
+            resetFollowers()
+            leader = self
+            flush()
         }
 
         override fun RaftEngine.exitRole(now: Long) {
@@ -102,9 +106,7 @@ enum class RaftRole {
     ERROR {
         override fun reset(): RaftRole? = null
 
-        override fun enter(now: Long, raft: RaftEngine) = with(raft) {
-            resetElectionTimeout(FOREVER)
-        }
+        override fun RaftEngine.enterRole(now: Long) = cancelElectionTimeout()
     };
 
     @Suppress("LeakingThis")
@@ -112,9 +114,14 @@ enum class RaftRole {
 
     protected open fun reset(): RaftRole? = FOLLOWER
 
-    internal open fun run(now: Long, raft: RaftEngine) {}
+    internal open fun run(now: Long, raft: RaftEngine): RaftRole? = null
 
-    internal open fun enter(now: Long, raft: RaftEngine) {}
+    internal fun enter(now: Long, raft: RaftEngine) {
+        log.info { "${raft.self}: became $this" }
+        raft.enterRole(now)
+    }
+
+    internal open fun RaftEngine.enterRole(now: Long) {}
 
     internal fun exit(now: Long, raft: RaftEngine) = with(raft) {
         resetElection()
@@ -131,12 +138,15 @@ enum class RaftRole {
 
     internal open fun RaftEngine.vote(now: Long, msg: VoteMessage): RaftRole? = null
 
-    private fun RaftEngine.processMessage(now: Long, msg: RaftMessage) = when (msg) {
-        is AppendMessage -> append(now, msg)
-        is AppendAckMessage -> appendAck(now, msg)
-        is RequestVoteMessage -> requestVote(now, msg)
-        is VoteMessage -> vote(now, msg)
-        else -> null
+    private fun RaftEngine.processMessage(now: Long, msg: RaftMessage): RaftRole? {
+        log.debug { "processMessage $msg" }
+        return when (msg) {
+            is AppendMessage -> append(now, msg)
+            is AppendAckMessage -> appendAck(now, msg)
+            is RequestVoteMessage -> requestVote(now, msg)
+            is VoteMessage -> vote(now, msg)
+            else -> null
+        }
     }
 
     internal fun process(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? = when {

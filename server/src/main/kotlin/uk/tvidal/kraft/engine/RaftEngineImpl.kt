@@ -3,6 +3,7 @@ package uk.tvidal.kraft.engine
 import uk.tvidal.kraft.BEFORE_LOG
 import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.config.KRaftConfig
+import uk.tvidal.kraft.engine.RaftRole.ERROR
 import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.client.ClientAppendMessage
@@ -34,7 +35,7 @@ internal class RaftEngineImpl(
             val lastLogIndex = storage.append(msg.data)
             if (isSingleNodeCluster) {
                 leaderCommitIndex = lastLogIndex
-                updateCommitIndex(lastLogIndex)
+                commitIndex = lastLogIndex
             }
         }
     }
@@ -73,23 +74,33 @@ internal class RaftEngineImpl(
     }
 
     override fun run(now: Long) {
-        val msg = messages.poll()
-        when (msg) {
-            is RaftMessage -> processMessage(now, msg)
-            is AppendMessage -> append(msg)
+        try {
+            val msg = messages.poll()
+            when (msg) {
+                is RaftMessage -> processMessage(now, msg)
+                is ClientAppendMessage -> clientAppend(msg)
+            }
+            val newRole = role.run(now, this)
+            updateRole(now, newRole)
+        } catch (e: Error) {
+            updateRole(now, ERROR)
+            throw e
         }
-        role.run(now, this)
     }
 
     private fun processMessage(now: Long, msg: RaftMessage) {
         do {
             val newRole = role.process(now, msg, this)
-            if (newRole != null && newRole != role) {
-                role.exit(now, this)
-                role = newRole
-                role.enter(now, this)
-            }
+            updateRole(now, newRole)
         } while (newRole != null)
+    }
+
+    private fun updateRole(now: Long, newRole: RaftRole?) {
+        if (newRole != null && newRole != role) {
+            role.exit(now, this)
+            role = newRole
+            role.enter(now, this)
+        }
     }
 
     override fun updateFollowers(now: Long) {
@@ -109,7 +120,7 @@ internal class RaftEngineImpl(
             val quorumCommitTerm = storage.termAt(quorumCommitIndex)
             if (quorumCommitTerm == term) {
                 log.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
-                updateCommitIndex(quorumCommitIndex)
+                commitIndex = quorumCommitIndex
                 followers.values.forEach(RaftFollowerState::commit)
             } else {
                 log.warn(

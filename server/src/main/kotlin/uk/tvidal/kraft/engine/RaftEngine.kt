@@ -5,12 +5,17 @@ import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
+import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
+import java.lang.System.currentTimeMillis
+import java.time.Instant
 
 internal abstract class RaftEngine(
     config: KRaftConfig
 ) : RaftState, RaftMessageSender {
+
+    private companion object : KRaftLogging()
 
     override val cluster = config.cluster
 
@@ -23,7 +28,11 @@ internal abstract class RaftEngine(
     override var term = 0L
 
     final override var commitIndex = 0L
-        private set
+        internal set(value) {
+            if (leaderCommitIndex > field) {
+                field = minOf(leaderCommitIndex, value)
+            }
+        }
 
     final override var leaderCommitIndex = 0L
         internal set
@@ -40,7 +49,12 @@ internal abstract class RaftEngine(
     override var votedFor: RaftNode? = null
     override val votesReceived: MutableSet<RaftNode> = mutableSetOf()
 
-    private var nextElectionTime = NEVER
+    internal var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
+        private set
+
+    init {
+        log.info { "Starting $self as $role (election=${Instant.ofEpochMilli(nextElectionTime)})" }
+    }
 
     val heartbeatWindow: Int
         get() = timeout.heartbeatTimeout
@@ -56,12 +70,6 @@ internal abstract class RaftEngine(
 
     fun cancelElectionTimeout() {
         nextElectionTime = NEVER
-    }
-
-    fun updateCommitIndex(matchIndex: Long) {
-        if (leaderCommitIndex > commitIndex) {
-            commitIndex = minOf(leaderCommitIndex, matchIndex)
-        }
     }
 
     fun read(fromIndex: Long, byteLimit: Int) = storage.read(fromIndex, byteLimit)
@@ -88,4 +96,6 @@ internal abstract class RaftEngine(
     abstract fun resetFollowers()
 
     abstract fun run(now: Long)
+
+    override fun toString() = "${RaftEngine::class.simpleName}($self)"
 }
