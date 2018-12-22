@@ -10,5 +10,5 @@ enum class ClientMessageType : MessageType {
     CONSUME_REGISTER,
     CONSUME_DATA,
 
-    CLIENT_ERROR
+    CLIENT_ERROR;
 }

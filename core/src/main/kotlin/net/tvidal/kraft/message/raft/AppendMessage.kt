@@ -6,8 +6,8 @@ import net.tvidal.kraft.storage.KRaftEntries
 
 class AppendMessage(
 
-    override val from: RaftNode,
-    override val term: Long,
+    from: RaftNode,
+    term: Long,
 
     val prevTerm: Long,
     val prevIndex: Long,

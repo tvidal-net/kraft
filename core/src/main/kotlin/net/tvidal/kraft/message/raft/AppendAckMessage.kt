@@ -5,8 +5,8 @@ import net.tvidal.kraft.message.raft.RaftMessageType.APPEND_ACK
 
 class AppendAckMessage(
 
-    override val from: RaftNode,
-    override val term: Long,
+    from: RaftNode,
+    term: Long,
 
     val ack: Boolean,
     val matchIndex: Long

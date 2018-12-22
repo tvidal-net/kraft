@@ -5,8 +5,8 @@ import net.tvidal.kraft.message.raft.RaftMessageType.REQUEST_VOTE
 
 class RequestVoteMessage(
 
-    override val from: RaftNode,
-    override val term: Long,
+    from: RaftNode,
+    term: Long,
 
     val lastLogTerm: Long,
     val lastLogIndex: Long
