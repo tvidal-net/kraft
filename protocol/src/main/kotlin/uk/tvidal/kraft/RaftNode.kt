@@ -1,13 +1,10 @@
-package uk.tvidal.kraft.domain
-
-import uk.tvidal.kraft.DEFAULT_CLUSTER_NAME
+package uk.tvidal.kraft
 
 data class RaftNode(
     val index: Byte,
     val cluster: String = DEFAULT_CLUSTER_NAME
 ) {
     companion object {
-        private const val MAX_CLUSTER_NAME_LENGTH = 16
         val EMPTY = RaftNode(0, "")
     }
 

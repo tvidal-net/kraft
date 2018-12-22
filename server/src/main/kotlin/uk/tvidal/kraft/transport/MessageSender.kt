@@ -1,6 +1,6 @@
 package uk.tvidal.kraft.transport
 
-import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.message.Message
 
 interface MessageSender {

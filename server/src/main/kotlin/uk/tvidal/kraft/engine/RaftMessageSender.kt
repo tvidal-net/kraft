@@ -1,6 +1,6 @@
 package uk.tvidal.kraft.engine
 
-import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage

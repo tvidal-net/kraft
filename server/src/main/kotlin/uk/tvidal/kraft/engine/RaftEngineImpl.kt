@@ -9,6 +9,7 @@ import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
+import uk.tvidal.kraft.storage.flush
 import uk.tvidal.kraft.transport.DualQueueMessageReceiver
 import uk.tvidal.kraft.transport.MessageReceiver
 
@@ -28,7 +29,7 @@ internal class RaftEngineImpl(
         transport.register(self, messages)
     }
 
-    override fun flush() = storage.append(uk.tvidal.kraft.storage.flush(term))
+    override fun flush() = storage.append(flush(term))
 
     fun clientAppend(msg: ClientAppendMessage) {
         if (role == LEADER) {
@@ -104,8 +105,7 @@ internal class RaftEngineImpl(
     inner class Followers {
 
         private val followers = others
-            .map { RaftFollowerState(this@RaftEngineImpl, transport.sender(it)) }
-            .associateBy { it.follower }
+            .associate { it to RaftFollowerState(this@RaftEngineImpl, transport.sender(it)) }
 
         fun reset() {
             followers.values.forEach(RaftFollowerState::reset)

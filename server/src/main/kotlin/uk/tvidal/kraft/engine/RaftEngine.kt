@@ -2,8 +2,8 @@ package uk.tvidal.kraft.engine
 
 import uk.tvidal.kraft.KRaftError
 import uk.tvidal.kraft.NEVER
+import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.config.KRaftConfig
-import uk.tvidal.kraft.domain.RaftNode
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.message.raft.AppendMessage
 

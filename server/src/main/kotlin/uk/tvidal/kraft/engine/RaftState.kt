@@ -1,7 +1,7 @@
 package uk.tvidal.kraft.engine
 
-import uk.tvidal.kraft.domain.RaftCluster
-import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.RaftCluster
+import uk.tvidal.kraft.RaftNode
 
 interface RaftState {
 

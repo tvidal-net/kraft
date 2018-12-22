@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.domain
+package uk.tvidal.kraft
 
 data class RaftCluster(
     val self: RaftNode,

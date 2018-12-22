@@ -1,6 +1,6 @@
 package uk.tvidal.kraft.message.raft
 
-import uk.tvidal.kraft.domain.RaftNode
+import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND_ACK
 
 class AppendAckMessage(
