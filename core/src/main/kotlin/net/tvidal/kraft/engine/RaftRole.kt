@@ -2,6 +2,7 @@ package net.tvidal.kraft.engine
 
 import net.tvidal.kraft.BEFORE_LOG
 import net.tvidal.kraft.FOREVER
+import net.tvidal.kraft.logging.KRaftLogger
 import net.tvidal.kraft.message.client.ClientAppendMessage
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.AppendMessage
@@ -13,7 +14,6 @@ import net.tvidal.kraft.message.raft.RaftMessageType.VOTE
 import net.tvidal.kraft.message.raft.RequestVoteMessage
 import net.tvidal.kraft.message.raft.VoteMessage
 import net.tvidal.kraft.storage.flush
-import org.slf4j.LoggerFactory.getLogger
 
 internal enum class RaftRole {
 
@@ -75,7 +75,7 @@ internal enum class RaftRole {
         }
 
         override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? {
-            log.info("vote from={} term={}", msg.from, msg.term)
+            log.info { "vote from=${msg.from} term=${msg.term}" }
             if (msg.vote) {
                 raft.votesReceived.add(msg.from)
                 val votesReceived = raft.votesReceived.size
@@ -133,7 +133,7 @@ internal enum class RaftRole {
         }
     };
 
-    protected val log = getLogger("${RaftRole::class.java.name}.$name")!!
+    protected val log by lazy { KRaftLogger(this) }
 
     protected open fun run(now: Long, raft: RaftEngine) {}
 

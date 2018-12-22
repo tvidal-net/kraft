@@ -5,11 +5,13 @@ import net.tvidal.kraft.KRaftError
 import net.tvidal.kraft.NEVER
 import net.tvidal.kraft.config.KRaftConfig
 import net.tvidal.kraft.domain.RaftNode
+import net.tvidal.kraft.logging.KRaftLogging
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.AppendMessage
-import org.slf4j.LoggerFactory.getLogger
 
 internal class RaftEngine(config: KRaftConfig) {
+
+    private companion object : KRaftLogging()
 
     private val timeout = config.timeout
     private var nextElectionTime = NEVER
@@ -94,17 +96,17 @@ internal class RaftEngine(config: KRaftConfig) {
 
             if (prevIndex < lastLogIndex) {
                 if (commitIndex > prevIndex) {
-                    LOG.warn(logMessage, *logData, "CANNOT TRUNCATE BEFORE COMMIT_INDEX: $commitIndex")
+                    log.warn(logMessage, *logData, "CANNOT TRUNCATE BEFORE COMMIT_INDEX: $commitIndex")
                     return BEFORE_LOG
                 } else {
-                    LOG.info(logMessage, *logData, "TRUNCATE LOG")
+                    log.info(logMessage, *logData, "TRUNCATE LOG")
                 }
             } else {
-                LOG.debug(logMessage, *logData, "OK")
+                log.debug(logMessage, *logData, "OK")
             }
             return prevIndex + 1
         }
-        LOG.warn(logMessage, *logData, "LOG IS INCONSISTENT")
+        log.warn(logMessage, *logData, "LOG IS INCONSISTENT")
         return BEFORE_LOG
     }
 
@@ -125,7 +127,7 @@ internal class RaftEngine(config: KRaftConfig) {
         fun ack(msg: AppendAckMessage) {
             val follower = followers[msg.from]
             if (follower != null) follower.ack(msg)
-            else LOG.error("There is no state for follower {}", msg.from)
+            else log.error("There is no state for follower {}", msg.from)
         }
 
         fun updateCommitIndex() {
@@ -136,20 +138,16 @@ internal class RaftEngine(config: KRaftConfig) {
 
                 val quorumCommitTerm = storage.termAt(quorumCommitIndex)
                 if (quorumCommitTerm == term) {
-                    LOG.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
+                    log.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
                     updateCommitIndex(quorumCommitIndex)
                     followers.values.forEach(RaftFollowerState::commit)
                 } else {
-                    LOG.warn(
+                    log.warn(
                         "SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
                         quorumCommitIndex, quorumCommitTerm, term
                     )
                 }
             }
         }
-    }
-
-    companion object {
-        private val LOG = getLogger(RaftEngine::class.java)
     }
 }

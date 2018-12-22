@@ -3,12 +3,12 @@ package net.tvidal.kraft.engine
 import net.tvidal.kraft.NEVER
 import net.tvidal.kraft.NOW
 import net.tvidal.kraft.domain.RaftNode
+import net.tvidal.kraft.logging.KRaftLogger
 import net.tvidal.kraft.message.raft.AppendAckMessage
 import net.tvidal.kraft.message.raft.RaftMessage
 import net.tvidal.kraft.storage.KRaftEntries
 import net.tvidal.kraft.storage.emptyEntries
 import net.tvidal.kraft.transport.MessageSender
-import org.slf4j.LoggerFactory.getLogger
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class RaftFollowerState(
@@ -16,7 +16,7 @@ internal class RaftFollowerState(
     private val sender: MessageSender
 ) {
 
-    private val LOG = getLogger("${RaftFollowerState::class.java.name}.${sender.node}")
+    private val log = KRaftLogger("${RaftFollowerState::class.java.name}.${sender.node}")
 
     val follower: RaftNode = sender.node
 
@@ -81,7 +81,7 @@ internal class RaftFollowerState(
         sender.send(msg)
         true
     } catch (e: Exception) {
-        LOG.error("Error sending message [{}]", msg, e)
+        log.error("Error sending message [{}]", msg, e)
         false
     }
 
