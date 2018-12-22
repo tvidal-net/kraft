@@ -94,6 +94,7 @@ enum class RaftRole {
         }
 
         override fun RaftEngine.appendAck(now: Long, msg: AppendAckMessage): RaftRole? {
+            receiveAck(msg)
             return null
         }
     },

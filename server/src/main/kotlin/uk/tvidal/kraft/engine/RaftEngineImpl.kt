@@ -20,10 +20,8 @@ internal class RaftEngineImpl(
 
     private companion object : KRaftLogging()
 
-    val heartbeatWindowMillis
-        get() = timeout.heartbeatTimeout
-
-    val followers = Followers()
+    val followers = others
+        .associate { it to RaftFollowerState(this, sender(it)) }
 
     init {
         transport.register(self, messages)
@@ -95,50 +93,36 @@ internal class RaftEngineImpl(
     }
 
     override fun updateFollowers(now: Long) {
-        followers.run(now)
+        followers.values.forEach { it.run(now) }
     }
 
     override fun resetFollowers() {
-        followers.reset()
+        followers.values.forEach(RaftFollowerState::reset)
     }
 
-    inner class Followers {
+    fun updateCommitIndex() {
+        val matchIndex = followers.values.map(RaftFollowerState::matchIndex) + lastLogIndex
+        val quorumCommitIndex = matchIndex.sorted().take(cluster.majority).last()
 
-        private val followers = others
-            .associate { it to RaftFollowerState(this@RaftEngineImpl, transport.sender(it)) }
+        if (quorumCommitIndex > commitIndex) {
 
-        fun reset() {
-            followers.values.forEach(RaftFollowerState::reset)
-        }
-
-        fun run(now: Long) {
-            followers.values.forEach { it.run(now) }
-        }
-
-        fun ack(msg: AppendAckMessage) {
-            val follower = followers[msg.from]
-            if (follower != null) follower.ack(msg)
-            else log.error("There is no state for follower {}", msg.from)
-        }
-
-        fun updateCommitIndex() {
-            val matchIndex = followers.values.map(RaftFollowerState::matchIndex) + lastLogIndex
-            val quorumCommitIndex = matchIndex.sorted().take(cluster.majority).last()
-
-            if (quorumCommitIndex > commitIndex) {
-
-                val quorumCommitTerm = storage.termAt(quorumCommitIndex)
-                if (quorumCommitTerm == term) {
-                    log.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
-                    updateCommitIndex(quorumCommitIndex)
-                    followers.values.forEach(RaftFollowerState::commit)
-                } else {
-                    log.warn(
-                        "SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
-                        quorumCommitIndex, quorumCommitTerm, term
-                    )
-                }
+            val quorumCommitTerm = storage.termAt(quorumCommitIndex)
+            if (quorumCommitTerm == term) {
+                log.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
+                updateCommitIndex(quorumCommitIndex)
+                followers.values.forEach(RaftFollowerState::commit)
+            } else {
+                log.warn(
+                    "SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
+                    quorumCommitIndex, quorumCommitTerm, term
+                )
             }
         }
+    }
+
+    override fun receiveAck(msg: AppendAckMessage) {
+        val state = followers[msg.from]
+        if (msg.ack) state?.ack(msg.matchIndex)
+        else state?.nack(msg.matchIndex)
     }
 }

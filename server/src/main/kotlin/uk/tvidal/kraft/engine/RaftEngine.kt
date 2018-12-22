@@ -5,6 +5,7 @@ import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
+import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 
 internal abstract class RaftEngine(
@@ -77,6 +78,8 @@ internal abstract class RaftEngine(
             else -> throw KRaftError("received prevIndex=$leaderPrevIndex from ${msg.from}")
         }
     }
+
+    abstract fun receiveAck(msg: AppendAckMessage)
 
     abstract fun flush(): Long
 

@@ -4,7 +4,6 @@ import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.NOW
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.logging.KRaftLogger
-import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.emptyEntries
@@ -63,8 +62,12 @@ internal class RaftFollowerState(
         if (streaming) nextHeartbeatTime = NOW
     }
 
-    fun ack(msg: AppendAckMessage) {
-        TODO("Process $msg")
+    fun ack(matchIndex: Long) {
+        TODO("Process $matchIndex")
+    }
+
+    fun nack(nackIndex: Long) {
+        TODO("Process $nackIndex")
     }
 
     private fun sendHeartbeat(data: KRaftEntries = emptyEntries()) = when {
