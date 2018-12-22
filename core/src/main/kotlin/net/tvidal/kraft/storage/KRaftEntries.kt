@@ -2,12 +2,15 @@ package net.tvidal.kraft.storage
 
 class KRaftEntries constructor(
     private val data: Collection<KRaftEntry>
-
 ) : Iterable<KRaftEntry> {
 
-    val size = data.size
     val bytes = data.sumBy { it.bytes }
-    val isEmpty get() = size == 0
+
+    val size: Int
+        get() = data.size
+
+    val isEmpty: Boolean
+        get() = size == 0
 
     override fun iterator() = data.iterator()
 
@@ -21,5 +24,5 @@ class KRaftEntries constructor(
         else -> data == other.data
     }
 
-    override fun toString() = "Entries[size=$size, bytes=$bytes]"
+    override fun toString() = "Entries[size=$size bytes=$bytes]"
 }

@@ -1,14 +1,15 @@
 package net.tvidal.kraft.config
 
+import java.util.Random
+
 data class TimeoutConfig(
-    val heartbeat: Int,
-    val election: IntRange,
-    val firstElection: Int
+    val heartbeatTimeout: Int = 500,
+    val minElectionTimeout: Int = heartbeatTimeout * 3,
+    val maxElectionTimeout: Int = minElectionTimeout * 2,
+    val firstElectionTimeout: Int = 0
 ) {
+    private val random = Random()
 
-    val minElection: Int
-        get() = election.first
-
-    val maxElection: Int
-        get() = election.last
+    val nextElectionTimeout: Int
+        get() = random.nextInt(maxElectionTimeout - minElectionTimeout + 1) + minElectionTimeout
 }

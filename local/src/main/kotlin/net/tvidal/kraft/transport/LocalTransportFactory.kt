@@ -1,11 +1,10 @@
 package net.tvidal.kraft.transport
 
-import net.tvidal.kraft.config.KRaftTransportFactory
 import net.tvidal.kraft.domain.RaftNode
 import net.tvidal.kraft.message.Message
 import java.util.concurrent.ConcurrentHashMap
 
-class LocalTransportFactory : KRaftTransportFactory {
+class LocalTransportFactory {
 
     private val receivers = ConcurrentHashMap<RaftNode, MessageReceiver>()
 
@@ -20,13 +19,15 @@ class LocalTransportFactory : KRaftTransportFactory {
         }
     }
 
-    override fun create() = transport
+    fun create() = transport
 
     private inner class LocalSender(override var node: RaftNode) : MessageSender {
 
         private var messageReceiver: MessageReceiver? = null
             get() {
-                if (field == null) field = receivers[node]
+                if (field == null) {
+                    field = receivers[node]
+                }
                 return field
             }
 

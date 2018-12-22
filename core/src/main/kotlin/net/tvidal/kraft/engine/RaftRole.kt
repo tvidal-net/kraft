@@ -104,7 +104,7 @@ internal enum class RaftRole {
             raft.leader = raft.self
 
             val flush = flush(raft.term)
-            raft.log.append(flush)
+            raft.storage.append(flush)
         }
 
         override fun exit(now: Long, raft: RaftEngine) {
@@ -113,7 +113,7 @@ internal enum class RaftRole {
         }
 
         override fun clientAppend(now: Long, msg: ClientAppendMessage, raft: RaftEngine): Long? {
-            val lastLogIndex = raft.log.append(msg.data)
+            val lastLogIndex = raft.storage.append(msg.data)
             if (raft.singleNodeCluster) {
                 raft.leaderCommitIndex = lastLogIndex
                 raft.updateCommitIndex(lastLogIndex)

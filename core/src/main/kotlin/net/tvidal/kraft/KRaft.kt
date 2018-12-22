@@ -15,23 +15,9 @@ const val INT_BYTES = java.lang.Integer.BYTES
 const val SHORT_BYTES = java.lang.Short.BYTES
 const val BYTE_BYTES = java.lang.Byte.BYTES
 
-fun raftMajority(clusterSize: Int) = clusterSize / 2 + 1
+fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME) =
+    (1..size).map { RaftNode(it.toByte(), clusterName) }
 
-fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME) = (1..size)
-    .map { RaftNode(it.toByte(), clusterName) }
+fun raftCluster(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME) =
+    raftNodes(size, clusterName).let { nodes -> (1..size).map { RaftCluster(it, nodes) } }
 
-fun raftCluster(self: RaftNode, others: List<RaftNode>) = object : RaftCluster {
-    private val all = setOf(self, *others.toTypedArray())
-    override val self = self
-    override val others = others
-    override val majority = raftMajority(all.size)
-    override fun contains(node: RaftNode) = all.contains(node)
-}
-
-fun raftCluster(selfNodeIndex: Int, nodes: List<RaftNode>) = object : RaftCluster {
-    private val all = nodes.toSet()
-    override val self = nodes[selfNodeIndex]
-    override val others = nodes.filterNot { it == self }.toList()
-    override val majority = raftMajority(all.size)
-    override fun contains(node: RaftNode) = all.contains(node)
-}

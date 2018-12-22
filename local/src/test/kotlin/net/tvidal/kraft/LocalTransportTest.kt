@@ -1,5 +1,6 @@
 package net.tvidal.kraft
 
+import net.tvidal.kraft.domain.RaftCluster
 import net.tvidal.kraft.message.Message
 import net.tvidal.kraft.message.raft.VoteMessage
 import net.tvidal.kraft.transport.LocalTransportFactory
@@ -14,7 +15,7 @@ class LocalTransportTest {
     private val transport = factory.create()
 
     private val nodes = raftNodes(2)
-    private val cluster = raftCluster(0, nodes)
+    private val cluster = RaftCluster(0, nodes)
 
     val mockReceiver = object : MessageReceiver {
 

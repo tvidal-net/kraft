@@ -15,9 +15,9 @@ class RaftEngine(config: KRaftConfig) {
     private val timeout = config.timeout
     private var nextElectionTime = NEVER
 
-    internal val transport = config.transportFactory.create()
-    internal val log = config.logFactory.create()
-    internal val sizes = config.sizes
+    internal val transport = config.transport
+    internal val storage = config.storage
+    internal val sizes = config.size
 
     val cluster = config.cluster
     var leader: RaftNode? = null; internal set
@@ -28,20 +28,20 @@ class RaftEngine(config: KRaftConfig) {
     val others get() = cluster.others
     val singleNodeCluster get() = others.isEmpty()
 
-    val lastLogTerm get() = log.lastLogTerm
-    val lastLogIndex get() = log.lastLogIndex
+    val lastLogTerm get() = storage.lastLogTerm
+    val lastLogIndex get() = storage.lastLogIndex
 
     var term = 0L; internal set
     var commitIndex = 0L; private set
     var leaderCommitIndex = 0L; internal set
     var logConsistent = false; internal set
 
-    val heartbeatWindowMillis get() = timeout.heartbeat
+    val heartbeatWindowMillis get() = timeout.heartbeatTimeout
 
     internal val followers = Followers()
 
-    private fun nextElectionTimeout(baseTimeout: Int = timeout.minElection) = timeout.run {
-        baseTimeout + RANDOM.nextInt(maxElection - minElection + 1)
+    private fun nextElectionTimeout(baseTimeout: Int = timeout.minElectionTimeout) = timeout.run {
+        baseTimeout + RANDOM.nextInt(maxElectionTimeout - minElectionTimeout + 1)
     }
 
     internal fun resetElectionTimeout(now: Long) {
@@ -69,7 +69,7 @@ class RaftEngine(config: KRaftConfig) {
 
     internal fun append(msg: AppendMessage) = appendLogIndex(msg).let {
         when {
-            it > BEFORE_LOG -> log.append(msg.data, it)
+            it > BEFORE_LOG -> storage.append(msg.data, it)
             else -> NEVER
         }
     }
@@ -77,7 +77,7 @@ class RaftEngine(config: KRaftConfig) {
     private fun appendLogIndex(msg: AppendMessage): Long {
         val prevTerm = msg.prevTerm
         val prevIndex = msg.prevIndex
-        val termAtPrevIndex = log.termAt(prevIndex)
+        val termAtPrevIndex = storage.termAt(prevIndex)
 
         val logMessage = "from={} log={} prevIndex={} termAtPrevIndex=[{},from={}] - {}"
         val logData = arrayOf(msg.from, lastLogIndex, prevIndex, termAtPrevIndex, prevTerm)
@@ -126,7 +126,7 @@ class RaftEngine(config: KRaftConfig) {
 
             if (quorumCommitIndex > commitIndex) {
 
-                val quorumCommitTerm = log.termAt(quorumCommitIndex)
+                val quorumCommitTerm = storage.termAt(quorumCommitIndex)
                 if (quorumCommitTerm == term) {
                     LOG.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
                     updateCommitIndex(quorumCommitIndex)

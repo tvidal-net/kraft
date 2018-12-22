@@ -1,10 +1,27 @@
 package net.tvidal.kraft.domain
 
-interface RaftCluster {
-
-    val self: RaftNode
+data class RaftCluster(
+    val self: RaftNode,
     val others: List<RaftNode>
-    val majority: Int
+) {
+    constructor(self: Int, nodes: List<RaftNode>) : this(
+        self = nodes[self],
+        others = nodes.filterIndexed { i, _ -> i != self }
+    )
 
-    fun contains(node: RaftNode): Boolean
+    constructor(self: Int, vararg nodes: RaftNode) :
+        this(self, nodes.toList())
+
+    val nodes = setOf(self, others)
+
+    val size: Int
+        get() = nodes.size
+
+    val single: Boolean
+        get() = others.isEmpty()
+
+    val majority: Int
+        get() = size / 2 + 1
+
+    fun contains(node: RaftNode) = node in nodes
 }

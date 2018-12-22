@@ -39,7 +39,7 @@ internal class RaftFollowerState(
 
     fun run(now: Long) {
         if (streaming) {
-            val data = raft.log.read(nextIndex, byteLimit.get())
+            val data = raft.storage.read(nextIndex, byteLimit.get())
             if (data.isEmpty) return // not enough bytes to send the next entry
 
             if (sendHeartbeat(data)) {
@@ -64,7 +64,7 @@ internal class RaftFollowerState(
     private fun sendHeartbeat(data: KRaftEntries = emptyEntries()) = when {
         data.isEmpty || consumeByteWindow(data.bytes) -> {
             val prevIndex = nextIndex - 1
-            val prevTerm = raft.log.termAt(prevIndex)
+            val prevTerm = raft.storage.termAt(prevIndex)
 
             nextIndex += data.size
             send(raft.heartbeat(prevIndex, prevTerm, data))
