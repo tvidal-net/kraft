@@ -1,6 +1,6 @@
 package net.tvidal.kraft.storage
 
-class KRaftEntries constructor(
+class KRaftEntries internal constructor(
     private val data: Collection<KRaftEntry>
 ) : Iterable<KRaftEntry> {
 
@@ -10,7 +10,7 @@ class KRaftEntries constructor(
         get() = data.size
 
     val isEmpty: Boolean
-        get() = size == 0
+        get() = data.isEmpty()
 
     override fun iterator() = data.iterator()
 

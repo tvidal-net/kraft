@@ -6,6 +6,9 @@ interface KRaftLog {
     val lastLogIndex: Long
     val lastLogTerm: Long
 
+    val nextLogIndex: Long
+        get() = lastLogIndex + 1
+
     fun append(entries: Iterable<KRaftEntry>, fromIndex: Long = nextLogIndex): Long
 
     fun read(fromIndex: Long, byteLimit: Int): KRaftEntries

@@ -2,7 +2,7 @@ package net.tvidal.kraft.domain
 
 data class RaftCluster(
     val self: RaftNode,
-    val others: List<RaftNode>
+    val others: List<RaftNode> = emptyList()
 ) {
     constructor(self: Int, nodes: List<RaftNode>) : this(
         self = nodes[self],
@@ -12,7 +12,7 @@ data class RaftCluster(
     constructor(self: Int, vararg nodes: RaftNode) :
         this(self, nodes.toList())
 
-    val nodes = setOf(self, others)
+    private val nodes: Set<RaftNode> = setOf(self, *others.toTypedArray())
 
     val size: Int
         get() = nodes.size
