@@ -12,7 +12,7 @@ class KRaftLogger(val logger: Logger) {
 
     constructor(cls: KClass<*>) : this(loggerName(cls))
 
-    constructor(block: () -> Unit) : this(block::class)
+    constructor(block: () -> Unit) : this(block.javaClass.name.substringBefore('$'))
 
     companion object {
         private const val COMPANION_SUFFIX = ".Companion"

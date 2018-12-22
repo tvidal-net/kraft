@@ -7,6 +7,8 @@ import joptsimple.OptionSet
 import net.tvidal.kraft.ansi.AnsiColor.RED
 import net.tvidal.kraft.ansi.AnsiColor.YELLOW
 import java.lang.System.exit
+import java.lang.System.getProperty
+import java.lang.System.setProperty
 import kotlin.reflect.full.isSuperclassOf
 import kotlin.reflect.full.primaryConstructor
 import kotlin.text.RegexOption.IGNORE_CASE
@@ -18,15 +20,25 @@ const val ERROR_SEVERE = 127
 const val HELP = "help"
 const val HELP_DESCRIPTION = "Prints usage information"
 
+private const val LOGBACK_CONFIG = "logback.configurationFile"
+const val LOGBACK_CONSOLE = "logback-console.xml"
+
 val ERROR = RED.format("[ERROR]")
 
+@Suppress("UnstableApiUsage")
 private val CLASS_PATH = ClassPath.from(ClassLoader.getSystemClassLoader())!!
 
 private val REGEX_TOOL = Regex("Tool$", IGNORE_CASE)
 private val REGEX_CAMEL = Regex("([a-z])([A-Z])")
-private val REPLACE_CAMEL = "\$1-\$2"
+private const val REPLACE_CAMEL = "\$1-\$2"
 
 private const val TOOLS_PACKAGE = "net.tvidal.kraft.tools"
+
+var logbackConfigurationFile: String
+    get() = getProperty(LOGBACK_CONFIG)
+    set(value) {
+        setProperty(LOGBACK_CONFIG, value)
+    }
 
 val TOOLS = CLASS_PATH.getTopLevelClasses(TOOLS_PACKAGE)
     .filter { REGEX_TOOL.containsMatchIn(it.name) }
@@ -85,6 +97,7 @@ fun execute(op: OptionSet): Int {
 }
 
 fun main(args: Array<String>) {
+    logbackConfigurationFile = LOGBACK_CONSOLE
     val parser = optionParser(true)
     val op = parser.parse(*args)
     val ret = execute(op)
