@@ -3,92 +3,78 @@ package uk.tvidal.kraft.engine
 import uk.tvidal.kraft.BEFORE_LOG
 import uk.tvidal.kraft.FOREVER
 import uk.tvidal.kraft.logging.KRaftLogger
-import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
-import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND
-import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND_ACK
 import uk.tvidal.kraft.message.raft.RaftMessageType.REQUEST_VOTE
-import uk.tvidal.kraft.message.raft.RaftMessageType.VOTE
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
 import uk.tvidal.kraft.message.raft.VoteMessage
-import uk.tvidal.kraft.storage.flush
 
-internal enum class RaftRole {
+enum class RaftRole {
 
     FOLLOWER {
-        override fun enter(now: Long, raft: RaftEngine) {
-            super.enter(now, raft)
+        override fun enter(now: Long, raft: RaftEngine) =
             raft.resetElectionTimeout(now)
+
+        override fun RaftEngine.exitRole(now: Long) {
+            leader = null
         }
 
-        override fun exit(now: Long, raft: RaftEngine) {
-            super.exit(now, raft)
-            raft.leader = null
-        }
+        override fun RaftEngine.append(now: Long, msg: AppendMessage): RaftRole? {
+            resetElectionTimeout(now)
+            leaderCommitIndex = msg.leaderCommitIndex
+            val matchIndex = append(msg)
 
-        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
-            raft.resetElectionTimeout(now)
-            raft.leaderCommitIndex = msg.leaderCommitIndex
-            val matchIndex = raft.append(msg)
-
-            raft.logConsistent = matchIndex > BEFORE_LOG
-            if (raft.logConsistent) {
-                raft.updateCommitIndex(matchIndex)
-                raft.sendAck(msg.from, matchIndex)
+            logConsistent = matchIndex > BEFORE_LOG
+            if (logConsistent) {
+                updateCommitIndex(matchIndex)
+                ack(msg.from, matchIndex)
             } else {
-                val nackIndex = raft.nackIndex(msg)
-                raft.sendNack(msg.from, nackIndex)
+                val nackIndex = nackIndex(msg)
+                nack(msg.from, nackIndex)
             }
-            raft.leader = msg.from
+            leader = msg.from
             return null
         }
 
-        override fun requestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? {
+        override fun RaftEngine.requestVote(now: Long, msg: RequestVoteMessage): RaftRole? {
             val candidate = msg.from
-
-            val grantVote = (raft.votedFor == null || raft.votedFor == candidate) &&
-                (raft.lastLogTerm < msg.lastLogTerm ||
-                    (raft.lastLogTerm == msg.lastLogTerm && raft.lastLogIndex <= msg.lastLogIndex))
+            val grantVote = (votedFor == null || votedFor == candidate) &&
+                (lastLogTerm < msg.lastLogTerm ||
+                    (lastLogTerm == msg.lastLogTerm && lastLogIndex <= msg.lastLogIndex))
 
             if (grantVote) {
-                raft.votedFor = candidate
-                raft.resetElectionTimeout(now)
+                votedFor = candidate
+                resetElectionTimeout(now)
             }
-            raft.sendVote(candidate, grantVote)
+            vote(candidate, grantVote)
             return null
         }
     },
 
     CANDIDATE {
-        override fun enter(now: Long, raft: RaftEngine) {
-            super.enter(now, raft)
-            raft.apply {
-                term++
-                votedFor = self
-                votesReceived.clear()
-                votesReceived.add(raft.self)
-                resetElectionTimeout(now)
-                sendRequestVotes()
-            }
+        override fun enter(now: Long, raft: RaftEngine) = with(raft) {
+            term++
+            votedFor = self
+            votesReceived.clear()
+            votesReceived.add(self)
+            resetElectionTimeout(now)
+            requestVotes()
         }
 
-        override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? {
+        override fun RaftEngine.vote(now: Long, msg: VoteMessage): RaftRole? {
             log.info { "vote from=${msg.from} term=${msg.term}" }
             if (msg.vote) {
-                raft.votesReceived.add(msg.from)
-                val votesReceived = raft.votesReceived.size
-                if (votesReceived >= raft.cluster.majority) {
+                votesReceived.add(msg.from)
+                val votesReceived = votesReceived.size
+                if (votesReceived >= cluster.majority) {
                     return LEADER
                 }
             }
             return null
         }
 
-        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
-            return FOLLOWER
-        }
+        override fun RaftEngine.append(now: Long, msg: AppendMessage) = reset()
     },
 
     LEADER {
@@ -98,13 +84,10 @@ internal enum class RaftRole {
         }
 
         override fun enter(now: Long, raft: RaftEngine) {
-            super.enter(now, raft)
             raft.cancelElectionTimeout()
             raft.followers.reset()
             raft.leader = raft.self
-
-            val flush = flush(raft.term)
-            raft.storage.append(flush)
+            raft.flush()
         }
 
         override fun exit(now: Long, raft: RaftEngine) {
@@ -112,68 +95,68 @@ internal enum class RaftRole {
             raft.leader = null
         }
 
-        override fun clientAppend(now: Long, msg: ClientAppendMessage, raft: RaftEngine): Long? {
-            val lastLogIndex = raft.storage.append(msg.data)
-            if (raft.singleNodeCluster) {
-                raft.leaderCommitIndex = lastLogIndex
-                raft.updateCommitIndex(lastLogIndex)
-            }
-            return lastLogIndex
-        }
-
-        override fun appendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? {
+        override fun RaftEngine.appendAck(now: Long, msg: AppendAckMessage): RaftRole? {
             return null
         }
     },
 
     ERROR {
+        override fun reset(): RaftRole? = null
+
         override fun enter(now: Long, raft: RaftEngine) {
             super.enter(now, raft)
             raft.resetElectionTimeout(FOREVER)
         }
     };
 
-    protected val log by lazy { KRaftLogger(this) }
+    @Suppress("LeakingThis")
+    protected val log = KRaftLogger(this)
 
-    protected open fun run(now: Long, raft: RaftEngine) {}
+    protected open fun reset(): RaftRole? = FOLLOWER
 
-    protected open fun enter(now: Long, raft: RaftEngine) {}
+    internal open fun run(now: Long, raft: RaftEngine) {}
 
-    protected open fun exit(now: Long, raft: RaftEngine) {
-        raft.votedFor = null
-        raft.votesReceived.clear()
+    internal open fun enter(now: Long, raft: RaftEngine) {}
+
+    internal fun exit(now: Long, raft: RaftEngine) = with(raft) {
+        resetElection()
+        exitRole(now)
     }
 
-    protected open fun clientAppend(now: Long, msg: ClientAppendMessage, raft: RaftEngine): Long? = null
+    internal open fun RaftEngine.exitRole(now: Long) {}
 
-    protected open fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? = null
+    internal open fun RaftEngine.append(now: Long, msg: AppendMessage): RaftRole? = null
 
-    protected open fun appendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? = null
+    internal open fun RaftEngine.appendAck(now: Long, msg: AppendAckMessage): RaftRole? = null
 
-    protected open fun requestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? = null
+    internal open fun RaftEngine.requestVote(now: Long, msg: RequestVoteMessage): RaftRole? = null
 
-    protected open fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? = null
+    internal open fun RaftEngine.vote(now: Long, msg: VoteMessage): RaftRole? = null
 
-    private fun processMessage(now: Long, msg: RaftMessage, raft: RaftEngine) = when (msg.type) {
-        APPEND -> append(now, msg as AppendMessage, raft)
-        APPEND_ACK -> appendAck(now, msg as AppendAckMessage, raft)
-        REQUEST_VOTE -> requestVote(now, msg as RequestVoteMessage, raft)
-        VOTE -> vote(now, msg as VoteMessage, raft)
+    private fun RaftEngine.processMessage(now: Long, msg: RaftMessage) = when (msg) {
+        is AppendMessage -> append(now, msg)
+        is AppendAckMessage -> appendAck(now, msg)
+        is RequestVoteMessage -> requestVote(now, msg)
+        is VoteMessage -> vote(now, msg)
+        else -> null
     }
 
-    fun process(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? {
-        val term = msg.term
+    internal fun process(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? = when {
 
-        if (raft.term < term) {
-            raft.term = term
-            return if (this == ERROR) ERROR else FOLLOWER
+        // There's a new term on the cluster, reset back to follower
+        msg.term > raft.term -> {
+            raft.term = msg.term
+            reset()
         }
 
-        return if (raft.term == term) {
-            processMessage(now, msg, raft)
-        } else {
-            if (msg.type == REQUEST_VOTE) raft.sendVote(msg.from, false)
+        // We're in the right term, just process it
+        raft.term == msg.term -> raft.processMessage(now, msg)
+
+        // Message is from an old term, deny if it's a request vote
+        msg.type == REQUEST_VOTE -> {
+            raft.vote(msg.from, false)
             null
         }
+        else -> null
     }
 }

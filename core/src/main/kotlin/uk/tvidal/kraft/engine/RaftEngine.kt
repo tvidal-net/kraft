@@ -1,74 +1,72 @@
 package uk.tvidal.kraft.engine
 
-import uk.tvidal.kraft.BEFORE_LOG
 import uk.tvidal.kraft.KRaftError
 import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.domain.RaftNode
-import uk.tvidal.kraft.logging.KRaftLogging
-import uk.tvidal.kraft.message.raft.AppendAckMessage
+import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.message.raft.AppendMessage
 
-internal class RaftEngine(config: KRaftConfig) {
+internal abstract class RaftEngine(
+    config: KRaftConfig
+) : RaftState, RaftMessageSender {
 
-    private companion object : KRaftLogging()
+    override val cluster = config.cluster
 
-    private val timeout = config.timeout
-    private var nextElectionTime = NEVER
+    override val transport = config.transport
+    protected val storage = config.storage
+    protected val timeout = config.timeout
+    protected val sizes = config.size
 
-    internal val transport = config.transport
-    internal val storage = config.storage
-    internal val sizes = config.size
+    override var role = FOLLOWER
+    override var term = 0L
 
-    val cluster = config.cluster
-
-    var leader: RaftNode? = null
-        internal set
-
-    var votedFor: RaftNode? = null
-        internal set
-
-    val votesReceived = mutableSetOf<RaftNode>()
-
-    val self get() = cluster.self
-    val others get() = cluster.others
-    val singleNodeCluster get() = cluster.single
-
-    val lastLogTerm get() = storage.lastLogTerm
-    val lastLogIndex get() = storage.lastLogIndex
-
-    var term = 0L
-        internal set
-
-    var commitIndex = 0L
+    final override var commitIndex = 0L
         private set
 
-    var leaderCommitIndex = 0L
+    final override var leaderCommitIndex = 0L
         internal set
 
-    var logConsistent = false
-        internal set
+    final override var lastLogTerm = 0L
+        private set
 
-    val heartbeatWindowMillis
-        get() = timeout.heartbeatTimeout
+    final override var lastLogIndex = 0L
+        private set
 
-    internal val followers = Followers()
+    override var logConsistent = false
 
-    internal fun resetElectionTimeout(now: Long) {
+    override var leader: RaftNode? = null
+    override var votedFor: RaftNode? = null
+    override val votesReceived: MutableSet<RaftNode> = mutableSetOf()
+
+    private var nextElectionTime = NEVER
+
+    fun resetElection() {
+        votedFor = null
+        votesReceived.clear()
+    }
+
+    fun resetElectionTimeout(now: Long) {
         nextElectionTime = timeout.nextElectionTime(now)
     }
 
-    internal fun cancelElectionTimeout() {
+    fun cancelElectionTimeout() {
         nextElectionTime = NEVER
     }
 
-    internal fun updateCommitIndex(matchIndex: Long) {
+    fun updateCommitIndex(matchIndex: Long) {
         if (leaderCommitIndex > commitIndex) {
             commitIndex = minOf(leaderCommitIndex, matchIndex)
         }
     }
 
-    internal fun nackIndex(msg: AppendMessage): Long {
+    fun read(fromIndex: Long, byteLimit: Int) = storage.read(fromIndex, byteLimit)
+
+    fun termAt(index: Long) = storage.termAt(index)
+
+    abstract fun append(msg: AppendMessage): Long
+
+    fun nackIndex(msg: AppendMessage): Long {
         val leaderPrevIndex = msg.prevIndex
         return when {
             leaderPrevIndex > lastLogIndex -> lastLogIndex
@@ -77,77 +75,5 @@ internal class RaftEngine(config: KRaftConfig) {
         }
     }
 
-    internal fun append(msg: AppendMessage) = appendLogIndex(msg).let {
-        when {
-            it > BEFORE_LOG -> storage.append(msg.data, it)
-            else -> NEVER
-        }
-    }
-
-    private fun appendLogIndex(msg: AppendMessage): Long {
-        val prevTerm = msg.prevTerm
-        val prevIndex = msg.prevIndex
-        val termAtPrevIndex = storage.termAt(prevIndex)
-
-        val logMessage = "from={} log={} prevIndex={} termAtPrevIndex=[{},from={}] - {}"
-        val logData = arrayOf(msg.from, lastLogIndex, prevIndex, termAtPrevIndex, prevTerm)
-
-        if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {
-
-            if (prevIndex < lastLogIndex) {
-                if (commitIndex > prevIndex) {
-                    log.warn(logMessage, *logData, "CANNOT TRUNCATE BEFORE COMMIT_INDEX: $commitIndex")
-                    return BEFORE_LOG
-                } else {
-                    log.info(logMessage, *logData, "TRUNCATE LOG")
-                }
-            } else {
-                log.debug(logMessage, *logData, "OK")
-            }
-            return prevIndex + 1
-        }
-        log.warn(logMessage, *logData, "LOG IS INCONSISTENT")
-        return BEFORE_LOG
-    }
-
-    internal inner class Followers {
-
-        private val followers = others
-            .map { RaftFollowerState(this@RaftEngine, transport.sender(it)) }
-            .associateBy { it.follower }
-
-        fun reset() {
-            followers.values.forEach(RaftFollowerState::reset)
-        }
-
-        fun run(now: Long) {
-            followers.values.forEach { it.run(now) }
-        }
-
-        fun ack(msg: AppendAckMessage) {
-            val follower = followers[msg.from]
-            if (follower != null) follower.ack(msg)
-            else log.error("There is no state for follower {}", msg.from)
-        }
-
-        fun updateCommitIndex() {
-            val matchIndex = followers.values.map(RaftFollowerState::matchIndex) + lastLogIndex
-            val quorumCommitIndex = matchIndex.sorted().take(cluster.majority).last()
-
-            if (quorumCommitIndex > commitIndex) {
-
-                val quorumCommitTerm = storage.termAt(quorumCommitIndex)
-                if (quorumCommitTerm == term) {
-                    log.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
-                    updateCommitIndex(quorumCommitIndex)
-                    followers.values.forEach(RaftFollowerState::commit)
-                } else {
-                    log.warn(
-                        "SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
-                        quorumCommitIndex, quorumCommitTerm, term
-                    )
-                }
-            }
-        }
-    }
+    abstract fun flush(): Long
 }

@@ -18,9 +18,10 @@ internal class RaftFollowerState(
 
     private val log = KRaftLogger("${RaftFollowerState::class.java.name}.${sender.node}")
 
-    val follower: RaftNode = sender.node
+    val follower: RaftNode
+        get() = sender.node
 
-    var nextHeartbeat = NEVER
+    var nextHeartbeatTime = NEVER
         private set
 
     var streaming = false
@@ -43,7 +44,7 @@ internal class RaftFollowerState(
 
     fun run(now: Long) {
         if (streaming) {
-            val data = raft.storage.read(nextIndex, byteLimit.get())
+            val data = raft.read(nextIndex, byteLimit.get())
             if (data.isEmpty) return // not enough bytes to send the next entry
 
             if (sendHeartbeat(data)) {
@@ -53,13 +54,13 @@ internal class RaftFollowerState(
     }
 
     private fun heartbeat(now: Long) {
-        if (now >= nextHeartbeat && sendHeartbeat()) {
+        if (now >= nextHeartbeatTime && sendHeartbeat()) {
             updateHeartbeat(now)
         }
     }
 
     fun commit() {
-        if (streaming) nextHeartbeat = NOW
+        if (streaming) nextHeartbeatTime = NOW
     }
 
     fun ack(msg: AppendAckMessage) {
@@ -69,9 +70,10 @@ internal class RaftFollowerState(
     private fun sendHeartbeat(data: KRaftEntries = emptyEntries()) = when {
         data.isEmpty || consumeByteWindow(data.bytes) -> {
             val prevIndex = nextIndex - 1
-            val prevTerm = raft.storage.termAt(prevIndex)
+            val prevTerm = raft.termAt(prevIndex)
 
             nextIndex += data.size
+            raft.heartbeat(follower, prevIndex, prevTerm)
             send(raft.heartbeat(prevIndex, prevTerm, data))
         }
         else -> false
@@ -88,7 +90,7 @@ internal class RaftFollowerState(
     private fun consumeByteWindow(bytes: Int): Boolean {
         var newLimit: Int
         do {
-            val prevLimit = byteLimit.get()
+            val prevLimit = byteLimit.toInt()
             newLimit = prevLimit - bytes
         } while (newLimit >= 0 && !byteLimit.compareAndSet(prevLimit, newLimit))
         return newLimit >= 0
@@ -99,6 +101,6 @@ internal class RaftFollowerState(
     }
 
     private fun updateHeartbeat(now: Long) {
-        nextHeartbeat = now + raft.heartbeatWindowMillis
+        nextHeartbeatTime = now + raft.heartbeatWindowMillis
     }
 }

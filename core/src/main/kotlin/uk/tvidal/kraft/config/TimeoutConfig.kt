@@ -10,12 +10,12 @@ data class TimeoutConfig(
 ) {
     private val random = Random()
 
-    val randomElectionTimeout: Int
+    internal val randomElectionTimeout: Int
         get() = random.nextInt(maxElectionTimeout - minElectionTimeout + 1) + minElectionTimeout
 
-    fun nextElectionTime(now: Long) = now + randomElectionTimeout
+    internal fun nextElectionTime(now: Long) = now + randomElectionTimeout
 
-    fun firstElectionTime(now: Long) = nextElectionTime(now) +
+    internal fun firstElectionTime(now: Long) = nextElectionTime(now) +
         if (firstElectionTimeout <= 0) 0
         else firstElectionTimeout - minElectionTimeout
 }
