@@ -1,3 +1,7 @@
+apply plugin: 'application'
+
+mainClassName = 'net.tvidal.kraft.LocalTestKt'
+
 dependencies {
     implementation project(':kraft-core')
     implementation project(':kraft-local')
