@@ -59,6 +59,7 @@ internal class RaftFollowerState(
     }
 
     fun ack(msg: AppendAckMessage) {
+        TODO("Process $msg")
     }
 
     private fun sendHeartbeat(data: KRaftEntries = emptyEntries()) = when {

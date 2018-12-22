@@ -1,6 +1,6 @@
 package net.tvidal.kraft.storage
 
-class RingBufferLog(size: Int) : AbstractRingBufferLog(size) {
+class RingBufferStorage(size: Int = 4096) : AbstractRingBufferStorage(size) {
 
     override fun append(entries: Iterable<KRaftEntry>, fromIndex: Long): Long {
         for ((i, entry) in entries.withIndex()) {

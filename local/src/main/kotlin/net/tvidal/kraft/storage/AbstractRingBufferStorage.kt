@@ -1,12 +1,17 @@
 package net.tvidal.kraft.storage
 
-abstract class AbstractRingBufferLog protected constructor(protected val size: Int) : KRaftLog {
+abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage {
 
     private val data = Array(size) { emptyEntry() }
 
-    final override val firstLogIndex get() = maxOf(lastLogIndex - size, 0) + 1
-    final override var lastLogIndex = 0L; private set
-    final override var lastLogTerm = 0L; private set
+    final override val firstLogIndex: Long
+        get() = maxOf(lastLogIndex - size, 0) + 1
+
+    final override var lastLogIndex: Long = 0L
+        private set
+
+    final override var lastLogTerm: Long = 0L
+        private set
 
     final override fun termAt(index: Long) = this[index].term
 
@@ -36,7 +41,7 @@ abstract class AbstractRingBufferLog protected constructor(protected val size: I
         index > nextLogIndex -> {
             throw IllegalArgumentException("Attempt to access past the end of the log")
         }
-        else -> (index % data.size).toInt()
+        else -> (index % size).toInt()
     }
 
     override fun toString() = "[($firstLogIndex:$lastLogIndex) nextLogIndex=$nextLogIndex size=$size]"

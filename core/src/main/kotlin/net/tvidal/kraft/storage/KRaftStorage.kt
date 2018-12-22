@@ -1,6 +1,6 @@
 package net.tvidal.kraft.storage
 
-interface KRaftLog {
+interface KRaftStorage {
 
     val firstLogIndex: Long
     val lastLogIndex: Long
