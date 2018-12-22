@@ -2,8 +2,9 @@ package net.tvidal.kraft.storage
 
 import net.tvidal.kraft.LONG_BYTES
 import net.tvidal.kraft.longEntries
-import org.testng.annotations.BeforeMethod
-import org.testng.annotations.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -18,7 +19,7 @@ class RingBufferStorageTest {
 
     lateinit var storage: KRaftStorage
 
-    @BeforeMethod
+    @BeforeEach
     fun setup() {
         storage = RingBufferStorage(SIZE)
     }
@@ -64,15 +65,19 @@ class RingBufferStorageTest {
         assertState(1, 1, 2)
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException::class])
+    @Test
     fun `should not append before first log index`() {
-        storage.append(longEntries(1, 1..17L))
-        storage.append(SINGLE_ENTRY, 1)
+        assertThrows<IllegalArgumentException> {
+            storage.append(longEntries(1, 1..17L))
+            storage.append(SINGLE_ENTRY, 1)
+        }
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException::class])
+    @Test
     fun `should not append after last log index`() {
-        storage.append(ENTRIES, 2)
+        assertThrows<IllegalArgumentException> {
+            storage.append(ENTRIES, 2)
+        }
     }
 
     @Test
@@ -94,10 +99,12 @@ class RingBufferStorageTest {
         assertTrue(storage.read(1, LONG_BYTES - 1).isEmpty)
     }
 
-    @Test(expectedExceptions = [IllegalArgumentException::class])
+    @Test
     fun `should not read before first log index`() {
-        storage.append(longEntries(1, 1..17L))
-        storage.read(1, Int.MAX_VALUE)
+        assertThrows<IllegalArgumentException> {
+            storage.append(longEntries(1, 1..17L))
+            storage.read(1, Int.MAX_VALUE)
+        }
     }
 
     @Test

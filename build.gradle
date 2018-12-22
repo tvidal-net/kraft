@@ -36,13 +36,31 @@ subprojects {
         }
     }
 
-    dependencies {
-        implementation "org.jetbrains.kotlin:kotlin-stdlib"
-        implementation "org.jetbrains.kotlin:kotlin-reflect"
+    test {
+        useJUnitPlatform()
+        systemProperty 'logback.configurationFile', 'logback-console.xml'
+    }
 
-        testImplementation "org.jetbrains.kotlin:kotlin-test"
-        testImplementation "org.testng:testng:$testngVersion"
-        testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    dependencies {
+
+        // Kotlin
+        implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+        implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+        testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlinVersion"
+
+        // JUnit
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion"
+        testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion"
+
+        // MockK
+        testImplementation "io.mockk:mockk:$mockkVersion"
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            failOnVersionConflict()
+            preferProjectModules()
+        }
     }
 
     jar {

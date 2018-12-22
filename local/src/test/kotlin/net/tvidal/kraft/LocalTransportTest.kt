@@ -5,10 +5,9 @@ import net.tvidal.kraft.message.Message
 import net.tvidal.kraft.message.raft.VoteMessage
 import net.tvidal.kraft.transport.LocalTransportFactory
 import net.tvidal.kraft.transport.MessageReceiver
-import org.testng.annotations.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertSame
 
-@Test
 class LocalTransportTest {
 
     private val factory = LocalTransportFactory()
@@ -32,10 +31,12 @@ class LocalTransportTest {
         }
     }
 
+    @Test
     fun `should always return the same transport instance`() {
         assertSame(transport, factory.create())
     }
 
+    @Test
     fun `should deliver message for registered receiver`() {
         transport.register(nodes[0], mockReceiver)
         val message = VoteMessage(nodes[1], 2L, false)
