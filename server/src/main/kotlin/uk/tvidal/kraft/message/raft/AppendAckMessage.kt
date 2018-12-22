@@ -11,4 +11,7 @@ class AppendAckMessage(
     val ack: Boolean,
     val matchIndex: Long
 
-) : AbstractRaftMessage(APPEND_ACK, from, term)
+) : AbstractRaftMessage(APPEND_ACK, from, term) {
+
+    override fun toString() = "${super.toString()} [ack=$ack matchIndex=$matchIndex]"
+}

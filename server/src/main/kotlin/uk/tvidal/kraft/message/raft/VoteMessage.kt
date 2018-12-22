@@ -10,4 +10,7 @@ class VoteMessage(
 
     val vote: Boolean
 
-) : AbstractRaftMessage(VOTE, from, term)
+) : AbstractRaftMessage(VOTE, from, term) {
+
+    override fun toString() = "${super.toString()} [vote=$vote]"
+}

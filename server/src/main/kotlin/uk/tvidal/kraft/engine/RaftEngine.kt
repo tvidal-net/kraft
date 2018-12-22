@@ -53,7 +53,7 @@ internal abstract class RaftEngine(
         private set
 
     init {
-        log.info { "Starting $self as $role (election=${Instant.ofEpochMilli(nextElectionTime)})" }
+        log.info { "Starting $self on [$lastLogIndex:$lastLogTerm] (election=${Instant.ofEpochMilli(nextElectionTime)})" }
     }
 
     val heartbeatWindow: Int

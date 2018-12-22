@@ -11,4 +11,7 @@ class RequestVoteMessage(
     val lastLogTerm: Long,
     val lastLogIndex: Long
 
-) : AbstractRaftMessage(REQUEST_VOTE, from, term)
+) : AbstractRaftMessage(REQUEST_VOTE, from, term) {
+
+    override fun toString() = "${super.toString()} [lastLogTerm=$lastLogTerm lastLogIndex=$lastLogIndex]"
+}
