@@ -16,7 +16,7 @@ internal abstract class RaftEngine(
     override val transport = config.transport
     protected val storage = config.storage
     protected val timeout = config.timeout
-    protected val sizes = config.size
+    val sizes = config.size
 
     override var role = FOLLOWER
     override var term = 0L
@@ -40,6 +40,9 @@ internal abstract class RaftEngine(
     override val votesReceived: MutableSet<RaftNode> = mutableSetOf()
 
     private var nextElectionTime = NEVER
+
+    val heartbeatWindow: Int
+        get() = timeout.heartbeatTimeout
 
     fun resetElection() {
         votedFor = null
@@ -76,4 +79,10 @@ internal abstract class RaftEngine(
     }
 
     abstract fun flush(): Long
+
+    abstract fun updateFollowers(now: Long)
+
+    abstract fun resetFollowers()
+
+    abstract fun run(now: Long)
 }

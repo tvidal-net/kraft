@@ -78,21 +78,19 @@ enum class RaftRole {
     },
 
     LEADER {
-        override fun run(now: Long, raft: RaftEngine) {
-            super.run(now, raft)
-            raft.followers.run(now)
-        }
+        override fun run(now: Long, raft: RaftEngine) = raft.updateFollowers(now)
 
         override fun enter(now: Long, raft: RaftEngine) {
-            raft.cancelElectionTimeout()
-            raft.followers.reset()
-            raft.leader = raft.self
-            raft.flush()
+            with(raft) {
+                cancelElectionTimeout()
+                resetFollowers()
+                leader = self
+                flush()
+            }
         }
 
-        override fun exit(now: Long, raft: RaftEngine) {
-            super.exit(now, raft)
-            raft.leader = null
+        override fun RaftEngine.exitRole(now: Long) {
+            leader = null
         }
 
         override fun RaftEngine.appendAck(now: Long, msg: AppendAckMessage): RaftRole? {
@@ -103,9 +101,8 @@ enum class RaftRole {
     ERROR {
         override fun reset(): RaftRole? = null
 
-        override fun enter(now: Long, raft: RaftEngine) {
-            super.enter(now, raft)
-            raft.resetElectionTimeout(FOREVER)
+        override fun enter(now: Long, raft: RaftEngine) = with(raft) {
+            resetElectionTimeout(FOREVER)
         }
     };
 

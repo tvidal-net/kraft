@@ -73,7 +73,7 @@ internal class RaftEngineImpl(
         return BEFORE_LOG
     }
 
-    fun run(now: Long) {
+    override fun run(now: Long) {
         val msg = messages.poll()
         when (msg) {
             is RaftMessage -> processMessage(now, msg)
@@ -91,6 +91,14 @@ internal class RaftEngineImpl(
                 role.enter(now, this)
             }
         } while (newRole != null)
+    }
+
+    override fun updateFollowers(now: Long) {
+        followers.run(now)
+    }
+
+    override fun resetFollowers() {
+        followers.reset()
     }
 
     inner class Followers {

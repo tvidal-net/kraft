@@ -74,7 +74,8 @@ internal class RaftFollowerState(
 
             nextIndex += data.size
             raft.heartbeat(follower, prevIndex, prevTerm)
-            send(raft.heartbeat(prevIndex, prevTerm, data))
+            raft.append(follower, prevIndex, prevTerm, data)
+            true
         }
         else -> false
     }
@@ -101,6 +102,6 @@ internal class RaftFollowerState(
     }
 
     private fun updateHeartbeat(now: Long) {
-        nextHeartbeatTime = now + raft.heartbeatWindowMillis
+        nextHeartbeatTime = now + raft.heartbeatWindow
     }
 }
