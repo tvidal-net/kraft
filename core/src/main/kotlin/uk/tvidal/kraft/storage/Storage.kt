@@ -8,22 +8,22 @@ import java.nio.charset.Charset
 import java.nio.charset.Charset.defaultCharset
 
 private val EMPTY_PAYLOAD = ByteArray(0)
-private val EMPTY_ENTRY = KRaftEntry(0L, EMPTY_PAYLOAD)
+private val EMPTY_ENTRY = KRaftEntry(EMPTY_PAYLOAD, 0L)
 
 private val EMPTY_ENTRIES = KRaftEntries(emptyList())
 
 fun emptyEntry() = EMPTY_ENTRY
 
-fun emptyEntry(term: Long) = KRaftEntry(term, EMPTY_PAYLOAD)
+fun emptyEntry(term: Long) = KRaftEntry(EMPTY_PAYLOAD, term)
 
-fun entryOf(term: Long, payload: ByteArray) = KRaftEntry(term, payload)
+fun entryOf(payload: ByteArray, term: Long = 0L) = KRaftEntry(payload, term)
 
-fun entryOf(term: Long, payload: ByteBuffer) = KRaftEntry(term, payload.array())
+fun entryOf(payload: ByteBuffer, term: Long = 0L) = KRaftEntry(payload.array(), term)
 
-fun entryOf(term: Long, payload: Long) = KRaftEntry(term, payload.toByteArray())
+fun entryOf(payload: Long, term: Long = 0L) = KRaftEntry(payload.toByteArray(), term)
 
-fun entryOf(term: Long, payload: String, charset: Charset = defaultCharset()) =
-    KRaftEntry(term, payload.toByteArray(charset))
+fun entryOf(payload: String, term: Long = 0L, charset: Charset = defaultCharset()) =
+    KRaftEntry(payload.toByteArray(charset), term)
 
 fun KRaftEntry.longValue() = with(wrap(payload)) {
     getLong(0)

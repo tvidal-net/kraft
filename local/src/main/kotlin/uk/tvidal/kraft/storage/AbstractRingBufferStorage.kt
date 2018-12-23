@@ -18,7 +18,7 @@ abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage
     protected fun read(range: LongRange) = when {
         range.isEmpty() -> emptyEntries()
         range.first == range.last -> singleEntry(this[range.first])
-        else -> KRaftEntries(range.map { this[it] })
+        else -> entries(range.map { this[it] })
     }
 
     protected operator fun get(index: Long) = when (index) {

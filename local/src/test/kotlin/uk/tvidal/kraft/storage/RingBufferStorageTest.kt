@@ -14,7 +14,7 @@ class RingBufferStorageTest {
         const val SIZE = 16
 
         val ENTRIES = longEntries(1, 1..3L)
-        val SINGLE_ENTRY = entryOf(2, "SINGLE").toEntries()
+        val SINGLE_ENTRY = entryOf("SINGLE", 2).toEntries()
     }
 
     lateinit var storage: KRaftStorage

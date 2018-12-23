@@ -2,9 +2,9 @@ package uk.tvidal.kraft.storage
 
 import java.util.Arrays
 
-class KRaftEntry constructor(
-    val term: Long,
-    val payload: ByteArray
+class KRaftEntry internal constructor(
+    val payload: ByteArray,
+    var term: Long
 ) {
     val bytes: Int
         get() = payload.size

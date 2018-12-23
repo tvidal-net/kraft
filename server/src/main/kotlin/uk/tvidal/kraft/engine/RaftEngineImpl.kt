@@ -24,7 +24,9 @@ internal class RaftEngineImpl(
     fun clientAppend(msg: ClientAppendMessage) {
         val currentLeader = leader
         if (role == LEADER) {
-            val lastLogIndex = storage.append(msg.data)
+            val entries = msg.data
+            entries.term = term
+            val lastLogIndex = storage.append(entries)
             log.debug { "$self clientAppend ${msg.data} $storage" }
             if (isSingleNodeCluster) {
                 leaderCommitIndex = lastLogIndex

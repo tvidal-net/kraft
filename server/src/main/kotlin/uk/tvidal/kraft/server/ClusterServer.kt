@@ -33,7 +33,7 @@ internal abstract class ClusterServer(
 
     override fun publish(data: List<ByteArray>) {
         randomNode.run {
-            publish(entries(data.map { entryOf(term, it) }))
+            publish(entries(data.map { entryOf(it) }))
         }
     }
 }
