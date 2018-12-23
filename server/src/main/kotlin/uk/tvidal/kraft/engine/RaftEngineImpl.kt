@@ -22,12 +22,17 @@ internal class RaftEngineImpl(
     }
 
     fun clientAppend(msg: ClientAppendMessage) {
+        val currentLeader = leader
         if (role == LEADER) {
             val lastLogIndex = storage.append(msg.data)
+            log.debug { "$self clientAppend ${msg.data} $storage" }
             if (isSingleNodeCluster) {
                 leaderCommitIndex = lastLogIndex
                 commitIndex = lastLogIndex
             }
+        } else if (currentLeader != null) {
+            log.debug { "$self clientAppend forward to $leader ${msg.data}" }
+            sender(currentLeader).send(msg)
         }
     }
 
@@ -92,10 +97,7 @@ internal class RaftEngineImpl(
                 commitIndex = quorumCommitIndex
                 followers.values.forEach(RaftFollower::commit)
             } else {
-                log.warn(
-                    "SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
-                    quorumCommitIndex, quorumCommitTerm, term
-                )
+                log.warn { "SKIPPING quorumCommitIndex=$quorumCommitIndex quorumCommitTerm=$quorumCommitTerm currentTerm=$term" }
             }
         }
     }

@@ -11,9 +11,9 @@ const val NOW = 0L
 const val BEFORE_LOG = 0L
 
 fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME): List<RaftNode> =
-    (0 until size).map { RaftNode(it.toByte(), clusterName) }
+    (0 until size).map { RaftNode(it, clusterName) }
 
 fun raftCluster(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME): List<RaftCluster> =
     raftNodes(size, clusterName).let { nodes -> (0 until size).map { RaftCluster(it, nodes) } }
 
-fun raftClusterServer(clusterConfig: List<KRaftConfig>): KRaftServer = SingleThreadClusterServer(clusterConfig)
+fun singleThreadClusterServer(clusterConfig: List<KRaftConfig>): KRaftServer = SingleThreadClusterServer(clusterConfig)

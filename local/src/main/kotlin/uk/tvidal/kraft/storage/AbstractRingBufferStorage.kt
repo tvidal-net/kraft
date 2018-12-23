@@ -48,5 +48,5 @@ abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage
         else -> (index % size).toInt()
     }
 
-    override fun toString() = "[($firstLogIndex:$lastLogIndex) nextLogIndex=$nextLogIndex]"
+    override fun toString() = "[($firstLogIndex->$lastLogIndex) nextLogIndex=$nextLogIndex]"
 }

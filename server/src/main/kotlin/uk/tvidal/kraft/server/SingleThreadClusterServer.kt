@@ -1,18 +1,12 @@
 package uk.tvidal.kraft.server
 
 import uk.tvidal.kraft.config.KRaftConfig
-import uk.tvidal.kraft.engine.RaftEngineImpl
-import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.concurrent.atomic.AtomicReference
 
 internal class SingleThreadClusterServer(
     clusterConfig: List<KRaftConfig>,
     private val loopTolerance: LoopToleranceController = LoopToleranceController()
-) : KRaftServer, Runnable {
-
-    private companion object : KRaftLogging()
-
-    private val nodes = clusterConfig.map { RaftEngineImpl(it) }
+) : ClusterServer(clusterConfig), Runnable {
 
     private val thread = AtomicReference<Thread>()
 

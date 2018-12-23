@@ -4,6 +4,7 @@ import uk.tvidal.kraft.BEFORE_LOG
 import uk.tvidal.kraft.KRaftError
 import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.client.localClientNode
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftRole.CANDIDATE
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
@@ -22,6 +23,8 @@ internal abstract class RaftEngine(
 ) : RaftState, RaftMessageSender {
 
     companion object : KRaftLogging()
+
+    override val clientNode: RaftNode = localClientNode()
 
     override val cluster = config.cluster
 

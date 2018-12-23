@@ -10,4 +10,7 @@ class ClientAppendMessage(
 
     val data: KRaftEntries
 
-) : AbstractClientMessage(CLIENT_APPEND, from)
+) : AbstractClientMessage(CLIENT_APPEND, from) {
+
+    override fun toString() = "${super.toString()} $data"
+}

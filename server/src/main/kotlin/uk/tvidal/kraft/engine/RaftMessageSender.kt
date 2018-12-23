@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.engine
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
@@ -9,6 +10,8 @@ import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.transport.KRaftTransport
 
 internal interface RaftMessageSender : RaftState {
+
+    val clientNode: RaftNode
 
     val transport: KRaftTransport
 
@@ -31,4 +34,7 @@ internal interface RaftMessageSender : RaftState {
 
     fun vote(to: RaftNode, vote: Boolean) = sender(to)
         .respond(VoteMessage(self, term, vote))
+
+    fun publish(entries: KRaftEntries) = sender(self)
+        .send(ClientAppendMessage(clientNode, entries))
 }
