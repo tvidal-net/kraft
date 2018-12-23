@@ -9,18 +9,18 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.SynchronousQueue
 
 class DualQueueMessageReceiver(
-    private val raftQueue: BlockingQueue<Message>,
-    private val clientQueue: BlockingQueue<Message>,
+    private val raft: BlockingQueue<Message>,
+    private val client: BlockingQueue<Message>,
     private val maxDrainCount: Int = MAX_DRAIN_COUNT
 ) : MessageReceiver {
 
     constructor(
-        raftQueueSize: Int = 64,
-        clientQueueSize: Int = 4096,
+        raftSize: Int = 64,
+        clientSize: Int = 4096,
         maxDrainCount: Int = MAX_DRAIN_COUNT
     ) : this(
-        raftQueue = createIncomingMessageQueue(raftQueueSize),
-        clientQueue = createIncomingMessageQueue(clientQueueSize),
+        raft = createIncomingMessageQueue(raftSize),
+        client = createIncomingMessageQueue(clientSize),
         maxDrainCount = maxDrainCount
     )
 
@@ -28,6 +28,7 @@ class DualQueueMessageReceiver(
 
     internal companion object {
         private const val MAX_DRAIN_COUNT = 16
+
         private fun createIncomingMessageQueue(queueSize: Int): BlockingQueue<Message> = when {
             queueSize <= 0 -> SynchronousQueue(true)
             else -> ArrayBlockingQueue(queueSize, true)
@@ -35,18 +36,18 @@ class DualQueueMessageReceiver(
     }
 
     override val size: Int
-        get() = raftQueue.size + clientQueue.size + messages.size
+        get() = raft.size + client.size + messages.size
 
     override fun poll(): Message? {
         if (messages.isEmpty()) {
-            raftQueue.drainTo(messages, maxDrainCount - messages.size)
-            clientQueue.drainTo(messages, maxDrainCount - messages.size)
+            raft.drainTo(messages, maxDrainCount - messages.size)
+            client.drainTo(messages, maxDrainCount - messages.size)
         }
         return messages.poll()
     }
 
     override fun offer(message: Message): Boolean = try {
-        val queue = if (message is RaftMessage) raftQueue else clientQueue
+        val queue = if (message is RaftMessage) raft else client
         queue.put(message)
         true
     } catch (e: InterruptedException) {
@@ -55,8 +56,8 @@ class DualQueueMessageReceiver(
     }
 
     override fun removeIf(predicate: (Message) -> Boolean) {
+        client.removeIf(predicate)
+        raft.removeIf(predicate)
         messages.removeIf(predicate)
-        raftQueue.removeIf(predicate)
-        clientQueue.removeIf(predicate)
     }
 }

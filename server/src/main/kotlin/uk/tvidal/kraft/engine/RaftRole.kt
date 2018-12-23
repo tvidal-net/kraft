@@ -4,23 +4,23 @@ import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
-import uk.tvidal.kraft.message.raft.RaftMessageType.REQUEST_VOTE
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
 import uk.tvidal.kraft.message.raft.VoteMessage
 
 enum class RaftRole {
 
     FOLLOWER {
-        override fun run(now: Long, raft: RaftEngine) = with(raft) {
-            checkElectionTimeout(now)
+        override fun run(now: Long, raft: RaftEngine): RaftRole? {
+            raft.checkElectionTimeout(now)
+            return null
         }
 
-        override fun RaftEngine.enterRole(now: Long) {
-            resetElectionTimeout(now)
+        override fun enterRole(now: Long, raft: RaftEngine) {
+            raft.resetElectionTimeout(now)
         }
 
-        override fun RaftEngine.exitRole(now: Long) {
-            resetLeader()
+        override fun exitRole(now: Long, raft: RaftEngine) {
+            raft.resetLeader()
         }
 
         override fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
@@ -35,15 +35,13 @@ enum class RaftRole {
     },
 
     CANDIDATE {
-        override fun RaftEngine.enterRole(now: Long) {
-            startElection(now)
+        override fun enterRole(now: Long, raft: RaftEngine) {
+            raft.startElection(now)
         }
 
-        override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine) =
-            raft.processVote(msg)
+        override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine) = raft.processVote(msg)
 
-        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine) =
-            reset()
+        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine) = reset()
     },
 
     LEADER {
@@ -52,12 +50,12 @@ enum class RaftRole {
             return null
         }
 
-        override fun RaftEngine.enterRole(now: Long) {
-            becomeLeader()
+        override fun enterRole(now: Long, raft: RaftEngine) {
+            raft.becomeLeader()
         }
 
-        override fun RaftEngine.exitRole(now: Long) {
-            resetLeader()
+        override fun exitRole(now: Long, raft: RaftEngine) {
+            raft.resetLeader()
         }
 
         override fun appendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? {
@@ -69,7 +67,9 @@ enum class RaftRole {
     ERROR {
         override fun reset(): RaftRole? = null
 
-        override fun RaftEngine.enterRole(now: Long) = cancelElectionTimeout()
+        override fun enterRole(now: Long, raft: RaftEngine) {
+            raft.cancelElectionTimeout()
+        }
     };
 
     @Suppress("LeakingThis")
@@ -81,18 +81,17 @@ enum class RaftRole {
 
     internal fun enter(now: Long, raft: RaftEngine) {
         log.info { "${raft.self} Enter $name" }
-        raft.enterRole(now)
+        enterRole(now, raft)
     }
 
-    internal open fun RaftEngine.enterRole(now: Long) {}
+    internal open fun enterRole(now: Long, raft: RaftEngine) {}
 
-    internal fun exit(now: Long, raft: RaftEngine) = with(raft) {
-        log.info { "${raft.self} Exit $name" }
-        resetElection()
-        exitRole(now)
+    internal fun exit(now: Long, raft: RaftEngine) {
+        raft.resetElection()
+        exitRole(now, raft)
     }
 
-    internal open fun RaftEngine.exitRole(now: Long) {}
+    internal open fun exitRole(now: Long, raft: RaftEngine) {}
 
     internal open fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? = null
 
@@ -122,13 +121,6 @@ enum class RaftRole {
         raft.term == msg.term -> {
             log.debug { "${raft.self} process msg=$msg" }
             processMessage(now, msg, raft)
-        }
-
-        // Message is from an old term, deny if it's a request vote
-        msg.type == REQUEST_VOTE -> {
-            log.debug { "${raft.self} dropping message due to oldTerm=${msg.term} (currentTerm=${raft.term})" }
-            raft.vote(msg.from, false)
-            null
         }
 
         else -> null

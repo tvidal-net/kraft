@@ -1,7 +1,7 @@
 package uk.tvidal.kraft
 
 import uk.tvidal.kraft.config.KRaftConfig
-import uk.tvidal.kraft.server.KRaftServer
+import uk.tvidal.kraft.server.ClusterServer
 import uk.tvidal.kraft.server.LOOP_TOLERANCE_MILLIS
 import uk.tvidal.kraft.server.LoopToleranceController
 import uk.tvidal.kraft.server.MultiThreadClusterServer
@@ -22,9 +22,9 @@ fun raftCluster(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME): List<Raf
 fun singleThreadClusterServer(
     clusterConfig: List<KRaftConfig>,
     loopToleranceMillis: Long = LOOP_TOLERANCE_MILLIS
-): KRaftServer = SingleThreadClusterServer(clusterConfig, LoopToleranceController(loopToleranceMillis))
+): ClusterServer = SingleThreadClusterServer(clusterConfig, LoopToleranceController(loopToleranceMillis))
 
 fun multiThreadClusterServer(
     clusterConfig: List<KRaftConfig>,
     loopToleranceMillis: Long = LOOP_TOLERANCE_MILLIS
-): KRaftServer = MultiThreadClusterServer(clusterConfig, LoopToleranceController(loopToleranceMillis))
+): ClusterServer = MultiThreadClusterServer(clusterConfig, LoopToleranceController(loopToleranceMillis))

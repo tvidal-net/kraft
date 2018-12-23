@@ -19,17 +19,17 @@ abstract class ClusterServer internal constructor(
     private val random: ThreadLocalRandom
         get() = ThreadLocalRandom.current()
 
-    protected val nodes: List<RaftEngine> = clusterConfig.map {
+    val nodes: List<RaftEngine> = clusterConfig.map {
         RaftServer(it)
     }
 
-    protected val size: Int
+    val size: Int
         get() = nodes.size
 
-    protected val leader: RaftEngine?
+    val leader: RaftEngine?
         get() = nodes.firstOrNull { it.role == LEADER }
 
-    protected val followers: List<RaftEngine>
+    val followers: List<RaftEngine>
         get() = nodes.filter { it.role == FOLLOWER }
 
     protected val randomNode: RaftEngine

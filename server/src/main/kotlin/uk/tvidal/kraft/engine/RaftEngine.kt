@@ -72,6 +72,8 @@ abstract class RaftEngine internal constructor(
     var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
         private set
 
+    private var lastElectionTimeChecked: Long = Long.MAX_VALUE
+
     init {
         log.info { "Created $this (election=${Instant.ofEpochMilli(nextElectionTime)})" }
     }
@@ -102,9 +104,18 @@ abstract class RaftEngine internal constructor(
         nextElectionTime = NEVER
     }
 
-    internal fun checkElectionTimeout(now: Long): RaftRole? =
-        if (nextElectionTime in 1..now) CANDIDATE
-        else null
+    internal fun checkElectionTimeout(now: Long): RaftRole? = try {
+        if (nextElectionTime in 1..now) {
+            val delay = now - lastElectionTimeChecked
+            if (delay > heartbeatWindow) {
+                resetElectionTimeout(now)
+                log.warn { "$self checkElectionTimeout check took too long ($delay ms), resetting" }
+                null
+            } else CANDIDATE
+        } else null
+    } finally {
+        lastElectionTimeChecked = now
+    }
 
     internal fun resetLeader() {
         leader = null

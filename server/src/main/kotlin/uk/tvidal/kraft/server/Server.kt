@@ -39,9 +39,7 @@ internal fun singleThread(runnable: Runnable): Thread = Thread(runnable, KRAFT_T
 
 fun registerStopServerShutdownHook(server: KRaftServer) = getRuntime().addShutdownHook(
     Thread(
-        Runnable {
-            server.stop()
-        },
+        Runnable { server.stop() },
         SHUTDOWN_HOOK_THREAD_NAME
     )
 )

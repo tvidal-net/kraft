@@ -72,7 +72,7 @@ class RaftServer internal constructor(
     }
 
     private fun updateRole(now: Long, newRole: RaftRole?) {
-        if (newRole != null && newRole != role) {
+        if (newRole != null) {
             role.exit(now, this)
             role = newRole
             role.enter(now, this)
