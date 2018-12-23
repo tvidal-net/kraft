@@ -3,6 +3,7 @@ package uk.tvidal.kraft.client
 import uk.tvidal.kraft.DEFAULT_CLIENT_CLUSTER_NAME
 import uk.tvidal.kraft.RaftNode
 import java.net.Inet4Address
+import java.net.InetAddress
 import java.net.NetworkInterface
 import java.nio.ByteBuffer.wrap
 
@@ -20,7 +21,7 @@ fun localNetworkSiteAddress(): Inet4Address? {
     return null
 }
 
-fun Inet4Address.toInt(): Int = with(wrap(address)) {
+fun InetAddress.toInt(): Int = with(wrap(address)) {
     getInt(0)
 }
 
