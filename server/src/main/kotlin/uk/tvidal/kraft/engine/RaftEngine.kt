@@ -13,6 +13,7 @@ import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
 import uk.tvidal.kraft.message.raft.VoteMessage
+import uk.tvidal.kraft.storage.flush
 import java.lang.System.currentTimeMillis
 import java.time.Instant
 
@@ -27,13 +28,16 @@ internal abstract class RaftEngine(
     override val transport = config.transport
     protected val storage = config.storage
     protected val timeout = config.timeout
-    val sizes = config.size
+    val sizes = config.sizes
 
     final override var role = FOLLOWER
         protected set
 
     final override var term = 0L
         private set
+
+    final override var leaderCommitIndex = 0L
+        protected set
 
     final override var commitIndex = 0L
         protected set(value) {
@@ -42,15 +46,17 @@ internal abstract class RaftEngine(
             }
         }
 
-    final override var leaderCommitIndex = 0L
-        protected set
-
     final override var logConsistent = false
         private set
 
-    final override val lastLogTerm = storage.lastLogTerm
-    final override val lastLogIndex = storage.lastLogIndex
-    final override val nextLogIndex = storage.nextLogIndex
+    final override val lastLogTerm
+        get() = storage.lastLogTerm
+
+    final override val lastLogIndex
+        get() = storage.lastLogIndex
+
+    final override val nextLogIndex
+        get() = storage.nextLogIndex
 
     final override var leader: RaftNode? = null
         private set
@@ -71,7 +77,7 @@ internal abstract class RaftEngine(
         get() = timeout.heartbeatTimeout
 
     fun startElection(now: Long) {
-        term++
+        updateTerm()
         votedFor = self
         votesReceived.clear()
         votesReceived += self
@@ -102,21 +108,41 @@ internal abstract class RaftEngine(
 
     fun appendEntries(now: Long, msg: AppendMessage) {
         resetElectionTimeout(now)
+        leader = msg.from
         leaderCommitIndex = msg.leaderCommitIndex
-        val matchIndex = appendLogIndex(msg)
+        val matchIndex = appendLogIndex(msg.prevIndex, msg.prevTerm)
         logConsistent = matchIndex > BEFORE_LOG
         if (logConsistent) {
             storage.append(msg.data, matchIndex)
-            commitIndex = matchIndex
-            ack(msg.from, matchIndex)
+            commitIndex = msg.prevIndex
+            ack(msg.from, lastLogIndex)
         } else {
             val nackIndex = nackIndex(msg)
             nack(msg.from, nackIndex)
         }
-        leader = msg.from
     }
 
-    protected abstract fun appendLogIndex(msg: AppendMessage): Long
+    private fun appendLogIndex(prevIndex: Long, prevTerm: Long): Long {
+        val termAtPrevIndex = storage.termAt(prevIndex)
+        val logMessage = "$self leader=$leader log=$lastLogIndex prevIndex=$prevIndex termAtPrevIndex=[$termAtPrevIndex,from=$prevTerm]"
+
+        if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {
+
+            if (prevIndex < lastLogIndex) {
+                if (commitIndex > prevIndex) {
+                    log.error { "$logMessage - CANNOT TRUNCATE BEFORE COMMIT_INDEX: $commitIndex" }
+                    return BEFORE_LOG
+                } else {
+                    log.info { "$logMessage - TRUNCATE LOG" }
+                }
+            } else {
+                log.debug { "$logMessage - OK" }
+            }
+            return prevIndex + 1
+        }
+        log.warn { "$logMessage - LOG IS INCONSISTENT" }
+        return BEFORE_LOG
+    }
 
     private fun nackIndex(msg: AppendMessage): Long = when {
         msg.prevIndex > lastLogIndex -> lastLogIndex
@@ -157,7 +183,7 @@ internal abstract class RaftEngine(
 
     abstract fun processAck(msg: AppendAckMessage)
 
-    fun updateTerm(newTerm: Long) {
+    fun updateTerm(newTerm: Long = term + 1) {
         log.info { "$self newTerm=$newTerm (currentTerm=$term)" }
         term = newTerm
     }
@@ -166,13 +192,15 @@ internal abstract class RaftEngine(
 
     fun read(fromIndex: Long, byteLimit: Int) = storage.read(fromIndex, byteLimit)
 
-    abstract fun appendFlush(): Long
+    private fun appendFlush() = storage.append(flush(term))
 
-    abstract fun heartbeat(now: Long)
+    abstract fun heartbeatFollowers(now: Long)
 
     abstract fun resetFollowers()
 
+    abstract fun computeCommitIndex()
+
     abstract fun run(now: Long)
 
-    override fun toString() = "${RaftEngine::class.simpleName}($self)"
+    override fun toString() = "${RaftEngine::class.simpleName}($self) [$lastLogIndex:$lastLogTerm]"
 }

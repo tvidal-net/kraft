@@ -27,7 +27,7 @@ abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage
         else -> data[pos(index)]
     }
 
-    protected fun truncateAt(index: Long) {
+    protected fun truncateBefore(index: Long) {
         pos(index)
         lastLogIndex = index - 1
     }

@@ -8,8 +8,8 @@ interface RaftState {
     val role: RaftRole
     val term: Long
 
-    val commitIndex: Long
     val leaderCommitIndex: Long
+    val commitIndex: Long
 
     val logConsistent: Boolean
     val lastLogTerm: Long

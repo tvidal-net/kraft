@@ -48,7 +48,7 @@ enum class RaftRole {
 
     LEADER {
         override fun run(now: Long, raft: RaftEngine): RaftRole? {
-            raft.heartbeat(now)
+            raft.heartbeatFollowers(now)
             return null
         }
 

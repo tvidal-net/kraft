@@ -9,5 +9,5 @@ data class KRaftConfig(
     val transport: KRaftTransport,
     val storage: KRaftStorage,
     val timeout: TimeoutConfig = TimeoutConfig(),
-    val size: SizeConfig = SizeConfig()
+    val sizes: SizeConfig = SizeConfig()
 )
