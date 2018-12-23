@@ -9,7 +9,7 @@ import uk.tvidal.kraft.message.raft.RaftMessage
 import uk.tvidal.kraft.transport.DualQueueMessageReceiver
 import uk.tvidal.kraft.transport.MessageReceiver
 
-internal class RaftEngineImpl(
+internal class RaftServer(
     config: KRaftConfig,
     private val messages: MessageReceiver = DualQueueMessageReceiver()
 ) : RaftEngine(config) {

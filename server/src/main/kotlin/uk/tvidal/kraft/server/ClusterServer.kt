@@ -2,7 +2,7 @@ package uk.tvidal.kraft.server
 
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftEngine
-import uk.tvidal.kraft.engine.RaftEngineImpl
+import uk.tvidal.kraft.engine.RaftServer
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.logging.KRaftLogging
@@ -19,7 +19,7 @@ internal abstract class ClusterServer(
         get() = ThreadLocalRandom.current()
 
     protected val nodes: List<RaftEngine> = clusterConfig.map {
-        RaftEngineImpl(it)
+        RaftServer(it)
     }
 
     protected val leader: RaftEngine?
