@@ -27,7 +27,7 @@ class DualQueueMessageReceiver(
     private val messages = ArrayDeque<Message>(maxDrainCount)
 
     internal companion object {
-        private const val MAX_DRAIN_COUNT = 10
+        private const val MAX_DRAIN_COUNT = 16
         private fun createIncomingMessageQueue(queueSize: Int): BlockingQueue<Message> = when {
             queueSize <= 0 -> SynchronousQueue(true)
             else -> ArrayBlockingQueue(queueSize, true)

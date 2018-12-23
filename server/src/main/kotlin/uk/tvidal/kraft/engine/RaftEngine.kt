@@ -37,7 +37,7 @@ abstract class RaftEngine internal constructor(
         protected set
 
     final override var term = 0L
-        private set
+        protected set
 
     final override var leaderCommitIndex = 0L
         protected set
@@ -188,10 +188,7 @@ abstract class RaftEngine internal constructor(
 
     internal abstract fun processAck(msg: AppendAckMessage)
 
-    internal fun updateTerm(newTerm: Long = term + 1) {
-        log.info { "$self updateTerm T$term newTerm=$newTerm" }
-        term = newTerm
-    }
+    internal abstract fun updateTerm(newTerm: Long = term + 1)
 
     internal fun termAt(index: Long) = storage.termAt(index)
 

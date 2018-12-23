@@ -43,6 +43,12 @@ class RaftServer internal constructor(
         else state?.nack(msg.matchIndex)
     }
 
+    override fun updateTerm(newTerm: Long) {
+        log.info { "$self updateTerm T$term newTerm=$newTerm" }
+        term = newTerm
+        messages.removeIf { it is RaftMessage && it.term < newTerm }
+    }
+
     override fun run(now: Long) {
         try {
             val msg = messages.poll()
