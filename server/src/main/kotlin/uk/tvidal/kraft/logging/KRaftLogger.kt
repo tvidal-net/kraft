@@ -8,7 +8,7 @@ class KRaftLogger(val logger: Logger) {
 
     constructor(name: String) : this(LoggerFactory.getLogger(name))
 
-    constructor(enum: Enum<*>) : this("${loggerName(enum::class)}.${enum.name}")
+    constructor(enum: Enum<*>) : this("${loggerName(enum::class)}")
 
     constructor(cls: KClass<*>) : this(loggerName(cls))
 

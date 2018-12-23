@@ -11,5 +11,5 @@ abstract class AbstractRaftMessage(
 
 ) : AbstractMessage(type, from), RaftMessage {
 
-    override fun toString() = "$type:$term (from: $from)"
+    override fun toString() = "$type T$term ($from)"
 }

@@ -21,7 +21,7 @@ internal abstract class RaftEngine(
     config: KRaftConfig
 ) : RaftState, RaftMessageSender {
 
-    private companion object : KRaftLogging()
+    companion object : KRaftLogging()
 
     override val cluster = config.cluster
 
@@ -70,13 +70,14 @@ internal abstract class RaftEngine(
         private set
 
     init {
-        log.info { "Starting $self on [$lastLogIndex:$lastLogTerm] (election=${Instant.ofEpochMilli(nextElectionTime)})" }
+        log.info { "Created $this (election=${Instant.ofEpochMilli(nextElectionTime)})" }
     }
 
     val heartbeatWindow: Int
         get() = timeout.heartbeatTimeout
 
     fun startElection(now: Long) {
+        log.info { "$self startElection T$term" }
         updateTerm()
         votedFor = self
         votesReceived.clear()
@@ -124,7 +125,8 @@ internal abstract class RaftEngine(
 
     private fun appendLogIndex(prevIndex: Long, prevTerm: Long): Long {
         val termAtPrevIndex = storage.termAt(prevIndex)
-        val logMessage = "$self leader=$leader log=$lastLogIndex prevIndex=$prevIndex termAtPrevIndex=[$termAtPrevIndex,from=$prevTerm]"
+        val logMessage = "$self appendLogIndex ($leader) log=$lastLogIndex prevIndex=$prevIndex " +
+            "termAtPrevIndex=[$termAtPrevIndex,msg=$prevTerm]"
 
         if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {
 
@@ -164,7 +166,7 @@ internal abstract class RaftEngine(
     }
 
     fun processVote(msg: VoteMessage): RaftRole? {
-        log.info { "$self term=${msg.term} vote=${msg.vote} from=${msg.from}" }
+        log.info { "$self processVote T$term (${msg.from}) [vote=${msg.vote} term=${msg.term}]" }
         if (msg.vote) {
             votesReceived += msg.from
             if (votesReceived.size >= cluster.majority) {
@@ -184,7 +186,7 @@ internal abstract class RaftEngine(
     abstract fun processAck(msg: AppendAckMessage)
 
     fun updateTerm(newTerm: Long = term + 1) {
-        log.info { "$self newTerm=$newTerm (currentTerm=$term)" }
+        log.info { "$self updateTerm T$term newTerm=$newTerm" }
         term = newTerm
     }
 
@@ -202,5 +204,5 @@ internal abstract class RaftEngine(
 
     abstract fun run(now: Long)
 
-    override fun toString() = "${RaftEngine::class.simpleName}($self) [$lastLogIndex:$lastLogTerm]"
+    override fun toString() = "${RaftEngine::class.simpleName}($self) $storage"
 }

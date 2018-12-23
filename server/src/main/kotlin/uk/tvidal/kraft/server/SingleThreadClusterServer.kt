@@ -23,6 +23,7 @@ internal class SingleThreadClusterServer(
         if (!running) {
             val newThread = singleThread(this)
             if (thread.compareAndSet(null, newThread)) {
+                log.info { "Starting..." }
                 newThread.start()
             }
         }
@@ -30,8 +31,10 @@ internal class SingleThreadClusterServer(
 
     override fun stop() {
         if (running) {
+            log.info { "Stopping..." }
             val currentThread = thread.getAndSet(null)
             currentThread?.join()
+            log.info { "Done" }
         }
     }
 

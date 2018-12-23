@@ -3,7 +3,6 @@ package uk.tvidal.kraft.engine
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftRole.ERROR
 import uk.tvidal.kraft.engine.RaftRole.LEADER
-import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
@@ -14,8 +13,6 @@ internal class RaftEngineImpl(
     config: KRaftConfig,
     private val messages: MessageReceiver = DualQueueMessageReceiver()
 ) : RaftEngine(config) {
-
-    private companion object : KRaftLogging()
 
     val followers = others
         .associate { it to RaftFollower(this, sender(it)) }
