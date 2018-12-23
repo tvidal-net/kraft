@@ -1,6 +1,6 @@
 dependencies {
     implementation project(':kraft-core')
 
-    implementation "com.google.code.gson:gson:$gsonVersion"
-    implementation "com.github.salomonbrys.kotson:kotson:$kotsonVersion"
+    compile "com.google.code.gson:gson:$gsonVersion"
+    compile "com.github.salomonbrys.kotson:kotson:$kotsonVersion"
 }

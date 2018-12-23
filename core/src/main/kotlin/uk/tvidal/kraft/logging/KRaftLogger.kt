@@ -63,4 +63,13 @@ class KRaftLogger(val logger: Logger) {
     fun error(e: Throwable) = error(e) { "${e::class.simpleName}: ${e.message}" }
 
     fun error(message: String, vararg args: Any?) = logger.error(message, *args)
+
+    inline fun tryCatch(rethrow: Boolean = false, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Throwable) {
+            error(e)
+            if (rethrow) throw e
+        }
+    }
 }
