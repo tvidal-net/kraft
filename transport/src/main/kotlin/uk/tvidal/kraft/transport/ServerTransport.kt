@@ -1,7 +1,6 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
-import uk.tvidal.kraft.codec.SocketMessageWriter
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.TransportMessage
@@ -57,12 +56,8 @@ class ServerTransport(
     }
 
     fun write(to: RaftNode, message: Message) {
-        writers[to]?.writeAsync(message)
-    }
-
-    private fun SocketMessageWriter.writeAsync(message: Message) {
         writerThread.tryCatch {
-            write(message)
+            writers[to]?.invoke(message)
         }
     }
 

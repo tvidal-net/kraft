@@ -5,6 +5,8 @@ import uk.tvidal.kraft.message.MessageType
 import uk.tvidal.kraft.message.client.ClientMessageType
 import uk.tvidal.kraft.message.raft.RaftMessageType
 import uk.tvidal.kraft.message.transport.TransportMessageType
+import java.io.InputStream
+import java.io.OutputStream
 import kotlin.reflect.KClass
 
 object MessageCodec {
@@ -19,4 +21,12 @@ object MessageCodec {
         .associate { it.name to it }
 
     operator fun get(name: String): KClass<out Message>? = messageTypes[name]?.messageType
+
+    fun jsonReader(stream: InputStream) = JsonMessageReader(
+        stream.reader()
+    )
+
+    fun jsonWriter(stream: OutputStream) = JsonMessageWriter(
+        stream.writer()
+    )
 }

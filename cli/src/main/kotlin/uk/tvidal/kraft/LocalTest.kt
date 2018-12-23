@@ -4,41 +4,37 @@ import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.server.registerStopServerShutdownHook
 import uk.tvidal.kraft.storage.RingBufferStorage
-import uk.tvidal.kraft.transport.LocalTransportFactory
-import java.lang.Thread.sleep
+import uk.tvidal.kraft.transport.networkTransport
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.concurrent.thread
 
 fun main(args: Array<String>) {
     logbackConfigurationFile = LOGBACK_CONSOLE
 
     val log = KRaftLogger {}
 
-    val transport = LocalTransportFactory()
-    val cluster = raftCluster(5)
+    val nodes = raftNodes(2)
+    val cluster = raftCluster(nodes)
+    val transport = networkTransport(nodes)
     val config = cluster.map {
-        KRaftConfig(it, transport.create(), RingBufferStorage())
+        KRaftConfig(it, transport[it.self]!!, RingBufferStorage())
     }
     val server = singleThreadClusterServer(config)
     registerStopServerShutdownHook(server)
     server.start()
 
-    Thread(
-        Runnable {
-            val random = ThreadLocalRandom.current()
+    thread(isDaemon = true, name = "KRaftProducerThread") {
+        val random = ThreadLocalRandom.current()
 
-            while (true) {
-                sleep(750)
-                log.info { "Publishing..." }
+        while (true) {
+            Thread.sleep(750)
+            log.info { "Publishing..." }
 
-                val data = (1..random.nextInt(12))
-                    .map { "Hello World: $it".toByteArray() }
+            val data = (1..random.nextInt(12))
+                .map { "Hello World: $it".toByteArray() }
 
-                server.publish(data)
-            }
-        },
-        "KRaftProducerThread"
-    ).apply {
-        isDaemon = true
-        start()
+            server.publish(data)
+        }
+
     }
 }

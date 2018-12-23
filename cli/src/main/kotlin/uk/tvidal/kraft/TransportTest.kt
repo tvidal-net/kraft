@@ -1,8 +1,9 @@
 package uk.tvidal.kraft
 
 import uk.tvidal.kraft.client.localClientNode
+import uk.tvidal.kraft.client.localNetworkSiteAddress
 import uk.tvidal.kraft.codec.json.JsonMessageReader
-import uk.tvidal.kraft.codec.json.gson
+import uk.tvidal.kraft.codec.json.MessageCodec
 import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.message.raft.VoteMessage
 import java.lang.Thread.sleep
@@ -55,18 +56,21 @@ private fun server(port: Int) {
 
 fun main(args: Array<String>) {
     logbackConfigurationFile = LOGBACK_CONSOLE
-    server(1801)
+    //    server(1801)
 
     val node = localClientNode()
+    val host = localNetworkSiteAddress()
 
-    val client = Socket("192.168.0.22", 1801)
-    val outputStream = client.getOutputStream()
-    val writer = outputStream.writer()
-    while (client.isConnected) {
-        val msg = VoteMessage(node, 1L, true)
-        val json = gson.toJsonTree(msg)
-        gson.toJson(json, writer)
-        writer.flush()
-        sleep(1000)
+    var count = 0L
+
+    singleThreadPool("TransportTest").retry(maxAttempts = 0) {
+        val socket = Socket(host, 1801)
+        val writer = MessageCodec.jsonWriter(socket.getOutputStream())
+        while (true) {
+            val msg = VoteMessage(node, count, false)
+            log.info { "Written message ${count++}" }
+            writer.write(msg)
+            sleep(300)
+        }
     }
 }

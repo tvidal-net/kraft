@@ -1,7 +1,6 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
-import uk.tvidal.kraft.codec.SocketMessageWriter
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.retry
@@ -24,13 +23,13 @@ class ClientTransport(
     @Volatile
     private var running: Boolean = true
 
-    private val socketReader = config.codec.reader(socket)
-    private val socketWriter = config.codec.writer(socket)
+    private val reader = config.codec.reader(socket)
+    private val writer = config.codec.writer(socket)
 
     init {
         val messages = config.messageReceiver
         config.readerThread.retry({ running && socket.isConnected }, maxAttempts = 0, name = "Client (${socket.inetAddress})") {
-            for (msg in socketReader) {
+            for (msg in reader) {
                 if (msg != null) {
                     messages.offer(msg)
                 }
@@ -39,12 +38,8 @@ class ClientTransport(
     }
 
     fun write(message: Message) {
-        socketWriter.writeAsync(message)
-    }
-
-    private fun SocketMessageWriter.writeAsync(message: Message) {
         writerThread.tryCatch {
-            write(message)
+            writer(message)
         }
     }
 

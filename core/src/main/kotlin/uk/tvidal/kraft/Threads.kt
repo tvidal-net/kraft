@@ -72,11 +72,11 @@ fun ExecutorService.retry(
             lastError = e
             attempts--
             log.error(e) { "${name ?: currentThread().name}: Retrying after ${delay}ms... ($attempts attempts remaining)" }
-            if (attempts > 0) {
+            if (maxAttempts == 0 || attempts > 0) {
                 sleep(delay.toLong())
                 val jitter = random.nextInt(initialDelay * 2) - initialDelay
-                val newDelay = (delay * fallbackFactor).toInt() + jitter
-                delay = if (newDelay <= maxDelay) newDelay else delay
+                val newDelay = (delay * fallbackFactor).toInt()
+                delay = (if (newDelay <= maxDelay) newDelay else delay) + jitter
             }
         } catch (e: Throwable) {
             log.error(e)

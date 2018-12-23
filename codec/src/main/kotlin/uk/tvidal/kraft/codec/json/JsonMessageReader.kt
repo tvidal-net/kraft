@@ -2,12 +2,13 @@ package uk.tvidal.kraft.codec.json
 
 import com.github.salomonbrys.kotson.fromJson
 import com.google.gson.JsonElement
+import com.google.gson.stream.JsonReader
 import uk.tvidal.kraft.message.Message
 import java.io.Reader
 
 class JsonMessageReader(reader: Reader) : Iterable<Message?> {
 
-    private val reader = gson.newJsonReader(reader)!!
+    private val reader: JsonReader = gson.newJsonReader(reader)
 
     override fun iterator() = object : Iterator<Message?> {
 
