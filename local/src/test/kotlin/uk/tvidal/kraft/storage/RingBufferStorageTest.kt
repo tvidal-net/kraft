@@ -1,10 +1,10 @@
 package uk.tvidal.kraft.storage
 
-import uk.tvidal.kraft.LONG_BYTES
-import uk.tvidal.kraft.longEntries
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.tvidal.kraft.LONG_BYTES
+import uk.tvidal.kraft.longEntries
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 

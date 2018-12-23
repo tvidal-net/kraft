@@ -28,7 +28,8 @@ abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage
     }
 
     protected fun truncateAt(index: Long) {
-        lastLogIndex = index
+        pos(index)
+        lastLogIndex = index - 1
     }
 
     protected fun append(entry: KRaftEntry) {
@@ -39,10 +40,10 @@ abstract class AbstractRingBufferStorage(protected val size: Int) : KRaftStorage
 
     private fun pos(index: Long) = when {
         index <= 0L || index < firstLogIndex -> {
-            throw IllegalArgumentException("Attempt to access before the start of the log")
+            throw IllegalArgumentException("Attempt to access before the start of the log (index=$index firstLogIndex=$firstLogIndex)")
         }
         index > nextLogIndex -> {
-            throw IllegalArgumentException("Attempt to access past the end of the log")
+            throw IllegalArgumentException("Attempt to access past the end of the log (index=$index lastLogIndex=$lastLogIndex)")
         }
         else -> (index % size).toInt()
     }

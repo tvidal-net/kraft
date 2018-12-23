@@ -3,7 +3,7 @@ package uk.tvidal.kraft.storage
 class RingBufferStorage(size: Int = 4096) : AbstractRingBufferStorage(size) {
 
     override fun append(entries: Iterable<KRaftEntry>, fromIndex: Long): Long {
-        truncateAt(fromIndex - 1)
+        truncateAt(fromIndex)
         entries.forEach { append(it) }
         return lastLogIndex
     }
