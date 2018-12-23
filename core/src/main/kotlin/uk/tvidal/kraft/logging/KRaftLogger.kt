@@ -2,17 +2,18 @@ package uk.tvidal.kraft.logging
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import uk.tvidal.kraft.className
 import kotlin.reflect.KClass
 
 class KRaftLogger(val logger: Logger) {
 
     constructor(name: String) : this(LoggerFactory.getLogger(name))
 
-    constructor(enum: Enum<*>) : this("${loggerName(enum::class)}")
+    constructor(enum: Enum<*>) : this(loggerName(enum::class))
 
     constructor(cls: KClass<*>) : this(loggerName(cls))
 
-    constructor(block: () -> Unit) : this(block.javaClass.name.substringBefore('$'))
+    constructor(block: Function<*>) : this(block.className())
 
     companion object {
         private const val COMPANION_SUFFIX = ".Companion"
@@ -64,12 +65,11 @@ class KRaftLogger(val logger: Logger) {
 
     fun error(message: String, vararg args: Any?) = logger.error(message, *args)
 
-    inline fun tryCatch(rethrow: Boolean = false, block: () -> Unit) {
-        try {
-            block()
-        } catch (e: Throwable) {
-            error(e)
-            if (rethrow) throw e
-        }
+    inline fun <T> tryCatch(rethrow: Boolean = false, block: () -> T): T? = try {
+        block()
+    } catch (e: Throwable) {
+        error(e)
+        if (rethrow) throw e
+        else null
     }
 }

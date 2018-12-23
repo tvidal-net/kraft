@@ -8,3 +8,5 @@ const val LONG_BYTES = java.lang.Long.BYTES
 const val INT_BYTES = java.lang.Integer.BYTES
 const val SHORT_BYTES = java.lang.Short.BYTES
 const val BYTE_BYTES = java.lang.Byte.BYTES
+
+fun Function<*>.className() = javaClass.name.substringBefore('$')

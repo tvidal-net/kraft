@@ -7,8 +7,10 @@ import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.ConnectMessage
 import uk.tvidal.kraft.message.transport.TransportMessage
+import uk.tvidal.kraft.retry
 import uk.tvidal.kraft.threadFactory
 import uk.tvidal.kraft.transport.MessageReceiver
+import uk.tvidal.kraft.tryCatch
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
@@ -46,14 +48,11 @@ class ServerTransport(
     }
 
     private fun read(socket: Socket) {
-        executor.submit {
-            val messageReader = codecFactory.reader(socket)
-            while (running && socket.isConnected) {
-                log.tryCatch {
-                    messageReader
-                        .asSequence()
-                        .filterNotNull()
-                        .forEach { receiveMessage(socket, it) }
+        val messageReader = codecFactory.reader(socket)
+        executor.retry({ running && socket.isConnected }) {
+            for (msg in messageReader) {
+                if (msg != null) {
+                    receiveMessage(socket, msg)
                 }
             }
         }
@@ -71,10 +70,8 @@ class ServerTransport(
     }
 
     private fun SocketMessageWriter.writeAsync(message: Message) {
-        writer.submit {
-            log.tryCatch {
-                write(message)
-            }
+        writer.tryCatch {
+            write(message)
         }
     }
 }
