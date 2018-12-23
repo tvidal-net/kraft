@@ -10,16 +10,16 @@ class LocalTransportFactory {
 
     private val senders = ConcurrentHashMap<RaftNode, MessageSender>()
 
-    private val transport = object : KRaftTransport {
+    fun create(node: RaftNode) = object : KRaftTransport {
 
-        override fun sender(node: RaftNode) = senders.computeIfAbsent(node) { LocalSender(node) }
+        override fun sender(node: RaftNode) = senders.computeIfAbsent(node) {
+            LocalSender(node)
+        }
 
-        override fun register(node: RaftNode, receiver: MessageReceiver) {
-            receivers[node] = receiver
+        override fun receiver(): MessageReceiver = receivers.computeIfAbsent(node) {
+            DualQueueMessageReceiver()
         }
     }
-
-    fun create() = transport
 
     private inner class LocalSender(override var node: RaftNode) : MessageSender {
 

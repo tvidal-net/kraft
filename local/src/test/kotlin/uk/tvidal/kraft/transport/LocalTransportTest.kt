@@ -39,7 +39,7 @@ class LocalTransportTest {
 
     @Test
     fun `should deliver message for registered receiver`() {
-        transport.register(nodes[0], mockReceiver)
+        transport.register(mockReceiver)
         val message = VoteMessage(nodes[1], 2L, false)
         transport.sender(nodes[0]).send(message)
 
