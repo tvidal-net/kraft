@@ -8,7 +8,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.SynchronousQueue
 
-class DualQueueMessageReceiver(
+internal class DualQueueMessageReceiver(
     private val raftQueue: BlockingQueue<Message>,
     private val clientQueue: BlockingQueue<Message>,
     private val maxDrainCount: Int = MAX_DRAIN_COUNT
