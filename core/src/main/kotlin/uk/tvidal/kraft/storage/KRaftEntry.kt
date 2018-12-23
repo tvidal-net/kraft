@@ -4,7 +4,7 @@ import java.util.Arrays
 
 class KRaftEntry internal constructor(
     val payload: ByteArray,
-    var term: Long
+    val term: Long
 ) {
     val bytes: Int
         get() = payload.size
@@ -14,6 +14,8 @@ class KRaftEntry internal constructor(
     operator fun component3() = bytes
 
     fun toEntries() = singleEntry(this)
+
+    fun copy(newTerm: Long) = KRaftEntry(payload, newTerm)
 
     override fun hashCode() = term.hashCode() xor Arrays.hashCode(payload)
 

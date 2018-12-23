@@ -12,11 +12,9 @@ class KRaftEntries internal constructor(
     val isEmpty: Boolean
         get() = data.isEmpty()
 
-    var term: Long
-        get() = data.last().term
-        set(value) {
-            data.forEach { it.term = value }
-        }
+    fun copy(newTerm: Long): KRaftEntries = KRaftEntries(
+        data = data.map { it.copy(newTerm) }
+    )
 
     override fun iterator() = data.iterator()
 
