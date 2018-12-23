@@ -1,8 +1,8 @@
 package uk.tvidal.kraft.codec.json
 
+import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.GsonBuilder
-import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonToken.NULL
@@ -26,10 +26,11 @@ inline fun <T> JsonReader.nullable(block: JsonReader.(JsonToken) -> T): T? {
     else block(token)
 }
 
-fun <T> JsonReader.nextArray(adapter: TypeAdapter<T>): List<T> = sequence {
+inline fun <reified T : Any> JsonReader.nextArray(): List<T> = sequence {
     beginArray()
     while (hasNext()) {
-        yield(adapter.read(this@nextArray))
+        val value = gson.fromJson<T>(this@nextArray)
+        yield(value)
     }
     endArray()
 }.toList()
