@@ -11,9 +11,10 @@ interface RaftState {
     val commitIndex: Long
     val leaderCommitIndex: Long
 
+    val logConsistent: Boolean
     val lastLogTerm: Long
     val lastLogIndex: Long
-    val logConsistent: Boolean
+    val nextLogIndex: Long
 
     val leader: RaftNode?
     val votedFor: RaftNode?

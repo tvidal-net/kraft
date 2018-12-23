@@ -1,6 +1,5 @@
 package uk.tvidal.kraft.engine
 
-import uk.tvidal.kraft.BEFORE_LOG
 import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
@@ -13,92 +12,56 @@ enum class RaftRole {
 
     FOLLOWER {
         override fun run(now: Long, raft: RaftEngine) = with(raft) {
-            if (now >= nextElectionTime) CANDIDATE
-            else null
+            checkElectionTimeout(now)
         }
 
-        override fun RaftEngine.enterRole(now: Long) =
+        override fun RaftEngine.enterRole(now: Long) {
             resetElectionTimeout(now)
+        }
 
         override fun RaftEngine.exitRole(now: Long) {
-            leader = null
+            resetLeader()
         }
 
-        override fun RaftEngine.append(now: Long, msg: AppendMessage): RaftRole? {
-            resetElectionTimeout(now)
-            leaderCommitIndex = msg.leaderCommitIndex
-            val matchIndex = append(msg)
-
-            logConsistent = matchIndex > BEFORE_LOG
-            if (logConsistent) {
-                commitIndex = matchIndex
-                ack(msg.from, matchIndex)
-            } else {
-                val nackIndex = nackIndex(msg)
-                nack(msg.from, nackIndex)
-            }
-            leader = msg.from
+        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? {
+            raft.appendEntries(now, msg)
             return null
         }
 
-        override fun RaftEngine.requestVote(now: Long, msg: RequestVoteMessage): RaftRole? {
-            val candidate = msg.from
-            val grantVote = (votedFor == null || votedFor == candidate) &&
-                (lastLogTerm < msg.lastLogTerm ||
-                    (lastLogTerm == msg.lastLogTerm && lastLogIndex <= msg.lastLogIndex))
-
-            if (grantVote) {
-                votedFor = candidate
-                resetElectionTimeout(now)
-            }
-            vote(candidate, grantVote)
+        override fun requestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? {
+            raft.processRequestVote(now, msg)
             return null
         }
     },
 
     CANDIDATE {
         override fun RaftEngine.enterRole(now: Long) {
-            term++
-            votedFor = self
-            votesReceived.clear()
-            votesReceived.add(self)
-            resetElectionTimeout(now)
-            requestVotes()
+            startElection(now)
         }
 
-        override fun RaftEngine.vote(now: Long, msg: VoteMessage): RaftRole? {
-            log.info { "$self vote=${msg.vote}from=${msg.from} term=${msg.term} " }
-            if (msg.vote) {
-                votesReceived += msg.from
-                if (votesReceived.size >= cluster.majority) {
-                    return LEADER
-                }
-            }
-            return null
-        }
+        override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine) =
+            raft.processVote(msg)
 
-        override fun RaftEngine.append(now: Long, msg: AppendMessage) = reset()
+        override fun append(now: Long, msg: AppendMessage, raft: RaftEngine) =
+            reset()
     },
 
     LEADER {
         override fun run(now: Long, raft: RaftEngine): RaftRole? {
-            raft.updateFollowers(now)
+            raft.heartbeat(now)
             return null
         }
 
         override fun RaftEngine.enterRole(now: Long) {
-            cancelElectionTimeout()
-            resetFollowers()
-            leader = self
-            flush()
+            becomeLeader()
         }
 
         override fun RaftEngine.exitRole(now: Long) {
-            leader = null
+            resetLeader()
         }
 
-        override fun RaftEngine.appendAck(now: Long, msg: AppendAckMessage): RaftRole? {
-            receiveAck(msg)
+        override fun appendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? {
+            raft.processAck(msg)
             return null
         }
     },
@@ -131,19 +94,19 @@ enum class RaftRole {
 
     internal open fun RaftEngine.exitRole(now: Long) {}
 
-    internal open fun RaftEngine.append(now: Long, msg: AppendMessage): RaftRole? = null
+    internal open fun append(now: Long, msg: AppendMessage, raft: RaftEngine): RaftRole? = null
 
-    internal open fun RaftEngine.appendAck(now: Long, msg: AppendAckMessage): RaftRole? = null
+    internal open fun appendAck(now: Long, msg: AppendAckMessage, raft: RaftEngine): RaftRole? = null
 
-    internal open fun RaftEngine.requestVote(now: Long, msg: RequestVoteMessage): RaftRole? = null
+    internal open fun requestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? = null
 
-    internal open fun RaftEngine.vote(now: Long, msg: VoteMessage): RaftRole? = null
+    internal open fun vote(now: Long, msg: VoteMessage, raft: RaftEngine): RaftRole? = null
 
-    private fun RaftEngine.processMessage(now: Long, msg: RaftMessage): RaftRole? = when (msg) {
-        is AppendMessage -> append(now, msg)
-        is AppendAckMessage -> appendAck(now, msg)
-        is RequestVoteMessage -> requestVote(now, msg)
-        is VoteMessage -> vote(now, msg)
+    private fun processMessage(now: Long, msg: RaftMessage, raft: RaftEngine): RaftRole? = when (msg) {
+        is AppendMessage -> append(now, msg, raft)
+        is AppendAckMessage -> appendAck(now, msg, raft)
+        is RequestVoteMessage -> requestVote(now, msg, raft)
+        is VoteMessage -> vote(now, msg, raft)
         else -> null
     }
 
@@ -151,15 +114,14 @@ enum class RaftRole {
 
         // There's a new term on the cluster, reset back to follower
         msg.term > raft.term -> {
-            log.info { "${raft.self} newTerm=${msg.from} (currentTerm=${raft.term})" }
-            raft.term = msg.term
+            raft.updateTerm(msg.term)
             reset()
         }
 
         // We're in the right term, just process it
         raft.term == msg.term -> {
             log.debug { "${raft.self} processMessage $msg" }
-            raft.processMessage(now, msg)
+            processMessage(now, msg, raft)
         }
 
         // Message is from an old term, deny if it's a request vote
@@ -168,6 +130,7 @@ enum class RaftRole {
             raft.vote(msg.from, false)
             null
         }
+
         else -> null
     }
 }

@@ -3,19 +3,19 @@ package uk.tvidal.kraft.engine
 import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.NOW
 import uk.tvidal.kraft.RaftNode
-import uk.tvidal.kraft.logging.KRaftLogger
+import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.raft.RaftMessage
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.emptyEntries
 import uk.tvidal.kraft.transport.MessageSender
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class RaftFollowerState(
+internal class RaftFollower(
     val raft: RaftEngine,
     private val sender: MessageSender
 ) {
 
-    private val log = KRaftLogger("${RaftFollowerState::class.java.name}.${sender.node}")
+    private companion object : KRaftLogging()
 
     val follower: RaftNode
         get() = sender.node
@@ -35,10 +35,14 @@ internal class RaftFollowerState(
     private val byteLimit = AtomicInteger()
 
     init {
-        resetByteWindow()
+        reset()
     }
 
     fun reset() {
+        resetByteWindow()
+        streaming = false
+        nextIndex = raft.lastLogIndex + 1
+        matchIndex = 0L
     }
 
     fun run(now: Long) {

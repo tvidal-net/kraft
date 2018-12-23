@@ -1,7 +1,6 @@
 package uk.tvidal.kraft.engine
 
 import uk.tvidal.kraft.BEFORE_LOG
-import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftRole.ERROR
 import uk.tvidal.kraft.engine.RaftRole.LEADER
@@ -22,13 +21,13 @@ internal class RaftEngineImpl(
     private companion object : KRaftLogging()
 
     val followers = others
-        .associate { it to RaftFollowerState(this, sender(it)) }
+        .associate { it to RaftFollower(this, sender(it)) }
 
     init {
         transport.register(self, messages)
     }
 
-    override fun flush() = storage.append(flush(term))
+    override fun appendFlush() = storage.append(flush(term))
 
     fun clientAppend(msg: ClientAppendMessage) {
         if (role == LEADER) {
@@ -40,19 +39,12 @@ internal class RaftEngineImpl(
         }
     }
 
-    override fun append(msg: AppendMessage) = appendLogIndex(msg).let {
-        when {
-            it > BEFORE_LOG -> storage.append(msg.data, it)
-            else -> NEVER
-        }
-    }
-
-    private fun appendLogIndex(msg: AppendMessage): Long {
+    override fun appendLogIndex(msg: AppendMessage): Long {
         val prevTerm = msg.prevTerm
         val prevIndex = msg.prevIndex
         val termAtPrevIndex = storage.termAt(prevIndex)
 
-        val logMessage = "from={} log={} prevIndex={} termAtPrevIndex=[{},from={}] - {}"
+        val logMessage = "$self from={} log={} prevIndex={} termAtPrevIndex=[{},from={}] - {}"
         val logData = arrayOf(msg.from, lastLogIndex, prevIndex, termAtPrevIndex, prevTerm)
 
         if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {
@@ -103,16 +95,16 @@ internal class RaftEngineImpl(
         }
     }
 
-    override fun updateFollowers(now: Long) {
+    override fun heartbeat(now: Long) {
         followers.values.forEach { it.run(now) }
     }
 
     override fun resetFollowers() {
-        followers.values.forEach(RaftFollowerState::reset)
+        followers.values.forEach(RaftFollower::reset)
     }
 
     fun updateCommitIndex() {
-        val matchIndex = followers.values.map(RaftFollowerState::matchIndex) + lastLogIndex
+        val matchIndex = followers.values.map(RaftFollower::matchIndex) + lastLogIndex
         val quorumCommitIndex = matchIndex.sorted().take(cluster.majority).last()
 
         if (quorumCommitIndex > commitIndex) {
@@ -121,7 +113,7 @@ internal class RaftEngineImpl(
             if (quorumCommitTerm == term) {
                 log.info("updateCommitIndex={} from={}", quorumCommitIndex, commitIndex)
                 commitIndex = quorumCommitIndex
-                followers.values.forEach(RaftFollowerState::commit)
+                followers.values.forEach(RaftFollower::commit)
             } else {
                 log.warn(
                     "SKIPPING updateCommitIndex={} quorumCommitTerm={} currentTerm={}",
@@ -131,7 +123,7 @@ internal class RaftEngineImpl(
         }
     }
 
-    override fun receiveAck(msg: AppendAckMessage) {
+    override fun processAck(msg: AppendAckMessage) {
         val state = followers[msg.from]
         if (msg.ack) state?.ack(msg.matchIndex)
         else state?.nack(msg.matchIndex)
