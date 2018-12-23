@@ -26,13 +26,13 @@ class RaftServer internal constructor(
         if (role == LEADER) {
             val entries = msg.data.copy(term)
             val lastLogIndex = storage.append(entries)
-            log.debug { "$self clientAppend ${msg.data} $storage" }
+            log.debug { "$self clientAppend (${msg.from}) ${msg.data} $storage" }
             if (isSingleNodeCluster) {
                 leaderCommitIndex = lastLogIndex
                 commitIndex = lastLogIndex
             }
         } else if (currentLeader != null) {
-            log.debug { "$self clientAppend forward to $leader ${msg.data}" }
+            log.debug { "$self clientAppend (${msg.from}) forward to $leader ${msg.data}" }
             sender(currentLeader).send(msg)
         }
     }
@@ -96,7 +96,6 @@ class RaftServer internal constructor(
             .last()
 
         if (quorumCommitIndex > commitIndex) {
-
             val quorumCommitTerm = storage.termAt(quorumCommitIndex)
             if (quorumCommitTerm == term) {
                 log.info { "$self updateCommitIndex=$quorumCommitIndex from=$commitIndex" }
