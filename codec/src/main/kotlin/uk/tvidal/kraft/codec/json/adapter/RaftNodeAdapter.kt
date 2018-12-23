@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.codec.json
+package uk.tvidal.kraft.codec.json.adapter
 
 import com.google.gson.JsonParseException
 import com.google.gson.TypeAdapter

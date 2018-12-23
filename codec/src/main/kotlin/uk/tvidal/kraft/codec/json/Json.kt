@@ -7,6 +7,9 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonToken.NULL
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.codec.json.adapter.KRaftEntriesAdapter
+import uk.tvidal.kraft.codec.json.adapter.KRaftEntryAdapter
+import uk.tvidal.kraft.codec.json.adapter.RaftNodeAdapter
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 

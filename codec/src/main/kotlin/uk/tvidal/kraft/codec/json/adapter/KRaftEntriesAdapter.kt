@@ -1,9 +1,11 @@
-package uk.tvidal.kraft.codec.json
+package uk.tvidal.kraft.codec.json.adapter
 
 import com.github.salomonbrys.kotson.getAdapter
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import uk.tvidal.kraft.codec.json.gson
+import uk.tvidal.kraft.codec.json.nextArray
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 import uk.tvidal.kraft.storage.entries
