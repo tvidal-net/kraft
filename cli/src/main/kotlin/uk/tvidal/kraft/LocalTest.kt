@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
     val config = cluster.map {
         KRaftConfig(it, transport.create(), RingBufferStorage())
     }
-    val server = singleThreadClusterServer(config)
+    val server = multiThreadClusterServer(config)
     registerStopServerShutdownHook(server)
     server.start()
 

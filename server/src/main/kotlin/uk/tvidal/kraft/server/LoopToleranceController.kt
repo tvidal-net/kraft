@@ -3,7 +3,7 @@ package uk.tvidal.kraft.server
 import java.lang.System.currentTimeMillis
 
 internal class LoopToleranceController(
-    val loopToleranceMillis: Long = 10,
+    val loopToleranceMillis: Long = LOOP_TOLERANCE_MILLIS,
     private val clock: () -> Long = System::currentTimeMillis
 ) {
 

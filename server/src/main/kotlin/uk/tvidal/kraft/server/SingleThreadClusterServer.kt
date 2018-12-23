@@ -43,12 +43,12 @@ internal class SingleThreadClusterServer(
     private fun loop() {
         var nodeIndex = 0
         while (running) {
-            val node = nodes[nodeIndex]
+            val raft = nodes[nodeIndex]
             try {
                 val now = loopTolerance.yield()
-                node.run(now)
+                raft.run(now)
             } catch (e: Exception) {
-                log.error(e) { "Error while processing: ${node.self}" }
+                log.error(e) { "Error while processing: ${raft.self}" }
             } finally {
                 nodeIndex = (nodeIndex + 1) % nodes.size
             }

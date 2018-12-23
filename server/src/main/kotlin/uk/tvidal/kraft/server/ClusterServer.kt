@@ -2,9 +2,9 @@ package uk.tvidal.kraft.server
 
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftEngine
-import uk.tvidal.kraft.engine.RaftServer
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.engine.RaftRole.LEADER
+import uk.tvidal.kraft.engine.RaftServer
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
@@ -21,6 +21,9 @@ internal abstract class ClusterServer(
     protected val nodes: List<RaftEngine> = clusterConfig.map {
         RaftServer(it)
     }
+
+    protected val size: Int
+        get() = nodes.size
 
     protected val leader: RaftEngine?
         get() = nodes.firstOrNull { it.role == LEADER }
