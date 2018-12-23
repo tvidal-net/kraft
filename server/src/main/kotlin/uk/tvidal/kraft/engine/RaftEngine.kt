@@ -18,11 +18,11 @@ import uk.tvidal.kraft.storage.flush
 import java.lang.System.currentTimeMillis
 import java.time.Instant
 
-internal abstract class RaftEngine(
+abstract class RaftEngine internal constructor(
     config: KRaftConfig
 ) : RaftState, RaftMessageSender {
 
-    companion object : KRaftLogging()
+    internal companion object : KRaftLogging()
 
     override val clientNode: RaftNode = localClientNode()
 
@@ -31,7 +31,7 @@ internal abstract class RaftEngine(
     override val transport = config.transport
     protected val storage = config.storage
     protected val timeout = config.timeout
-    val sizes = config.sizes
+    internal val sizes = config.sizes
 
     final override var role = FOLLOWER
         protected set
@@ -69,17 +69,17 @@ internal abstract class RaftEngine(
 
     override val votesReceived: MutableSet<RaftNode> = mutableSetOf()
 
-    internal var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
+    var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
         private set
 
     init {
         log.info { "Created $this (election=${Instant.ofEpochMilli(nextElectionTime)})" }
     }
 
-    val heartbeatWindow: Int
+    internal val heartbeatWindow: Int
         get() = timeout.heartbeatTimeout
 
-    fun startElection(now: Long) {
+    internal fun startElection(now: Long) {
         log.info { "$self startElection T$term" }
         updateTerm()
         votedFor = self
@@ -89,28 +89,28 @@ internal abstract class RaftEngine(
         requestVotes()
     }
 
-    fun resetElection() {
+    internal fun resetElection() {
         votedFor = null
         votesReceived.clear()
     }
 
-    fun resetElectionTimeout(now: Long) {
+    internal fun resetElectionTimeout(now: Long) {
         nextElectionTime = timeout.nextElectionTime(now)
     }
 
-    fun cancelElectionTimeout() {
+    internal fun cancelElectionTimeout() {
         nextElectionTime = NEVER
     }
 
-    fun checkElectionTimeout(now: Long): RaftRole? =
+    internal fun checkElectionTimeout(now: Long): RaftRole? =
         if (nextElectionTime in 1..now) CANDIDATE
         else null
 
-    fun resetLeader() {
+    internal fun resetLeader() {
         leader = null
     }
 
-    fun appendEntries(now: Long, msg: AppendMessage) {
+    internal fun appendEntries(now: Long, msg: AppendMessage) {
         resetElectionTimeout(now)
         leader = msg.from
         leaderCommitIndex = msg.leaderCommitIndex
@@ -155,7 +155,7 @@ internal abstract class RaftEngine(
         else -> throw KRaftError("received prevIndex=${msg.prevIndex} from ${msg.from}")
     }
 
-    fun processRequestVote(now: Long, msg: RequestVoteMessage) {
+    internal fun processRequestVote(now: Long, msg: RequestVoteMessage) {
         val candidate = msg.from
         val grantVote = (votedFor == null || votedFor == candidate) &&
             (lastLogTerm < msg.lastLogTerm ||
@@ -168,7 +168,7 @@ internal abstract class RaftEngine(
         vote(candidate, grantVote)
     }
 
-    fun processVote(msg: VoteMessage): RaftRole? {
+    internal fun processVote(msg: VoteMessage): RaftRole? {
         log.info { "$self processVote T$term (${msg.from}) [vote=${msg.vote} term=${msg.term}]" }
         if (msg.vote) {
             votesReceived += msg.from
@@ -179,33 +179,33 @@ internal abstract class RaftEngine(
         return null
     }
 
-    fun becomeLeader() {
+    internal fun becomeLeader() {
         cancelElectionTimeout()
         resetFollowers()
         leader = self
         appendFlush()
     }
 
-    abstract fun processAck(msg: AppendAckMessage)
+    internal abstract fun processAck(msg: AppendAckMessage)
 
-    fun updateTerm(newTerm: Long = term + 1) {
+    internal fun updateTerm(newTerm: Long = term + 1) {
         log.info { "$self updateTerm T$term newTerm=$newTerm" }
         term = newTerm
     }
 
-    fun termAt(index: Long) = storage.termAt(index)
+    internal fun termAt(index: Long) = storage.termAt(index)
 
-    fun read(fromIndex: Long, byteLimit: Int) = storage.read(fromIndex, byteLimit)
+    internal fun read(fromIndex: Long, byteLimit: Int) = storage.read(fromIndex, byteLimit)
 
     private fun appendFlush() = storage.append(flush(term))
 
-    abstract fun heartbeatFollowers(now: Long)
+    internal abstract fun heartbeatFollowers(now: Long)
 
-    abstract fun resetFollowers()
+    internal abstract fun resetFollowers()
 
-    abstract fun computeCommitIndex()
+    internal abstract fun computeCommitIndex()
 
-    abstract fun run(now: Long)
+    internal abstract fun run(now: Long)
 
     override fun toString() = "${RaftEngine::class.simpleName}($self) $storage"
 }

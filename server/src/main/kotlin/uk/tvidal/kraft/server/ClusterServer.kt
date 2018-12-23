@@ -10,10 +10,11 @@ import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
 import java.util.concurrent.ThreadLocalRandom
 
-internal abstract class ClusterServer(
+abstract class ClusterServer internal constructor(
     clusterConfig: List<KRaftConfig>
 ) : KRaftServer {
-    companion object : KRaftLogging()
+
+    internal companion object : KRaftLogging()
 
     private val random: ThreadLocalRandom
         get() = ThreadLocalRandom.current()

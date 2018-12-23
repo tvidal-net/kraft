@@ -9,7 +9,7 @@ import uk.tvidal.kraft.message.raft.RaftMessage
 import uk.tvidal.kraft.transport.DualQueueMessageReceiver
 import uk.tvidal.kraft.transport.MessageReceiver
 
-internal class RaftServer(
+class RaftServer internal constructor(
     config: KRaftConfig,
     private val messages: MessageReceiver = DualQueueMessageReceiver()
 ) : RaftEngine(config) {
@@ -21,7 +21,7 @@ internal class RaftServer(
         transport.register(self, messages)
     }
 
-    fun clientAppend(msg: ClientAppendMessage) {
+    internal fun clientAppend(msg: ClientAppendMessage) {
         val currentLeader = leader
         if (role == LEADER) {
             val entries = msg.data.copy(term)

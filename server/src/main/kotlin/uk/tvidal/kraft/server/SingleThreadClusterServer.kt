@@ -3,14 +3,14 @@ package uk.tvidal.kraft.server
 import uk.tvidal.kraft.config.KRaftConfig
 import java.util.concurrent.atomic.AtomicReference
 
-internal class SingleThreadClusterServer(
+class SingleThreadClusterServer internal constructor(
     clusterConfig: List<KRaftConfig>,
     private val loopTolerance: LoopToleranceController = LoopToleranceController()
 ) : ClusterServer(clusterConfig), Runnable {
 
     private val thread = AtomicReference<Thread>()
 
-    private val running: Boolean
+    val running: Boolean
         get() = thread.get() != null
 
     override fun start() {

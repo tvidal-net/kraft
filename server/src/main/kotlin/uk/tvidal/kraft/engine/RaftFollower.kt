@@ -10,7 +10,7 @@ import uk.tvidal.kraft.storage.emptyEntries
 import uk.tvidal.kraft.transport.MessageSender
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class RaftFollower(
+class RaftFollower internal constructor(
     private val raft: RaftEngine,
     private val sender: MessageSender
 ) {
@@ -19,7 +19,7 @@ internal class RaftFollower(
     val follower: RaftNode
         get() = sender.node
 
-    var nextHeartbeatTime = NEVER
+    internal var nextHeartbeatTime = NEVER
         private set
 
     val streaming: Boolean
@@ -33,28 +33,28 @@ internal class RaftFollower(
 
     private val byteLimit = AtomicInteger()
 
-    private val availableBytes: Int
+    val availableBytes: Int
         get() = byteLimit.get()
 
     init {
         reset()
     }
 
-    fun reset() {
+    internal fun reset() {
         resetByteWindow()
         matchIndex = BEFORE_LOG
         nextIndex = raft.nextLogIndex
     }
 
-    fun resetHeartbeatTimeout(now: Long) {
+    internal fun resetHeartbeatTimeout(now: Long) {
         nextHeartbeatTime = now + raft.heartbeatWindow
     }
 
-    fun clearHeartbeatTimeout() {
+    internal fun clearHeartbeatTimeout() {
         nextHeartbeatTime = NOW
     }
 
-    fun run(now: Long) {
+    internal fun run(now: Long) {
         if (streaming) {
             val data = raft.read(nextIndex, availableBytes)
             if (!data.isEmpty) { // not enough bytes to send the next entry
@@ -72,18 +72,18 @@ internal class RaftFollower(
         }
     }
 
-    fun ack(newMatchIndex: Long) {
+    internal fun ack(newMatchIndex: Long) {
         matchIndex = newMatchIndex
         raft.computeCommitIndex()
     }
 
-    fun nack(nackIndex: Long) {
+    internal fun nack(nackIndex: Long) {
         matchIndex = NEVER
         nextIndex = nackIndex + 1
         clearHeartbeatTimeout()
     }
 
-    fun commit() {
+    internal fun commit() {
         if (streaming) {
             clearHeartbeatTimeout()
         }

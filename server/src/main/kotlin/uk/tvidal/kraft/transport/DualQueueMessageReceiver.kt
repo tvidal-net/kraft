@@ -8,7 +8,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.SynchronousQueue
 
-internal class DualQueueMessageReceiver(
+class DualQueueMessageReceiver(
     private val raftQueue: BlockingQueue<Message>,
     private val clientQueue: BlockingQueue<Message>,
     private val maxDrainCount: Int = MAX_DRAIN_COUNT
@@ -26,7 +26,7 @@ internal class DualQueueMessageReceiver(
 
     private val messages = ArrayDeque<Message>(maxDrainCount)
 
-    companion object {
+    internal companion object {
         private const val MAX_DRAIN_COUNT = 10
         private fun createIncomingMessageQueue(queueSize: Int): BlockingQueue<Message> = when {
             queueSize <= 0 -> SynchronousQueue(true)
