@@ -30,6 +30,7 @@ class KRaftConsumerImpl internal constructor(
 
     init {
         register()
+        read()
     }
 
     private fun register(fromIndex: Long = index) {

@@ -1,11 +1,11 @@
 package uk.tvidal.kraft.server
 
-import uk.tvidal.kraft.config.KRaftConfig
+import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.engine.RaftEngine
 import uk.tvidal.kraft.fixedThreadPool
 
 class MultiThreadClusterServer internal constructor(
-    clusterConfig: List<KRaftConfig>,
+    clusterConfig: List<KRaftServerConfig>,
     private val loopTolerance: LoopToleranceController = LoopToleranceController()
 ) : ClusterServer(clusterConfig) {
 

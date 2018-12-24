@@ -5,7 +5,7 @@ import uk.tvidal.kraft.KRaftError
 import uk.tvidal.kraft.NEVER
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.client.clientNode
-import uk.tvidal.kraft.config.KRaftConfig
+import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.engine.RaftRole.CANDIDATE
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.engine.RaftRole.LEADER
@@ -19,7 +19,7 @@ import java.lang.System.currentTimeMillis
 import java.time.Instant
 
 abstract class RaftEngine internal constructor(
-    config: KRaftConfig
+    config: KRaftServerConfig
 ) : RaftState, RaftMessageSender {
 
     private companion object : KRaftLogging()

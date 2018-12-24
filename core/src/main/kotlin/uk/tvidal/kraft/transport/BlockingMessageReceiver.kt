@@ -1,14 +1,12 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.message.Message
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
+import java.util.concurrent.SynchronousQueue
 
 class BlockingMessageReceiver(
-    private val queue: BlockingQueue<Message>
+    private val queue: BlockingQueue<Message> = SynchronousQueue()
 ) : MessageReceiver {
-
-    constructor(capacity: Int = 64) : this(ArrayBlockingQueue(capacity))
 
     override val size: Int
         get() = queue.size

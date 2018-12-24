@@ -1,6 +1,6 @@
 package uk.tvidal.kraft.server
 
-import uk.tvidal.kraft.config.KRaftConfig
+import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.engine.RaftEngine
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.engine.RaftRole.LEADER
@@ -10,7 +10,7 @@ import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.concurrent.ThreadLocalRandom
 
 abstract class ClusterServer internal constructor(
-    clusterConfig: List<KRaftConfig>
+    clusterConfig: List<KRaftServerConfig>
 ) : KRaftServer {
 
     internal companion object : KRaftLogging()

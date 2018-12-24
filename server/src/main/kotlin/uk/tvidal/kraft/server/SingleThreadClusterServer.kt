@@ -1,12 +1,12 @@
 package uk.tvidal.kraft.server
 
-import uk.tvidal.kraft.config.KRaftConfig
+import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.concurrent.thread
 
 class SingleThreadClusterServer internal constructor(
-    clusterConfig: List<KRaftConfig>,
+    clusterConfig: List<KRaftServerConfig>,
     private val loopTolerance: LoopToleranceController = LoopToleranceController()
 ) : ClusterServer(clusterConfig) {
 

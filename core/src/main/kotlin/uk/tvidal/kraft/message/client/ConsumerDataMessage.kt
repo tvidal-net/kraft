@@ -11,7 +11,7 @@ class ConsumerDataMessage(
 ) : AbstractClientMessage(CONSUMER_DATA, from) {
 
     val lastIndex: Long
-        get() = firstIndex + data.size
+        get() = firstIndex + data.size - 1
 
     override fun text() = "from=$firstIndex $data"
 }

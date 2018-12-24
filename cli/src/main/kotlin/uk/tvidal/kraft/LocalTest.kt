@@ -1,6 +1,7 @@
 package uk.tvidal.kraft
 
-import uk.tvidal.kraft.config.KRaftConfig
+import uk.tvidal.kraft.client.consumer.FIRST_INDEX
+import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.server.registerStopServerShutdownHook
 import uk.tvidal.kraft.storage.RingBufferStorage
 import uk.tvidal.kraft.storage.entries
@@ -8,6 +9,7 @@ import uk.tvidal.kraft.storage.entryOf
 import uk.tvidal.kraft.transport.localCluster
 import uk.tvidal.kraft.transport.networkTransport
 import java.lang.Thread.sleep
+import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
 
 private val random get() = ThreadLocalRandom.current()
@@ -19,7 +21,7 @@ fun main(args: Array<String>) {
     val cluster = raftCluster(nodes)
     val transport = networkTransport(nodes)
     val config = cluster.map {
-        KRaftConfig(it, transport[it.self]!!, RingBufferStorage())
+        KRaftServerConfig(it, transport[it.self]!!, RingBufferStorage())
     }
     val server = singleThreadClusterServer(config)
     registerStopServerShutdownHook(server)
@@ -32,10 +34,11 @@ fun main(args: Array<String>) {
     val producer = producer(serverNode to address)
     singleThreadPool("KRaftProducerThread").loop {
 
+        val now = Instant.now()
         val entryCount = random.nextInt(5, 51)
         val data = entries(
             (0 until entryCount).map {
-                entryOf("Message $it")
+                entryOf("$now Message $it ")
             }
         )
 
@@ -43,4 +46,15 @@ fun main(args: Array<String>) {
         sleep(random.nextInt(30, 300).toLong())
     }
     // */
+
+    sleep(500)
+    consumer(serverNode to address, index = FIRST_INDEX) {
+        it.data.forEachIndexed { i, e ->
+            val index = it.firstIndex + i
+            val term = e.term
+            val text = String(e.payload)
+            System.err.println("$index T$term::$text")
+        }
+        true
+    }
 }
