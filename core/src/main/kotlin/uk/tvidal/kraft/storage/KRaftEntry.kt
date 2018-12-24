@@ -1,10 +1,12 @@
 package uk.tvidal.kraft.storage
 
 import java.util.Arrays
+import java.util.UUID
 
-class KRaftEntry internal constructor(
+class KRaftEntry(
     val payload: ByteArray,
-    val term: Long
+    val term: Long,
+    val id: UUID = UUID.randomUUID()
 ) {
     val bytes: Int
         get() = payload.size

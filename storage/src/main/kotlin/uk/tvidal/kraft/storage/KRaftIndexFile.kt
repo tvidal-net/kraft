@@ -1,6 +1,6 @@
 package uk.tvidal.kraft.storage
 
-import uk.tvidal.kraft.codec.binary.KRaftEntry.IndexEntry
+import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.toProto
 import java.io.Closeable
 import java.io.File
@@ -21,10 +21,12 @@ class KRaftIndexFile internal constructor(
 
     private fun read() {
         file.inputStream().use { stream ->
-            while (stream.read() == MAGIC_NUMBER) {
+            do {
                 val entry = IndexEntry.parseDelimitedFrom(stream)
-                data[entry.index] = entry
-            }
+                if (entry != null) {
+                    data[entry.index] = entry
+                }
+            } while (entry != null)
         }
     }
 
