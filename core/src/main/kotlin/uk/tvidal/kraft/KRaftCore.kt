@@ -1,6 +1,5 @@
 package uk.tvidal.kraft
 
-const val DEFAULT_CLIENT_CLUSTER_NAME = "Client"
 const val DEFAULT_CLUSTER_NAME = "KRaft"
 const val MAX_CLUSTER_NAME_LENGTH = 16
 

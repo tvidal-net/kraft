@@ -1,6 +1,5 @@
 package uk.tvidal.kraft.client
 
-import uk.tvidal.kraft.DEFAULT_CLIENT_CLUSTER_NAME
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.logging.KRaftLogger
 import java.net.Inet4Address
@@ -34,5 +33,5 @@ fun InetAddress.toInt(): Int = with(wrap(address)) {
     getInt(0)
 }
 
-fun localClientNode(name: String = DEFAULT_CLIENT_CLUSTER_NAME, inetAddress: InetAddress = localNetworkSiteAddress) =
+fun clientNode(name: String = "Client", inetAddress: InetAddress = localNetworkSiteAddress) =
     RaftNode(inetAddress.toInt(), name, true)
