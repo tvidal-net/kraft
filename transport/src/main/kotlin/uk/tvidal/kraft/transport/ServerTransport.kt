@@ -44,18 +44,31 @@ class ServerTransport(
     }
 
     private fun receiveMessage(socket: Socket, message: Message?) {
-        if (message != null) {
+        if (message != null && checkValidClient(message.from, socket)) {
             val from = message.from
             writers.computeIfAbsent(from) {
-                log.info { "Server [$node <- $from] client connected ($socket)" }
-                config
-                    .codec
-                    .writer(socket)
+                clientConnected(from, socket)
             }
             if (message !is TransportMessage) {
                 config.messageReceiver.offer(message)
             }
         }
+    }
+
+    private fun checkValidClient(from: RaftNode, socket: Socket): Boolean {
+        val configAddress = config.cluster[from]?.address
+        val check = configAddress == null || configAddress == socket.inetAddress
+        if (!check) {
+            log.warn { "message in $socket pretending to be from $from (expected=$configAddress actual=${socket.inetAddress})" }
+        }
+        return check
+    }
+
+    private fun clientConnected(from: RaftNode, socket: Socket): SocketMessageWriter {
+        log.info { "Server [$node <- $from] client connected ($socket)" }
+        return config
+            .codec
+            .writer(socket)
     }
 
     fun write(to: RaftNode, message: Message) {

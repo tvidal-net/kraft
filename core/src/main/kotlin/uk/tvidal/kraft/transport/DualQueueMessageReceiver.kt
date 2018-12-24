@@ -1,6 +1,8 @@
 package uk.tvidal.kraft.transport
 
+import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.client.ClientMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
 import java.lang.Thread.currentThread
 import java.util.ArrayDeque
@@ -26,7 +28,7 @@ class DualQueueMessageReceiver(
 
     private val messages = ArrayDeque<Message>(maxDrainCount)
 
-    internal companion object {
+    internal companion object : KRaftLogging() {
         private const val MAX_DRAIN_COUNT = 16
 
         private fun createIncomingMessageQueue(queueSize: Int): BlockingQueue<Message> = when {
@@ -47,9 +49,10 @@ class DualQueueMessageReceiver(
     }
 
     override fun offer(message: Message?): Boolean = try {
-        if (message != null) {
-            val queue = if (message is RaftMessage) raft else client
-            queue.put(message)
+        when (message) {
+            is RaftMessage -> raft.put(message)
+            is ClientMessage -> client.put(message)
+            else -> log.warn { "received an invalid message: $message" }
         }
         true
     } catch (e: InterruptedException) {

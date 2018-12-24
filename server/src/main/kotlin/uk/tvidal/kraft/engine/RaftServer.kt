@@ -65,6 +65,10 @@ class RaftServer internal constructor(
     }
 
     private fun processMessage(now: Long, msg: RaftMessage) {
+        if (msg.from !in cluster) {
+            log.warn { "$self received raft message from node outside cluster ${msg.from}" }
+            return
+        }
         do {
             val newRole = role.process(now, msg, this)
             updateRole(now, newRole)

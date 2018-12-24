@@ -86,7 +86,7 @@ fun main(args: Array<String>) {
     //    server(1801)
 
     val node = localClientNode()
-    val host = localNetworkSiteAddress()
+    val host = localNetworkSiteAddress
 
     var count = 0L
 

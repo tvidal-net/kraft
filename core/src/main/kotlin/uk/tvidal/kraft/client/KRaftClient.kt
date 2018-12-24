@@ -2,29 +2,37 @@ package uk.tvidal.kraft.client
 
 import uk.tvidal.kraft.DEFAULT_CLIENT_CLUSTER_NAME
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.logging.KRaftLogger
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.nio.ByteBuffer.wrap
 
-fun localNetworkSiteAddress(): Inet4Address? {
-    for (i in NetworkInterface.getNetworkInterfaces()) {
-        if (!i.isLoopback) {
-            val addresses = i.inetAddresses
-            for (a in addresses) {
-                if (a is Inet4Address && a.isSiteLocalAddress) {
-                    return a
+private val log = KRaftLogger {}
+
+private fun localNetworkSiteAddress(): InetAddress {
+    try {
+        for (i in NetworkInterface.getNetworkInterfaces()) {
+            if (!i.isLoopback) {
+                val addresses = i.inetAddresses
+                for (a in addresses) {
+                    if (a is Inet4Address && a.isSiteLocalAddress) {
+                        return a
+                    }
                 }
             }
         }
+    } catch (e: Exception) {
+        log.error(e)
     }
-    return null
+    return Inet4Address.getLocalHost()
 }
+
+val localNetworkSiteAddress = localNetworkSiteAddress()
 
 fun InetAddress.toInt(): Int = with(wrap(address)) {
     getInt(0)
 }
 
-fun localClientIndex(): Int = localNetworkSiteAddress()?.toInt() ?: 0
-
-fun localClientNode(name: String = DEFAULT_CLIENT_CLUSTER_NAME, index: Int = localClientIndex()) = RaftNode(index, name, true)
+fun localClientNode(name: String = DEFAULT_CLIENT_CLUSTER_NAME, inetAddress: InetAddress = localNetworkSiteAddress) =
+    RaftNode(inetAddress.toInt(), name, true)

@@ -23,5 +23,5 @@ data class RaftCluster(
     val majority: Int
         get() = size / 2 + 1
 
-    fun contains(node: RaftNode) = node in nodes
+    operator fun contains(node: RaftNode) = node in nodes
 }

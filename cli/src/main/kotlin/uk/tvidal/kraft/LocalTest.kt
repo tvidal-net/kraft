@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
     registerStopServerShutdownHook(server)
     server.start()
 
-    thread(isDaemon = true, name = "KRaftProducerThread") {
+    thread(start = false, isDaemon = true, name = "KRaftProducerThread") {
         val random = ThreadLocalRandom.current()
 
         while (true) {

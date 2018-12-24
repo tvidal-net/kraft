@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.client.localNetworkSiteAddress
 import uk.tvidal.kraft.message.Message
 import java.net.InetSocketAddress
 
@@ -10,7 +11,7 @@ typealias SocketMessageWriter = (Message) -> Unit
 const val BASE_PORT = 1800
 
 fun localCluster(nodes: Collection<RaftNode>, basePort: Int = BASE_PORT): Map<RaftNode, InetSocketAddress> = nodes.associate {
-    it to InetSocketAddress(basePort + it.index)
+    it to InetSocketAddress(localNetworkSiteAddress, basePort + it.index)
 }
 
 fun networkTransportConfig(cluster: Map<RaftNode, InetSocketAddress>): List<NetworkTransportConfig> = cluster.map { (node, _) ->
