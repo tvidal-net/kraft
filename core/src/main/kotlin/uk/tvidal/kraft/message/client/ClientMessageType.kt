@@ -10,8 +10,9 @@ enum class ClientMessageType(
     CLIENT_APPEND(ClientAppendMessage::class),
     CLIENT_APPEND_ACK,
 
-    CONSUME_REGISTER,
-    CONSUME_DATA,
+    CONSUMER_REGISTER(ConsumerRegisterMessage::class),
+    CONSUMER_DATA(ConsumerDataMessage::class),
+    CONSUMER_ACK(ConsumerAckMessage::class),
 
     CLIENT_ERROR;
 }
