@@ -102,7 +102,7 @@ class RaftServer internal constructor(
         if (quorumCommitIndex > commitIndex) {
             val quorumCommitTerm = storage.termAt(quorumCommitIndex)
             if (quorumCommitTerm == term) {
-                log.info { "$self updateCommitIndex=$quorumCommitIndex from=$commitIndex" }
+                log.debug { "$self computeCommitIndex=$quorumCommitIndex from=$commitIndex" }
                 leaderCommitIndex = quorumCommitIndex
                 commitIndex = quorumCommitIndex
                 followers.values.forEach(RaftFollower::commit)

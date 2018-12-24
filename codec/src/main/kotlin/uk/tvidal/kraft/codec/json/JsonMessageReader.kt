@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.codec.json
 
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.get
 import com.google.gson.JsonElement
 import com.google.gson.stream.JsonReader
 import uk.tvidal.kraft.message.Message
@@ -16,8 +17,7 @@ class JsonMessageReader(reader: Reader) : Iterable<Message?> {
 
         override fun next(): Message? {
             val json = gson.fromJson<JsonElement>(reader)
-            val envelope = gson.fromJson<JsonMessageEnvelope>(json)
-            val name = envelope.type
+            val name = json["type"].asString
             val type = MessageCodec[name]
             return if (type == null) null
             else gson.fromJson<Message>(json, type.java)
