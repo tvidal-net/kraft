@@ -3,23 +3,32 @@ package uk.tvidal.kraft.server
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.thread
 
 class SingleThreadClusterServer internal constructor(
     clusterConfig: List<KRaftConfig>,
     private val loopTolerance: LoopToleranceController = LoopToleranceController()
-) : ClusterServer(clusterConfig), Runnable {
+) : ClusterServer(clusterConfig) {
 
     internal companion object : KRaftLogging()
 
-    private val thread = AtomicReference<Thread>()
+    private val currentThread = AtomicReference<Thread>()
 
     val running: Boolean
-        get() = thread.get() != null
+        get() = currentThread.get() != null
+
+    private fun createThread() = thread(name = KRAFT_THREAD_NAME, start = false) {
+        try {
+            loop()
+        } catch (e: Throwable) {
+            log.error(e) { "SEVERE ERROR: ${e.message}" }
+        }
+    }
 
     override fun start() {
         if (!running) {
-            val newThread = singleThread(this)
-            if (thread.compareAndSet(null, newThread)) {
+            val newThread = createThread()
+            if (currentThread.compareAndSet(null, newThread)) {
                 newThread.start()
                 logo()
             }
@@ -29,17 +38,9 @@ class SingleThreadClusterServer internal constructor(
     override fun stop() {
         if (running) {
             log.info { "Stopping..." }
-            val currentThread = thread.getAndSet(null)
+            val currentThread = currentThread.getAndSet(null)
             currentThread?.join()
             log.info { "Done" }
-        }
-    }
-
-    override fun run() {
-        try {
-            loop()
-        } catch (e: Throwable) {
-            log.error(e) { "SEVERE ERROR: ${e.message}" }
         }
     }
 
@@ -48,8 +49,9 @@ class SingleThreadClusterServer internal constructor(
         while (running) {
             val raft = nodes[nodeIndex]
             try {
-                val now = loopTolerance.yield()
-                raft.run(now)
+                raft.run(
+                    now = loopTolerance.yield()
+                )
             } catch (e: Exception) {
                 log.error(e) { "Error while processing: ${raft.self}" }
             } finally {

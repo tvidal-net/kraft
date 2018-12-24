@@ -10,10 +10,8 @@ import uk.tvidal.kraft.message.raft.VoteMessage
 enum class RaftRole {
 
     FOLLOWER {
-        override fun run(now: Long, raft: RaftEngine): RaftRole? {
+        override fun run(now: Long, raft: RaftEngine): RaftRole? =
             raft.checkElectionTimeout(now)
-            return null
-        }
 
         override fun enterRole(now: Long, raft: RaftEngine) {
             raft.resetElectionTimeout(now)

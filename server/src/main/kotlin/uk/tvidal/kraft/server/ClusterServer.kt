@@ -37,6 +37,7 @@ abstract class ClusterServer internal constructor(
         get() = nodes[random.nextInt(nodes.size)]
 
     protected fun logo() {
+        // http://patorjk.com/software/taag/#p=display&f=Ivrit&t=KRaft%200.1%0AServer
         loadResource("/logo/server.txt")
             .forEach(log::info)
     }

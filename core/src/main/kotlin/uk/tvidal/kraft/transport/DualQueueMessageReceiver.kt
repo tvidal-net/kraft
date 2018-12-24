@@ -1,6 +1,5 @@
 package uk.tvidal.kraft.transport
 
-import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.raft.RaftMessage
 import java.lang.Thread.currentThread
@@ -48,7 +47,6 @@ class DualQueueMessageReceiver(
     }
 
     override fun offer(message: Message?): Boolean = try {
-        KRaftLogger {}.debug { "Received: $message" }
         if (message != null) {
             val queue = if (message is RaftMessage) raft else client
             queue.put(message)
