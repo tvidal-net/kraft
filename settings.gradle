@@ -5,6 +5,7 @@ include ':client'
 include ':codec'
 include ':core'
 include ':server'
+include ':storage'
 include ':transport'
 include ':local'
 

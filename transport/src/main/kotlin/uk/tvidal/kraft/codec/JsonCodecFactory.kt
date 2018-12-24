@@ -1,7 +1,7 @@
 package uk.tvidal.kraft.codec
 
-import uk.tvidal.kraft.codec.json.MessageCodec.jsonReader
-import uk.tvidal.kraft.codec.json.MessageCodec.jsonWriter
+import uk.tvidal.kraft.codec.MessageCodec.jsonReader
+import uk.tvidal.kraft.codec.MessageCodec.jsonWriter
 import uk.tvidal.kraft.transport.SocketMessageReader
 import uk.tvidal.kraft.transport.SocketMessageWriter
 import java.net.Socket

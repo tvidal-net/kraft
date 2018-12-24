@@ -12,6 +12,7 @@ dependencies {
     implementation project(':kraft-codec')
     implementation project(':kraft-client')
     implementation project(':kraft-transport')
+    implementation project(':kraft-storage')
 
     implementation("com.google.guava:guava:$guavaVersion") { transitive = false }
     implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"

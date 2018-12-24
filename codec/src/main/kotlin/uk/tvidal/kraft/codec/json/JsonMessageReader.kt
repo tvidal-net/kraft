@@ -4,6 +4,7 @@ import com.github.salomonbrys.kotson.fromJson
 import com.github.salomonbrys.kotson.get
 import com.google.gson.JsonElement
 import com.google.gson.stream.JsonReader
+import uk.tvidal.kraft.codec.MessageCodec
 import uk.tvidal.kraft.message.Message
 import java.io.Reader
 

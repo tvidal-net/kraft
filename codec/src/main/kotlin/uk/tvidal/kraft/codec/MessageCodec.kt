@@ -1,5 +1,7 @@
-package uk.tvidal.kraft.codec.json
+package uk.tvidal.kraft.codec
 
+import uk.tvidal.kraft.codec.json.JsonMessageReader
+import uk.tvidal.kraft.codec.json.JsonMessageWriter
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.MessageType
 import uk.tvidal.kraft.message.client.ClientMessageType

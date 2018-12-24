@@ -1,5 +1,11 @@
+plugins {
+    id "com.google.protobuf" version "0.8.7"
+}
+
 dependencies {
     implementation project(':kraft-core')
+
+    compile "com.google.protobuf:protobuf-java:$protobufVersion"
 
     compile "com.google.code.gson:gson:$gsonVersion"
     compile "com.github.salomonbrys.kotson:kotson:$kotsonVersion"
