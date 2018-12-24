@@ -105,6 +105,7 @@ abstract class RaftEngine internal constructor(
     }
 
     internal fun checkElectionTimeout(now: Long): RaftRole? = try {
+        // nextElectionTime > 0 && nextElectionTime <= now
         if (nextElectionTime in 1..now) {
             val delay = now - lastElectionTimeChecked
             if (delay > heartbeatWindow) {
