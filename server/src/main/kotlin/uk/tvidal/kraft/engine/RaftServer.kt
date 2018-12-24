@@ -29,18 +29,20 @@ class RaftServer internal constructor(
         )
     }
 
-    internal fun clientAppend(msg: ClientAppendMessage) {
+    internal fun clientAppend(message: ClientAppendMessage) {
         val currentLeader = leader
         if (role == LEADER) {
-            val entries = msg.data.copy(term)
+            val entries = message.data.copy(term)
             val lastLogIndex = storage.append(entries)
-            log.debug { "$self clientAppend msg=$msg" }
+            log.debug { "$self clientAppend lastLogIndex=$lastLogIndex msg=$message" }
             if (isSingleNodeCluster) {
                 leaderCommitIndex = lastLogIndex
                 commitIndex = lastLogIndex
             }
         } else if (currentLeader != null) {
-            sender(currentLeader).send(msg)
+            message.relay = self
+            sender(currentLeader)
+                .send(message)
         }
     }
 
