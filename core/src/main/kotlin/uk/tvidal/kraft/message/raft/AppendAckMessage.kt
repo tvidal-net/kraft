@@ -13,5 +13,5 @@ class AppendAckMessage(
 
 ) : AbstractRaftMessage(APPEND_ACK, from, term) {
 
-    override fun toString() = "${super.toString()} [ack=$ack matchIndex=$matchIndex]"
+    override fun text() = "ack=$ack matchIndex=$matchIndex"
 }

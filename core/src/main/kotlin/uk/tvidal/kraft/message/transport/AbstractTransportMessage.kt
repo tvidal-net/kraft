@@ -8,7 +8,4 @@ abstract class AbstractTransportMessage(
     final override val type: TransportMessageType,
     from: RaftNode
 
-) : AbstractMessage(type, from), TransportMessage {
-
-    override fun toString() = "$type ($from)"
-}
+) : AbstractMessage(type, from), TransportMessage

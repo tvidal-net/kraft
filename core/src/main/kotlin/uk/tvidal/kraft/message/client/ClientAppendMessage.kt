@@ -12,5 +12,5 @@ class ClientAppendMessage(
 
 ) : AbstractClientMessage(CLIENT_APPEND, from) {
 
-    override fun toString() = "${super.toString()} $data"
+    override fun text() = "data=$data"
 }

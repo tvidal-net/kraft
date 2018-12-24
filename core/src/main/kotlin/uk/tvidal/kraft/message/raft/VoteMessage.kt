@@ -12,5 +12,5 @@ class VoteMessage(
 
 ) : AbstractRaftMessage(VOTE, from, term) {
 
-    override fun toString() = "${super.toString()} [vote=$vote]"
+    override fun text() = "vote=$vote"
 }

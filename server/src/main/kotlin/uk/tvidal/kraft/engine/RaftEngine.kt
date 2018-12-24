@@ -139,7 +139,7 @@ abstract class RaftEngine internal constructor(
 
     private fun appendLogIndex(prevIndex: Long, prevTerm: Long): Long {
         val termAtPrevIndex = storage.termAt(prevIndex)
-        val logMessage = "$self appendLogIndex ($leader) log=$lastLogIndex prevIndex=$prevIndex " +
+        val logMessage = "$self appendLogIndex ($leader) prevIndex=$prevIndex " +
             "termAtPrevIndex=[$termAtPrevIndex,msg=$prevTerm]"
 
         if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {

@@ -8,5 +8,5 @@ class ConsumerRegisterMessage(
     val fromIndex: Long
 ) : AbstractClientMessage(CONSUMER_REGISTER, from) {
 
-    override fun toString() = "${super.toString()} fromIndex=$fromIndex"
+    override fun text() = "fromIndex=$fromIndex"
 }

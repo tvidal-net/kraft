@@ -11,5 +11,6 @@ abstract class AbstractRaftMessage(
 
 ) : AbstractMessage(type, from), RaftMessage {
 
-    override fun toString() = "$type T$term ($from)"
+    override val headerText: String
+        get() = "$type T$term ($from)"
 }

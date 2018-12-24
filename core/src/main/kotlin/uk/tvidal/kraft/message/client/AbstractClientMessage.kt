@@ -9,7 +9,4 @@ abstract class AbstractClientMessage(
 
     from: RaftNode
 
-) : AbstractMessage(type, from), ClientMessage {
-
-    override fun toString() = "$type ($from)"
-}
+) : AbstractMessage(type, from), ClientMessage

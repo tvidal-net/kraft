@@ -18,6 +18,6 @@ class AppendMessage(
 
 ) : AbstractRaftMessage(APPEND, from, term) {
 
-    override fun toString() = "${super.toString()} [prevIndex=$prevIndex prevTerm=$prevTerm " +
-        "leaderCommitIndex=$leaderCommitIndex entries=${data.size} bytes=${data.bytes}]"
+    override fun text() = "prevIndex=$prevIndex prevTerm=$prevTerm " +
+        "leaderCommitIndex=$leaderCommitIndex data=$data"
 }

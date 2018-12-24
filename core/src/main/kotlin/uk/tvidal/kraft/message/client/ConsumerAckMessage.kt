@@ -8,5 +8,5 @@ class ConsumerAckMessage(
     val index: Long
 ) : AbstractClientMessage(CONSUMER_ACK, from) {
 
-    override fun toString() = "${super.toString()} index=$index"
+    override fun text() = "index=$index"
 }

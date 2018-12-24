@@ -13,5 +13,5 @@ class ConsumerDataMessage(
     val lastIndex: Long
         get() = firstIndex + data.size
 
-    override fun toString() = "${super.toString()} from=$firstIndex $data"
+    override fun text() = "from=$firstIndex $data"
 }
