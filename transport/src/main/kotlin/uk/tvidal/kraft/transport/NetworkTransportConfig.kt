@@ -9,14 +9,17 @@ import java.net.InetSocketAddress
 import java.util.concurrent.ExecutorService
 
 class NetworkTransportConfig(
-    node: RaftNode,
-    cluster: Map<RaftNode, InetSocketAddress>,
-    codec: SocketCodecFactory = JsonCodecFactory,
-    readerThread: ExecutorService = cachedThreadPool("$node-Reader"),
-    writerThread: ExecutorService = singleThreadPool("$node-Writer"),
-    val serverThread: ExecutorService = singleThreadPool("$node-Server"),
+    val self: RaftNode,
+    val cluster: Map<RaftNode, InetSocketAddress>,
+    val codec: SocketCodecFactory = JsonCodecFactory,
+    val readerThread: ExecutorService = cachedThreadPool("$self-Reader"),
+    val writerThread: ExecutorService = singleThreadPool("$self-Writer"),
+    val serverThread: ExecutorService = singleThreadPool("$self-Server"),
     val messageReceiver: MessageReceiver = DualQueueMessageReceiver()
-) : ClientTransportConfig(node, cluster, codec, readerThread, writerThread) {
+) {
+    operator fun get(node: RaftNode) = cluster[node]!!
 
-    val others = cluster.keys.filter { it != node }
+    val host get() = this[self]
+
+    val others = cluster.keys.filter { it != self }
 }

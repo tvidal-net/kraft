@@ -1,10 +1,18 @@
 package uk.tvidal.kraft
 
+import uk.tvidal.kraft.client.clientNode
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.server.registerStopServerShutdownHook
 import uk.tvidal.kraft.storage.RingBufferStorage
+import uk.tvidal.kraft.storage.entries
+import uk.tvidal.kraft.storage.entryOf
+import uk.tvidal.kraft.transport.localCluster
+import uk.tvidal.kraft.transport.messageSender
 import uk.tvidal.kraft.transport.networkTransport
-import kotlin.concurrent.thread
+import java.lang.Thread.sleep
+import java.util.concurrent.ThreadLocalRandom
+
+private val random get() = ThreadLocalRandom.current()
 
 fun main(args: Array<String>) {
     logbackConsoleConfiguration()
@@ -19,6 +27,26 @@ fun main(args: Array<String>) {
     registerStopServerShutdownHook(server)
     server.start()
 
-    thread(start = false, isDaemon = true, name = "KRaftProducerThread") {
+    //    /*
+    val producerNode = clientNode("Producer1")
+    val serverNode = (server.leader ?: server.randomNode).self
+    val address = localCluster(nodes)[serverNode]!!
+
+    val producer = producer(
+        server = messageSender(serverNode to address, producerNode),
+        self = producerNode
+    )
+    singleThreadPool("KRaftProducerThread").loop {
+
+        val entryCount = random.nextInt(5, 51)
+        val data = entries(
+            (0 until entryCount).map {
+                entryOf("Message $it")
+            }
+        )
+
+        producer.publish(data)
+        sleep(random.nextInt(30, 300).toLong())
     }
+    // */
 }

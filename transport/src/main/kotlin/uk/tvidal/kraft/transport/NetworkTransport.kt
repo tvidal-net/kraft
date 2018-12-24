@@ -9,7 +9,7 @@ class NetworkTransport(
     config: NetworkTransportConfig
 ) : KRaftTransport, Closeable {
 
-    private val node = config.node
+    override val self = config.self
     private val cluster = config.cluster
     private val codec = config.codec
 
@@ -39,7 +39,7 @@ class NetworkTransport(
         server.close()
         clients
             .values
-            .filterIsInstance<ClusterMessageSender>()
+            .filterIsInstance<Closeable>()
             .forEach(Closeable::close)
     }
 }

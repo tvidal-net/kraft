@@ -22,7 +22,7 @@ abstract class RaftEngine internal constructor(
     config: KRaftConfig
 ) : RaftState, RaftMessageSender {
 
-    internal companion object : KRaftLogging()
+    private companion object : KRaftLogging()
 
     val clientNode: RaftNode = clientNode()
 
@@ -82,7 +82,7 @@ abstract class RaftEngine internal constructor(
         get() = timeout.heartbeatTimeout
 
     internal fun startElection(now: Long) {
-        log.info { "$self startElection T$term" }
+        log.trace { "$self startElection T$term" }
         updateTerm()
         votedFor = self
         votesReceived.clear()
@@ -214,6 +214,8 @@ abstract class RaftEngine internal constructor(
     internal abstract fun computeCommitIndex()
 
     internal abstract fun run(now: Long)
+
+    abstract fun publish(payload: ByteArray)
 
     override fun toString() = "${RaftEngine::class.simpleName}($self) $storage"
 }

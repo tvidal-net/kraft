@@ -23,7 +23,7 @@ class ServerTransport(
     @Volatile
     private var running: Boolean = true
 
-    private val node get() = config.node
+    private val node get() = config.self
 
     init {
         log.info { "Server [$node] waiting for connections on port ${config.host.port}" }

@@ -3,18 +3,31 @@ package uk.tvidal.kraft.engine
 import uk.tvidal.kraft.config.KRaftConfig
 import uk.tvidal.kraft.engine.RaftRole.ERROR
 import uk.tvidal.kraft.engine.RaftRole.LEADER
+import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
+import uk.tvidal.kraft.storage.entryOf
 
 class RaftServer internal constructor(
     config: KRaftConfig
 ) : RaftEngine(config) {
 
+    private companion object : KRaftLogging()
+
     val followers = others
         .associate { it to RaftFollower(this, sender(it)) }
 
     private val messages = config.transport.receiver()
+
+    override fun publish(payload: ByteArray) {
+        messages.offer(
+            ClientAppendMessage(
+                from = clientNode,
+                data = entryOf(payload, term).toEntries()
+            )
+        )
+    }
 
     internal fun clientAppend(msg: ClientAppendMessage) {
         val currentLeader = leader
@@ -39,7 +52,7 @@ class RaftServer internal constructor(
     }
 
     override fun updateTerm(newTerm: Long) {
-        log.info { "$self updateTerm T$term newTerm=$newTerm" }
+        log.trace { "$self updateTerm T$term newTerm=$newTerm" }
         term = newTerm
         messages.removeIf { it is RaftMessage && it.term < newTerm }
     }

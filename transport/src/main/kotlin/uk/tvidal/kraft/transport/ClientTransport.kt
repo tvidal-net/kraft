@@ -33,7 +33,7 @@ class ClientTransport(
         get() = (connection ?: connect()).writer
 
     init {
-        write(ConnectMessage(config.node))
+        write(ConnectMessage(config.self))
     }
 
     fun write(message: Message) {
@@ -43,7 +43,7 @@ class ClientTransport(
     }
 
     private fun connect(): SocketConnection {
-        val name = "Client [${config.node} -> $node]"
+        val name = "Client [${config.self} -> $node]"
         val future = CompletableFuture<SocketConnection>()
         config.readerThread.retry(this::running, maxAttempts = 0, name = name) {
             connection = SocketConnection(host)

@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.client.clientNode
 import uk.tvidal.kraft.client.localNetworkSiteAddress
 import uk.tvidal.kraft.message.Message
 import java.net.InetSocketAddress
@@ -22,5 +23,19 @@ fun networkTransport(nodes: Collection<RaftNode>, basePort: Int = BASE_PORT) =
     networkTransport(networkTransportConfig(localCluster(nodes, basePort)))
 
 fun networkTransport(configs: Collection<NetworkTransportConfig>): Map<RaftNode, NetworkTransport> = configs.associate {
-    it.node to NetworkTransport(it)
+    it.self to NetworkTransport(it)
 }
+
+fun messageSender(
+    server: Pair<RaftNode, InetSocketAddress>,
+    self: RaftNode = clientNode()
+): MessageSender = ClientMessageSender(
+    client = ClientTransport(
+        node = server.first,
+        config = NetworkTransportConfig(
+            self = self,
+            cluster = mapOf(server),
+            messageReceiver = SimpleMessageReceiver()
+        )
+    )
+)

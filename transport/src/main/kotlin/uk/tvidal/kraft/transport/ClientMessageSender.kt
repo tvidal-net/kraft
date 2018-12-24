@@ -4,9 +4,11 @@ import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.message.Message
 
 class ClientMessageSender(
-    override val node: RaftNode,
     val client: ClientTransport
 ) : MessageSender {
+
+    override val node: RaftNode
+        get() = client.node
 
     override fun send(message: Message) {
         client.write(message)

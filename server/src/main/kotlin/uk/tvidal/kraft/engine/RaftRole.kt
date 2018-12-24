@@ -78,7 +78,7 @@ enum class RaftRole {
     internal open fun run(now: Long, raft: RaftEngine): RaftRole? = null
 
     internal fun enter(now: Long, raft: RaftEngine) {
-        log.info { "${raft.self} Enter $name" }
+        log.info { "${raft.self} Enter $name T${raft.term}" }
         enterRole(now, raft)
     }
 
