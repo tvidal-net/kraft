@@ -14,7 +14,6 @@ import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
 import uk.tvidal.kraft.message.raft.VoteMessage
-import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.flush
 import java.lang.System.currentTimeMillis
 import java.time.Instant
@@ -215,8 +214,6 @@ abstract class RaftEngine internal constructor(
     internal abstract fun computeCommitIndex()
 
     internal abstract fun run(now: Long)
-
-    abstract fun publish(entries: KRaftEntries)
 
     override fun toString() = "${RaftEngine::class.simpleName}($self) $storage"
 }

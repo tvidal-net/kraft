@@ -7,8 +7,6 @@ import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.engine.RaftServer
 import uk.tvidal.kraft.loadResource
 import uk.tvidal.kraft.logging.KRaftLogging
-import uk.tvidal.kraft.storage.entries
-import uk.tvidal.kraft.storage.entryOf
 import java.util.concurrent.ThreadLocalRandom
 
 abstract class ClusterServer internal constructor(
@@ -40,11 +38,5 @@ abstract class ClusterServer internal constructor(
         // http://patorjk.com/software/taag/#p=display&f=Ivrit&t=KRaft%200.1%0AServer
         loadResource("/logo/server.txt")
             .forEach(log::info)
-    }
-
-    override fun publish(data: List<ByteArray>) {
-        randomNode.run {
-            publish(entries(data.map { entryOf(it) }))
-        }
     }
 }

@@ -30,7 +30,7 @@ class NetworkTransport(
     )
 
     override fun sender(node: RaftNode): MessageSender = clients.computeIfAbsent(node) {
-        NetworkMessageSender(node, server)
+        ServerMessageSender(node, server)
     }
 
     override fun receiver() = messages

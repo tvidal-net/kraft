@@ -8,7 +8,7 @@ class ClusterMessageSender(
     node: RaftNode,
     server: ServerTransport,
     val client: ClientTransport
-) : NetworkMessageSender(node, server), Closeable {
+) : ServerMessageSender(node, server), Closeable {
 
     override fun send(message: Message) {
         client.write(message)

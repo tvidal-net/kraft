@@ -17,11 +17,17 @@ class ClientTransport(
 ) : Closeable {
     companion object : KRaftLogging()
 
+    private val host get() = config[node]
+
     @Volatile
     private var running: Boolean = true
 
     @Volatile
     private var connection: SocketConnection? = null
+
+    private val socket get() = connection!!.socket
+    private val reader get() = connection!!.reader
+    private val messages get() = config.messageReceiver
 
     private val writer: SocketMessageWriter
         get() = (connection ?: connect()).writer
@@ -40,15 +46,21 @@ class ClientTransport(
         val name = "Client [${config.node} -> $node]"
         val future = CompletableFuture<SocketConnection>()
         config.readerThread.retry(this::running, maxAttempts = 0, name = name) {
-            val host = config[node]
             connection = SocketConnection(host)
             log.info { "$name connected to ${connection!!.socket}" }
             if (!future.isDone) future.complete(connection)
-            with(connection!!) {
-                reader.map(config.messageReceiver::offer)
-            }
+            reader.forEach(this::receiveMessage)
         }
         return future.get()
+    }
+
+    private fun receiveMessage(message: Message?) {
+        val from = message?.from
+        if (message?.from != node) {
+            log.warn { "message in ${connection?.socket} pretending to be from $from" }
+            return
+        }
+        messages.offer(message)
     }
 
     override fun close() {
