@@ -4,7 +4,7 @@ import uk.tvidal.kraft.message.Message
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 
-class SimpleMessageReceiver(
+class BlockingMessageReceiver(
     private val queue: BlockingQueue<Message>
 ) : MessageReceiver {
 
@@ -13,7 +13,7 @@ class SimpleMessageReceiver(
     override val size: Int
         get() = queue.size
 
-    override fun poll(): Message? = queue.poll()
+    override fun poll(): Message? = queue.take()
 
     override fun offer(message: Message?) = queue.offer(message)
 

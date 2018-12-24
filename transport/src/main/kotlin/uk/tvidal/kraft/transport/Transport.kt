@@ -4,10 +4,13 @@ import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.client.clientNode
 import uk.tvidal.kraft.client.localNetworkSiteAddress
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.singleThreadPool
 import java.net.InetSocketAddress
 
 typealias SocketMessageReader = Iterable<Message?>
 typealias SocketMessageWriter = (Message) -> Unit
+
+val networkWriterThread = singleThreadPool("NetworkWriter")
 
 const val BASE_PORT = 1800
 
@@ -28,7 +31,8 @@ fun networkTransport(configs: Collection<NetworkTransportConfig>): Map<RaftNode,
 
 fun messageSender(
     server: Pair<RaftNode, InetSocketAddress>,
-    self: RaftNode = clientNode()
+    self: RaftNode = clientNode(),
+    messageReceiver: MessageReceiver = BlockingMessageReceiver()
 ): MessageSender = ClientMessageSender(
     self = self,
     client = ClientTransport(
@@ -36,7 +40,7 @@ fun messageSender(
         config = NetworkTransportConfig(
             self = self,
             cluster = mapOf(server),
-            messageReceiver = SimpleMessageReceiver()
+            messageReceiver = messageReceiver
         )
     )
 )

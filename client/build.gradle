@@ -1,4 +1,5 @@
 dependencies {
     implementation project(':kraft-core')
     implementation project(':kraft-codec')
+    implementation project(':kraft-transport')
 }

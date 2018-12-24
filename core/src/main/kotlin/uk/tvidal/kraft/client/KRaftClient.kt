@@ -4,5 +4,5 @@ import uk.tvidal.kraft.RaftNode
 
 interface KRaftClient {
 
-    val node: RaftNode
+    val self: RaftNode
 }

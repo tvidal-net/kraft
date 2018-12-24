@@ -13,7 +13,7 @@ class NetworkTransportConfig(
     val cluster: Map<RaftNode, InetSocketAddress>,
     val codec: SocketCodecFactory = JsonCodecFactory,
     val readerThread: ExecutorService = cachedThreadPool("$self-Reader"),
-    val writerThread: ExecutorService = singleThreadPool("$self-Writer"),
+    val writerThread: ExecutorService = networkWriterThread,
     val serverThread: ExecutorService = singleThreadPool("$self-Server"),
     val messageReceiver: MessageReceiver = DualQueueMessageReceiver()
 ) {
