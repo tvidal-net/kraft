@@ -31,3 +31,8 @@ fun multiThreadClusterServer(
     clusterConfig: List<KRaftConfig>,
     loopToleranceMillis: Long = LOOP_TOLERANCE_MILLIS
 ): ClusterServer = MultiThreadClusterServer(clusterConfig, LoopToleranceController(loopToleranceMillis))
+
+fun loadResource(path: String): List<String> = String::class.java
+    .getResourceAsStream(path)!!
+    .reader()
+    .readLines()

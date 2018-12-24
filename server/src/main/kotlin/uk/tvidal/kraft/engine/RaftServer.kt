@@ -6,6 +6,7 @@ import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
+import uk.tvidal.kraft.storage.KRaftEntries
 
 class RaftServer internal constructor(
     config: KRaftConfig
@@ -15,6 +16,10 @@ class RaftServer internal constructor(
         .associate { it to RaftFollower(this, sender(it)) }
 
     private val messages = config.transport.receiver()
+
+    override fun publish(entries: KRaftEntries) {
+        messages.offer(ClientAppendMessage(clientNode, entries))
+    }
 
     internal fun clientAppend(msg: ClientAppendMessage) {
         val currentLeader = leader

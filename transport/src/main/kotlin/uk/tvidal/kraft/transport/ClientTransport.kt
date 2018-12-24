@@ -42,7 +42,7 @@ class ClientTransport(
         config.readerThread.retry(this::running, maxAttempts = 0, name = name) {
             val host = config[node]
             connection = SocketConnection(host)
-            log.info { "$name connected to $host" }
+            log.info { "$name connected to ${connection!!.socket}" }
             if (!future.isDone) future.complete(connection)
             with(connection!!) {
                 reader.map(config.messageReceiver::offer)

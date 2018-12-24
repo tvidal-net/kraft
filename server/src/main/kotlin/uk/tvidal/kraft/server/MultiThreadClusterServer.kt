@@ -12,13 +12,13 @@ class MultiThreadClusterServer internal constructor(
     private val executor = fixedThreadPool(KRAFT_THREAD_NAME, size)
 
     override fun start() {
-        log.info { "Starting..." }
         val work = nodes.map {
             Runnable { loop(it) }
         }
         work.forEach {
             executor.submit(it)
         }
+        logo()
     }
 
     override fun stop() {
