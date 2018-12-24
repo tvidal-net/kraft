@@ -8,6 +8,9 @@ open class ServerMessageSender(
     val server: ServerTransport
 ) : MessageSender {
 
+    final override val self: RaftNode
+        get() = server.self
+
     override fun send(message: Message) {
         server.write(node, message)
     }

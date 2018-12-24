@@ -30,6 +30,7 @@ fun messageSender(
     server: Pair<RaftNode, InetSocketAddress>,
     self: RaftNode = clientNode()
 ): MessageSender = ClientMessageSender(
+    self = self,
     client = ClientTransport(
         node = server.first,
         config = NetworkTransportConfig(

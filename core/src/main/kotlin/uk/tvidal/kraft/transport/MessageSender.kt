@@ -5,6 +5,8 @@ import uk.tvidal.kraft.message.Message
 
 interface MessageSender {
 
+    val self: RaftNode
+
     val node: RaftNode
 
     fun send(message: Message)

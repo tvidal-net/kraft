@@ -17,7 +17,7 @@ private val random get() = ThreadLocalRandom.current()
 fun main(args: Array<String>) {
     logbackConsoleConfiguration()
 
-    val nodes = raftNodes(2)
+    val nodes = raftNodes(1)
     val cluster = raftCluster(nodes)
     val transport = networkTransport(nodes)
     val config = cluster.map {
@@ -28,13 +28,12 @@ fun main(args: Array<String>) {
     server.start()
 
     //    /*
-    val producerNode = clientNode("Producer1")
+    val producerNode = clientNode("Producer")
     val serverNode = (server.leader ?: server.randomNode).self
     val address = localCluster(nodes)[serverNode]!!
 
     val producer = producer(
-        server = messageSender(serverNode to address, producerNode),
-        self = producerNode
+        sender = messageSender(serverNode to address, producerNode)
     )
     singleThreadPool("KRaftProducerThread").loop {
 

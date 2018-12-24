@@ -33,7 +33,7 @@ abstract class RaftEngine internal constructor(
     protected val timeout = config.timeout
     internal val sizes = config.sizes
 
-    final override var role = FOLLOWER
+    final override var role = if (cluster.single) LEADER else FOLLOWER
         protected set
 
     final override var term = 0L

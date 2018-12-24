@@ -23,10 +23,11 @@ class ServerTransport(
     @Volatile
     private var running: Boolean = true
 
-    private val node get() = config.self
+    val self: RaftNode
+        get() = config.self
 
     init {
-        log.info { "Server [$node] waiting for connections on port ${config.host.port}" }
+        log.info { "Server [$self] waiting for connections on port ${config.host.port}" }
         config.serverThread.retry(this::running, maxAttempts = 0, name = "Server") {
             val socket = serverSocket.accept()
             log.debug { "incoming connection ${socket.inetAddress}:${socket.port}" }
@@ -65,7 +66,7 @@ class ServerTransport(
     }
 
     private fun clientConnected(from: RaftNode, socket: Socket): SocketMessageWriter {
-        log.info { "Server [$node <- $from] client connected ($socket)" }
+        log.info { "Server [$self <- $from] client connected ($socket)" }
         return config
             .codec
             .writer(socket)
@@ -75,7 +76,7 @@ class ServerTransport(
         config.writerThread.tryCatch {
             val writer = writers[to]
             if (writer != null) writer(message)
-            else log.warn { "$node attempted to send message to unknown node $to" }
+            else log.warn { "$self attempted to send message to unknown node $to" }
         }
     }
 
