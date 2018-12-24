@@ -9,6 +9,9 @@ class KRaftEntry internal constructor(
     val bytes: Int
         get() = payload.size
 
+    val isEmpty: Boolean
+        get() = payload.isEmpty()
+
     operator fun component1() = term
     operator fun component2() = payload
     operator fun component3() = bytes

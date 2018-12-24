@@ -82,7 +82,7 @@ abstract class RaftEngine internal constructor(
         get() = timeout.heartbeatTimeout
 
     internal fun startElection(now: Long) {
-        log.trace { "$self startElection T$term" }
+        log.trace { "[$self] startElection T$term" }
         updateTerm()
         votedFor = self
         votesReceived.clear()
@@ -109,7 +109,7 @@ abstract class RaftEngine internal constructor(
             val delay = now - lastElectionTimeChecked
             if (delay > heartbeatWindow) {
                 resetElectionTimeout(now)
-                log.warn { "$self checkElectionTimeout check took too long ($delay ms), resetting" }
+                log.warn { "[$self] checkElectionTimeout check took too long ($delay ms), resetting" }
                 null
             } else CANDIDATE
         } else null
@@ -139,7 +139,7 @@ abstract class RaftEngine internal constructor(
 
     private fun appendLogIndex(prevIndex: Long, prevTerm: Long): Long {
         val termAtPrevIndex = storage.termAt(prevIndex)
-        val logMessage = "$self appendLogIndex ($leader) prevIndex=$prevIndex " +
+        val logMessage = "[$self] appendLogIndex ($leader) prevIndex=$prevIndex " +
             "termAtPrevIndex=[$termAtPrevIndex,msg=$prevTerm]"
 
         if (prevIndex == 0L || (prevIndex <= lastLogIndex && prevTerm == termAtPrevIndex)) {
@@ -180,7 +180,7 @@ abstract class RaftEngine internal constructor(
     }
 
     internal fun processVote(msg: VoteMessage): RaftRole? {
-        log.info { "$self processVote T$term (${msg.from}) [vote=${msg.vote} term=${msg.term}]" }
+        log.info { "[$self] processVote T$term (${msg.from}) [vote=${msg.vote} term=${msg.term}]" }
         if (msg.vote) {
             votesReceived += msg.from
             if (votesReceived.size >= cluster.majority) {

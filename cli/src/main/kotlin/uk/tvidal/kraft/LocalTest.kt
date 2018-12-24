@@ -17,7 +17,7 @@ private val random get() = ThreadLocalRandom.current()
 fun main(args: Array<String>) {
     logbackConsoleConfiguration()
 
-    val nodes = raftNodes(1)
+    val nodes = raftNodes(3)
     val cluster = raftCluster(nodes)
     val transport = networkTransport(nodes)
     val config = cluster.map {
@@ -47,14 +47,8 @@ fun main(args: Array<String>) {
     }
     // */
 
-    sleep(500)
     consumer(serverNode to address, index = FIRST_INDEX) {
-        it.data.forEachIndexed { i, e ->
-            val index = it.firstIndex + i
-            val term = e.term
-            val text = String(e.payload)
-            System.err.println("$index T$term::$text")
-        }
+        println("received: ${it.data}")
         true
     }
 }

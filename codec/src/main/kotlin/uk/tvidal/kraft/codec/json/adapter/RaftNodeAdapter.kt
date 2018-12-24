@@ -15,13 +15,13 @@ class RaftNodeAdapter : TypeAdapter<RaftNode>() {
         const val CLIENT_NODE = "Client"
         const val RAFT_NODE = "Raft"
 
-        val regex = Regex("(\\w+)\\((\\w+):([0-9.]+)\\)")
+        val regex = Regex("(\\w+)\\((\\w+):?([0-9.]+)\\)")
     }
 
     override fun write(writer: JsonWriter, node: RaftNode?) {
         if (node != null) {
             val type = if (node.clientNode) CLIENT_NODE else RAFT_NODE
-            writer.value("$type($node)")
+            writer.value("$type(${node.name})")
         } else writer.nullValue()
     }
 

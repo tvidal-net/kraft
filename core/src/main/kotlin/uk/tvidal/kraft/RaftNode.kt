@@ -10,10 +10,10 @@ data class RaftNode(
         private const val BYTE_MASK = 0xFF
     }
 
-    private val name = buildString {
+    val name = buildString {
         append(cluster)
-        append(':')
         if (clientNode) {
+            append(':')
             repeat(3) {
                 val bits = (3 - it) * 8
                 append(index shr bits and BYTE_MASK)

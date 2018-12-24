@@ -39,9 +39,9 @@ class RaftServer internal constructor(
         if (role == LEADER) {
             val entries = message.data.copy(term)
             val lastLogIndex = storage.append(entries)
-            log.debug { "$self clientAppend lastLogIndex=$lastLogIndex msg=$message" }
+            log.debug { "[$self] clientAppend lastLogIndex=$lastLogIndex msg=$message" }
             if (isSingleNodeCluster) {
-                log.debug { "$self commit log=$storage from=$commitIndex leaderCommitIndex=$lastLogIndex" }
+                log.debug { "[$self] commit log=$storage from=$commitIndex leaderCommitIndex=$lastLogIndex" }
                 commit(lastLogIndex)
             }
         } else if (currentLeader != null) {
@@ -58,7 +58,7 @@ class RaftServer internal constructor(
     }
 
     override fun updateTerm(newTerm: Long) {
-        log.trace { "$self updateTerm T$term newTerm=$newTerm" }
+        log.trace { "[$self] updateTerm T$term newTerm=$newTerm" }
         term = newTerm
         messages.removeIf { it is RaftMessage && it.term < newTerm }
     }
@@ -86,7 +86,7 @@ class RaftServer internal constructor(
                 val newRole = role.process(now, msg, this)
                 updateRole(now, newRole)
             } while (newRole != null)
-        } else log.warn { "$self received raft message from node outside cluster ${msg.from}" }
+        } else log.warn { "[$self] received raft message from node outside cluster ${msg.from}" }
     }
 
     private fun updateRole(now: Long, newRole: RaftRole?) {
@@ -116,7 +116,7 @@ class RaftServer internal constructor(
         if (quorumCommitIndex > commitIndex) {
             val quorumCommitTerm = storage.termAt(quorumCommitIndex)
             if (quorumCommitTerm == term) {
-                log.debug { "$self commit log=$storage from=$commitIndex quorumCommitIndex=$quorumCommitIndex" }
+                log.debug { "[$self] commit log=$storage from=$commitIndex quorumCommitIndex=$quorumCommitIndex" }
                 commit(quorumCommitIndex)
             } else {
                 log.warn { "SKIPPING quorumCommitIndex=$quorumCommitIndex quorumCommitTerm=$quorumCommitTerm currentTerm=$term" }

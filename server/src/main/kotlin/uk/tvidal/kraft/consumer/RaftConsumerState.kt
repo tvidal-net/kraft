@@ -38,7 +38,7 @@ class RaftConsumerState(
             val index = computeIndex(message.fromIndex)
             val consumer = RaftConsumer(message.from, index, commitIndex)
             consumers[message.from] = consumer
-            log.info { "$self consumerRegister msg=$message $consumer " }
+            log.info { "[$self] consumerRegister msg=$message $consumer " }
             updateData(consumer)
         }
     }
@@ -67,8 +67,9 @@ class RaftConsumerState(
         val consumer = consumers[message.from]
         if (consumer != null) {
             consumer.update(message.index + 1, commitIndex)
+            log.trace { "[$self] consumerAck $consumer" }
             updateData(consumer)
-        } else log.warn { "$self message from unknown consumer $message" }
+        } else log.warn { "[$self] message from unknown consumer $message" }
     }
 
     private fun updateStreaming(consumer: RaftConsumer) {
@@ -85,7 +86,7 @@ class RaftConsumerState(
 
     private fun update(consumer: RaftConsumer) {
         val payload = storage.read(consumer.index, 256)
-        log.debug { "$self consumeData $consumer $payload" }
+        log.trace { "[$self] consumeData $consumer $payload" }
         transport.sender(consumer.node).respond(
             ConsumerDataMessage(
                 from = self,
@@ -96,7 +97,7 @@ class RaftConsumerState(
     }
 
     private fun error(node: RaftNode, error: ClientErrorType) {
-        log.warn { "$self consumerError ($node) error=$error" }
+        log.warn { "[$self] consumerError ($node) error=$error" }
         transport.sender(node).respond(
             ClientErrorMessage(node, error)
         )

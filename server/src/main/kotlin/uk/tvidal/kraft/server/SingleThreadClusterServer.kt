@@ -30,6 +30,7 @@ class SingleThreadClusterServer internal constructor(
             val newThread = createThread()
             if (currentThread.compareAndSet(null, newThread)) {
                 newThread.start()
+                waitForLeader()
                 logo()
             }
         }

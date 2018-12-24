@@ -7,6 +7,7 @@ import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.engine.RaftServer
 import uk.tvidal.kraft.loadResource
 import uk.tvidal.kraft.logging.KRaftLogging
+import java.lang.Thread.yield
 import java.util.concurrent.ThreadLocalRandom
 
 abstract class ClusterServer internal constructor(
@@ -33,6 +34,12 @@ abstract class ClusterServer internal constructor(
 
     val randomNode: RaftEngine
         get() = nodes[random.nextInt(nodes.size)]
+
+    protected fun waitForLeader() {
+        while (leader == null) {
+            yield()
+        }
+    }
 
     protected fun logo() {
         // http://patorjk.com/software/taag/#p=display&f=Ivrit&t=KRaft%200.1%0AServer

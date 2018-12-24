@@ -78,7 +78,7 @@ enum class RaftRole {
     internal open fun run(now: Long, raft: RaftEngine): RaftRole? = null
 
     internal fun enter(now: Long, raft: RaftEngine) {
-        log.info { "${raft.self} Enter $name T${raft.term}" }
+        log.info { "[${raft.self}] Enter $name T${raft.term}" }
         enterRole(now, raft)
     }
 
@@ -117,7 +117,7 @@ enum class RaftRole {
 
         // We're in the right term, just process it
         raft.term == msg.term -> {
-            log.debug { "${raft.self} process msg=$msg" }
+            log.trace { "[${raft.self}] process $msg" }
             processMessage(now, msg, raft)
         }
 
