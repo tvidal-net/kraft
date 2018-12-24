@@ -6,6 +6,7 @@ import uk.tvidal.kraft.codec.json.JsonMessageReader
 import uk.tvidal.kraft.codec.json.MessageCodec
 import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.message.raft.VoteMessage
+import uk.tvidal.kraft.transport.networkTransport
 import java.lang.Thread.sleep
 import java.net.ServerSocket
 import java.net.Socket
@@ -54,8 +55,34 @@ private fun server(port: Int) {
     }
 }
 
+object NewTest {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        logbackConsoleConfiguration()
+        val nodes = raftNodes(2)
+        val (n0, n1) = nodes
+        val transport = networkTransport(nodes)
+        val message = VoteMessage(localClientNode(), 1L, false)
+
+        val s0 = transport[n0]!!.sender(n1)
+        val s1 = transport[n1]!!.sender(n0)
+
+        s0.let { }
+        s1.let { message }
+
+        /*
+        s0.send(message)
+        s1.send(message)
+
+        sleep(500)
+        s0.respond(message)
+        s1.respond(message)
+        // */
+    }
+}
+
 fun main(args: Array<String>) {
-    logbackConfigurationFile = LOGBACK_CONSOLE
+    logbackConsoleConfiguration()
     //    server(1801)
 
     val node = localClientNode()

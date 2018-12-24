@@ -20,6 +20,7 @@ class NetworkTransport(
     private val clients: ConcurrentMap<RaftNode, MessageSender> = ConcurrentHashMap(
         config
             .cluster
+            .filter { it.key != node }
             .mapValues { (node, _) ->
                 val client = ClientTransport(node, config)
                 ClusterMessageSender(node, server, client)

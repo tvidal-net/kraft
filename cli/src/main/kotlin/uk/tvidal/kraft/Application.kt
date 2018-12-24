@@ -96,8 +96,12 @@ fun execute(op: OptionSet): Int {
     }
 }
 
-fun main(args: Array<String>) {
+fun logbackConsoleConfiguration() {
     logbackConfigurationFile = LOGBACK_CONSOLE
+}
+
+fun main(args: Array<String>) {
+    logbackConsoleConfiguration()
     val parser = optionParser(true)
     val op = parser.parse(*args)
     val ret = execute(op)

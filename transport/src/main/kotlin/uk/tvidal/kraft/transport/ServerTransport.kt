@@ -12,52 +12,57 @@ import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
 
 class ServerTransport(
-    config: NetworkTransportConfig
+    val config: NetworkTransportConfig
 ) : Closeable {
     companion object : KRaftLogging()
 
     private val serverSocket = ServerSocket(config.host.port)
-
-    private val node = config.node
-    private val readerThread = config.readerThread
-    private val writerThread = config.writerThread
-    private val codec = config.codec
-    private val messages = config.messageReceiver
 
     private val writers = ConcurrentHashMap<RaftNode, SocketMessageWriter>()
 
     @Volatile
     private var running: Boolean = true
 
+    private val node get() = config.node
+
     init {
+        log.info { "Server [$node] waiting for connections on port ${config.host.port}" }
         config.serverThread.retry(this::running, maxAttempts = 0, name = "Server") {
             val socket = serverSocket.accept()
-            log.info { "Client Connected: ${socket.inetAddress}" }
+            log.debug { "incoming connection ${socket.inetAddress}:${socket.port}" }
             read(socket)
         }
     }
 
     private fun read(socket: Socket) {
-        val reader = codec.reader(socket)
-        readerThread.retry({ running && socket.isConnected }, name = "Server (${socket.inetAddress})") {
-            for (msg in reader) {
-                if (msg != null) {
-                    receiveMessage(socket, msg)
-                }
+        config.readerThread.retry(this::running, maxAttempts = 0, name = "Server ($socket)") {
+            config
+                .codec
+                .reader(socket)
+                .forEach { receiveMessage(socket, it) }
+        }
+    }
+
+    private fun receiveMessage(socket: Socket, message: Message?) {
+        if (message != null) {
+            val from = message.from
+            writers.computeIfAbsent(from) {
+                log.info { "Server [$node <- $from] client connected ($socket)" }
+                config
+                    .codec
+                    .writer(socket)
+            }
+            if (message !is TransportMessage) {
+                config.messageReceiver.offer(message)
             }
         }
     }
 
-    private fun receiveMessage(socket: Socket, msg: Message) {
-        writers.computeIfAbsent(msg.from) { codec.writer(socket) }
-        if (msg !is TransportMessage) {
-            messages.offer(msg)
-        }
-    }
-
     fun write(to: RaftNode, message: Message) {
-        writerThread.tryCatch {
-            writers[to]?.invoke(message)
+        config.writerThread.tryCatch {
+            val writer = writers[to]
+            if (writer != null) writer(message)
+            else log.warn { "$node attempted to send message to unknown node $to" }
         }
     }
 
