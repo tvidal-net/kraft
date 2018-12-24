@@ -7,8 +7,9 @@ import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.emptyEntries
+import uk.tvidal.kraft.streaming.DataWindow
 import uk.tvidal.kraft.transport.MessageSender
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.min
 
 class RaftFollower internal constructor(
     private val raft: RaftEngine,
@@ -31,17 +32,14 @@ class RaftFollower internal constructor(
     var matchIndex = BEFORE_LOG
         private set
 
-    private val byteLimit = AtomicInteger()
-
-    val availableBytes: Int
-        get() = byteLimit.get()
+    private val window = DataWindow(raft.sizes.unackedBytes)
 
     init {
         reset()
     }
 
     internal fun reset() {
-        resetByteWindow()
+        window.reset()
         matchIndex = BEFORE_LOG
         nextIndex = raft.nextLogIndex
     }
@@ -56,8 +54,10 @@ class RaftFollower internal constructor(
 
     internal fun run(now: Long) {
         if (streaming) {
-            val data = raft.read(nextIndex, availableBytes)
+            val available = min(raft.sizes.batchSize, window.available)
+            val data = raft.read(nextIndex, available)
             if (!data.isEmpty) { // not enough bytes to send the next entry
+                window.consume(nextIndex, data)
                 appendEntries(now, data)
                 nextIndex += data.size
                 return
@@ -73,6 +73,7 @@ class RaftFollower internal constructor(
     }
 
     internal fun ack(newMatchIndex: Long) {
+        window.release(newMatchIndex)
         matchIndex = newMatchIndex
         raft.computeCommitIndex()
     }
@@ -80,6 +81,7 @@ class RaftFollower internal constructor(
     internal fun nack(nackIndex: Long) {
         matchIndex = NEVER
         nextIndex = nackIndex + 1
+        window.reset()
         clearHeartbeatTimeout()
     }
 
@@ -94,18 +96,5 @@ class RaftFollower internal constructor(
         val prevIndex = nextIndex - 1
         val prevTerm = raft.termAt(prevIndex)
         raft.append(follower, prevIndex, prevTerm, data)
-    }
-
-    private fun consumeByteWindow(bytes: Int): Boolean {
-        var newLimit: Int
-        do {
-            val prevLimit = availableBytes
-            newLimit = prevLimit - bytes
-        } while (newLimit >= 0 && !byteLimit.compareAndSet(prevLimit, newLimit))
-        return newLimit >= 0
-    }
-
-    private fun resetByteWindow() {
-        byteLimit.set(raft.sizes.maxUnackedBytesWindow)
     }
 }

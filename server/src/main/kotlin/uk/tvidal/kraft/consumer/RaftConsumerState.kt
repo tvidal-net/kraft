@@ -36,7 +36,7 @@ class RaftConsumerState(
     fun register(message: ConsumerRegisterMessage) {
         if (validateIndex(message.from, message.fromIndex)) {
             val index = computeIndex(message.fromIndex)
-            val consumer = RaftConsumer(message.from, index, commitIndex)
+            val consumer = RaftConsumer(message.from, index, commitIndex, message.maxBytes)
             consumers[message.from] = consumer
             log.info { "[$self] consumerRegister msg=$message $consumer " }
             updateData(consumer)
@@ -67,6 +67,7 @@ class RaftConsumerState(
         val consumer = consumers[message.from]
         if (consumer != null) {
             consumer.update(message.index + 1, commitIndex)
+            consumer.window.release(message.index)
             log.trace { "[$self] consumerAck $consumer" }
             updateData(consumer)
         } else log.warn { "[$self] message from unknown consumer $message" }
@@ -74,26 +75,32 @@ class RaftConsumerState(
 
     private fun updateStreaming(consumer: RaftConsumer) {
         if (consumer.streaming) {
-            update(consumer)
+            val nextIndex = sendData(consumer)
+            consumer.update(nextIndex, commitIndex)
         }
     }
 
     private fun updateData(consumer: RaftConsumer) {
         if (!consumer.streaming) {
-            update(consumer)
+            sendData(consumer)
         }
     }
 
-    private fun update(consumer: RaftConsumer) {
-        val payload = storage.read(consumer.index, 256)
+    private fun sendData(consumer: RaftConsumer): Long {
+        val index = consumer.index
+        val payload = storage.read(index, consumer.window.available)
         log.trace { "[$self] consumeData $consumer $payload" }
-        transport.sender(consumer.node).respond(
-            ConsumerDataMessage(
-                from = self,
-                firstIndex = consumer.index,
-                data = payload
+        if (!payload.isEmpty) {
+            consumer.window.consume(index, payload)
+            transport.sender(consumer.node).respond(
+                ConsumerDataMessage(
+                    from = self,
+                    firstIndex = index,
+                    data = payload
+                )
             )
-        )
+        } else consumer.streaming = false
+        return index + payload.size
     }
 
     private fun error(node: RaftNode, error: ClientErrorType) {

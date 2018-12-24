@@ -17,7 +17,7 @@ private val random get() = ThreadLocalRandom.current()
 fun main(args: Array<String>) {
     logbackConsoleConfiguration()
 
-    val nodes = raftNodes(3)
+    val nodes = raftNodes(2)
     val cluster = raftCluster(nodes)
     val transport = networkTransport(nodes)
     val config = cluster.map {
