@@ -48,7 +48,7 @@ internal class KRaftDataFileTest : BaseFileTest() {
 
         KRaftDataFile.open(file).also {
             assertEquals(33L, it.firstIndex)
-            assertEquals(11, it.count)
+            assertEquals(11, it.size)
             assertEquals(COMMITTED, it.state)
         }
     }

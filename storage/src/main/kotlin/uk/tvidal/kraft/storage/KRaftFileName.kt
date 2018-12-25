@@ -66,6 +66,9 @@ data class KRaftFileName(
     val index: String
         get() = fullName(INDEX_FILE)
 
+    val next: KRaftFileName
+        get() = copy(id = id + 1, state = ACTIVE)
+
     private fun fullName(extension: String = ""): String =
         String.format(FORMAT, name, id, extension).toLowerCase()
 

@@ -206,7 +206,7 @@ abstract class RaftEngine internal constructor(
 
     internal fun read(fromIndex: Long, byteLimit: Int) = storage.read(fromIndex, byteLimit)
 
-    private fun appendFlush() = storage.append(flush(term))
+    private fun appendFlush() = storage.append(entries = flush(term))
 
     internal abstract fun heartbeatFollowers(now: Long)
 

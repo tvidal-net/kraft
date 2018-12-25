@@ -4,6 +4,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.computeSerialisedSize
 import uk.tvidal.kraft.codec.binary.entryOf
@@ -44,23 +45,14 @@ class KRaftDataFile private constructor(
     val immutable: Boolean
         get() = state != ACTIVE
 
-    var count: Int = 0
+    val committed: Boolean
+        get() = state == COMMITTED
+
+    var size: Int = 0
         private set
 
     var firstIndex: Long = 0L
         private set
-
-    val lastIndex: Long
-        get() = firstIndex + count - 1
-
-    val range: LongRange
-        get() = LongRange(firstIndex, lastIndex)
-
-    operator fun contains(index: Long) = index in range
-
-    fun commit(commitIndex: Long) {
-        TODO("$commitIndex")
-    }
 
     operator fun get(range: KRaftIndexEntryRange): KRaftEntries = entries(
         range.map { get(it) }
@@ -78,24 +70,24 @@ class KRaftDataFile private constructor(
         if (immutable)
             throw IllegalStateException("Cannot modify files in $state state")
 
+        var count = 0
         try {
             for (entry in data) {
+                val index = firstIndex + size + count++
                 val proto = entry.toProto()
                 val size = computeSerialisedSize(proto)
-                if (size <= stream.available) {
-                    val index = append(proto)
-                    count++
-
-                    yield(index)
-                } else break
+                if (size <= stream.available) yield(append(proto, index))
+                else break
             }
         } finally {
-            writeHeader()
+            if (count > 0) {
+                size += count
+                writeHeader()
+            }
         }
     }.asIterable()
 
-    private fun append(entry: DataEntry): IndexEntry {
-        val index = lastIndex + 1
+    private fun append(entry: DataEntry, index: Long): IndexEntry {
         val offset = stream.position
         entry.writeDelimitedTo(stream.output)
         val bytes = stream.position - offset
@@ -109,6 +101,7 @@ class KRaftDataFile private constructor(
 
     fun rebuildIndex(): Iterable<IndexEntry> = object : Iterable<IndexEntry>, Iterator<IndexEntry> {
 
+        private val range = firstIndex..(firstIndex + size - 1)
         private var index = firstIndex
         private var offset = FILE_INITIAL_POSITION
 
@@ -117,11 +110,11 @@ class KRaftDataFile private constructor(
 
         override fun next(): IndexEntry = buffer {
             position(offset)
-            val proto = DataEntry.parseDelimitedFrom(stream.input)
+            val data = DataEntry.parseDelimitedFrom(stream.input)
             val bytes = position() - offset
 
             val index = IndexEntry.newBuilder()
-                .setId(proto.id)
+                .setId(data.id)
                 .setIndex(index++)
                 .setOffset(offset)
                 .setBytes(bytes)
@@ -136,7 +129,7 @@ class KRaftDataFile private constructor(
         if (stream.buffer.limit() == 0) return false
         val header = readHeader()
         if (header.magicNumber == KRAFT_MAGIC_NUMBER) {
-            count = header.entryCount
+            size = header.entryCount
             firstIndex = header.firstIndex
             state = header.state
             stream.position = header.offset
@@ -151,7 +144,7 @@ class KRaftDataFile private constructor(
     }
 
     private fun writeHeader(
-        newCount: Int = count,
+        newCount: Int = size,
         newFirstIndex: Long = firstIndex,
         newState: FileState = state
     ) {
@@ -167,10 +160,14 @@ class KRaftDataFile private constructor(
                 .build()
                 .writeDelimitedTo(stream.output)
 
-            count = newCount
+            size = newCount
             firstIndex = newFirstIndex
             state = newState
         }
+    }
+
+    fun close(closedState: FileState) {
+        writeHeader(newState = closedState)
     }
 
     private val mark = Stack<Int>()

@@ -37,7 +37,7 @@ class KRaftIndexFile internal constructor(
         return LongRange(first ?: firstIndex, last)
     }
 
-    operator fun get(index: Long): IndexEntry? = data[index]
+    operator fun get(index: Long): IndexEntry = data[index]!!
 
     fun read(fromIndex: Long, byteLimit: Int): KRaftIndexEntryRange {
         val list = mutableListOf<IndexEntry>()
@@ -54,11 +54,12 @@ class KRaftIndexFile internal constructor(
         return KRaftIndexEntryRange(list)
     }
 
-    fun append(range: Iterable<IndexEntry>) {
-        range.forEach(this::append)
-    }
+    fun append(range: Iterable<IndexEntry>): Int =
+        range
+            .onEach(this::append)
+            .count()
 
-    fun append(entry: IndexEntry) {
+    private fun append(entry: IndexEntry) {
         validateEntry(entry)
         ensureOpen()
         entry.writeDelimitedTo(outputStream)

@@ -38,7 +38,7 @@ class RaftServer internal constructor(
         val currentLeader = leader
         if (role == LEADER) {
             val entries = message.data.copy(term)
-            val lastLogIndex = storage.append(entries)
+            val lastLogIndex = storage.append(entries = entries)
             log.debug { "[$self] clientAppend lastLogIndex=$lastLogIndex msg=$message" }
             if (isSingleNodeCluster) {
                 log.debug { "[$self] commit log=$storage from=$commitIndex leaderCommitIndex=$lastLogIndex" }

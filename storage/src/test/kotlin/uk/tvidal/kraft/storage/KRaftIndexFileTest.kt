@@ -34,13 +34,13 @@ internal class KRaftIndexFileTest : BaseFileTest() {
     internal fun `ensures the file is read properly`() {
         KRaftIndexFile(existingFile).use {
             assertEquals(10L..19, it.range)
-            with(it[16]!!) {
+            with(it[16]) {
                 assertEquals(16, index)
                 assertEquals(66, offset)
                 assertEquals(11, bytes)
             }
 
-            with(it[19]!!) {
+            with(it[19]) {
                 assertEquals(19, index)
                 assertEquals(99, offset)
                 assertEquals(11, bytes)

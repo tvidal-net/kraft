@@ -9,7 +9,7 @@ interface KRaftStorage {
     val nextLogIndex: Long
         get() = lastLogIndex + 1
 
-    fun append(entries: Iterable<KRaftEntry>, fromIndex: Long = nextLogIndex): Long
+    fun append(entries: KRaftEntries, fromIndex: Long = nextLogIndex): Long
 
     fun read(fromIndex: Long, byteLimit: Int): KRaftEntries
 
