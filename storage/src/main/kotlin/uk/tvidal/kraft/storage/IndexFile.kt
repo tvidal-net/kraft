@@ -5,9 +5,8 @@ import java.io.Closeable
 import java.io.File
 import java.io.OutputStream
 
-class KRaftIndexFile internal constructor(
-    val file: File,
-    firstIndex: Long = 1L
+class IndexFile internal constructor(
+    val file: File
 ) : Closeable, MutableIndexRange {
 
     override var range = LongRange.EMPTY
@@ -21,37 +20,40 @@ class KRaftIndexFile internal constructor(
         range = readFile(firstIndex)
     }
 
+    val isOpen: Boolean
+        get() = outputStream != null
+
     private fun readFile(firstIndex: Long): LongRange {
         var first: Long? = null
         var last = 0L
         file.inputStream().use { stream ->
-            do {
+            while (true) {
                 val entry = IndexEntry.parseDelimitedFrom(stream)
-                if (entry != null) {
+                if (entry != null && entry.hasId()) {
                     data[entry.index] = entry
                     if (first == null) first = entry.index
                     last = entry.index
-                }
-            } while (entry != null)
+                } else break
+            }
         }
         return LongRange(first ?: firstIndex, last)
     }
 
     operator fun get(index: Long): IndexEntry = data[index]!!
 
-    fun read(fromIndex: Long, byteLimit: Int): KRaftIndexEntryRange {
+    fun read(fromIndex: Long, byteLimit: Int): IndexEntryRange {
         val list = mutableListOf<IndexEntry>()
-        var size = 0
+        var available = byteLimit
         var index = fromIndex
         while (index <= range.last) {
             val entry = data[index++]!!
             val bytes = entry.bytes
-            if (size + bytes <= byteLimit) {
-                size += bytes
+            if (available - bytes >= 0) {
+                available -= bytes
                 list.add(entry)
-            }
+            } else break
         }
-        return KRaftIndexEntryRange(list)
+        return IndexEntryRange(list)
     }
 
     fun append(range: Iterable<IndexEntry>): Int =
@@ -91,6 +93,10 @@ class KRaftIndexFile internal constructor(
     }
 
     override fun close() {
-        outputStream?.close()
+        val os = outputStream
+        outputStream = null
+        os?.close()
     }
+
+    override fun toString() = "IndexFile[($range) isOpen=$isOpen]"
 }

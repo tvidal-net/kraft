@@ -6,14 +6,15 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import java.io.File
 
 class KRaftFile internal constructor(
-    val dataFile: KRaftDataFile,
-    name: KRaftFileName,
-    config: KRaftFileStorageConfig
+    val dataFile: DataFile,
+    name: FileName,
+    config: FileStorageConfig
 ) : ChainNode<KRaftFile>,
     KRaftFileState by dataFile,
     MutableIndexRange by dataFile {
 
-    var fileName: KRaftFileName = name
+    var fileName: FileName = name
+        private set
 
     private val path = config.path
 
@@ -23,11 +24,12 @@ class KRaftFile internal constructor(
 
     override var prev: KRaftFile? = null
 
-    val indexFile = KRaftIndexFile(file, dataFile.firstIndex)
+    val indexFile = IndexFile(
+        file = path.resolve(fileName.index).toFile()
+    )
 
     init {
-        val index = path.resolve(fileName.index).toFile()
-        if (!index.exists()) {
+        if (indexFile.isEmpty() && !dataFile.isEmpty()) {
             indexFile.append(dataFile.rebuildIndex())
             if (dataFile.immutable) indexFile.close()
         }
@@ -49,4 +51,6 @@ class KRaftFile internal constructor(
         fileName = fileName.copy(state = state)
         file.renameTo(path.resolve(fileName.current).toFile())
     }
+
+    override fun toString() = "File[($range) $fileName $state]"
 }

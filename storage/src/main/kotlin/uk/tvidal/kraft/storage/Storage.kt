@@ -18,13 +18,11 @@ internal val KRAFT_MAGIC_NUMBER: UniqueID = UUID
     .fromString("ACEDBABE-BEEF-F00D-DEAD-180182C0FFEE")
     .toProto()
 
+const val DEFAULT_FILE_NAME = "kraft"
 const val DEFAULT_FILE_SIZE = 4L * 1024 * 1024 // 4 MB
 const val FILE_INITIAL_POSITION = 48 // allocate a few bytes for the header
-const val FILE_NAME_FORMAT = "%s_%d.%s"
-const val FILE_EXTENSION = "kr"
-const val FILE_EXTENSION_COMMIT = "c.kr"
-const val FILE_EXTENSION_DISCARD = "d.kr"
-const val MAGIC_NUMBER = 0xFF
+
+val DEFAULT_FILE_PATH = File(System.getProperty("user.dir"))
 
 fun checksum(data: ByteArray): Int {
     val crc = CRC32()
@@ -41,3 +39,11 @@ internal fun openMemoryMappedFile(file: File, size: Long): ByteBuffer {
         it.map(MapMode.READ_WRITE, 0, size)
     }
 }
+
+fun fileStorage(
+    dir: File = DEFAULT_FILE_PATH,
+    name: String = DEFAULT_FILE_NAME,
+    size: Long = DEFAULT_FILE_SIZE
+) = KRaftFileStorage(
+    FileStorageConfig(dir.toPath(), name, size)
+)

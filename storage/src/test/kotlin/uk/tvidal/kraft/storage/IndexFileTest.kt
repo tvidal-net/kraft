@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class KRaftIndexFileTest : BaseFileTest() {
+internal class IndexFileTest : BaseFileTest() {
 
     companion object {
 
@@ -32,7 +32,7 @@ internal class KRaftIndexFileTest : BaseFileTest() {
 
     @Test
     internal fun `ensures the file is read properly`() {
-        KRaftIndexFile(existingFile).use {
+        IndexFile(existingFile).use {
             assertEquals(10L..19, it.range)
             with(it[16]) {
                 assertEquals(16, index)
@@ -50,7 +50,7 @@ internal class KRaftIndexFileTest : BaseFileTest() {
 
     @Test
     internal fun `byte limit is respected on read`() {
-        KRaftIndexFile(existingFile).use {
+        IndexFile(existingFile).use {
             val emptyRange = it.read(11, 10)
             assertTrue { emptyRange.isEmpty }
 
@@ -75,7 +75,7 @@ internal class KRaftIndexFileTest : BaseFileTest() {
     @Test
     internal fun `ensure appended data has a valid index`() {
         assertThrows<IllegalArgumentException> {
-            KRaftIndexFile(newFile).use {
+            IndexFile(newFile).use {
                 val firstRange = indexRange(10, 1L)
                 it.append(firstRange)
 
@@ -88,7 +88,7 @@ internal class KRaftIndexFileTest : BaseFileTest() {
     @Test
     internal fun `ensure appended data has a valid offset`() {
         assertThrows<IllegalArgumentException> {
-            KRaftIndexFile(newFile).use {
+            IndexFile(newFile).use {
                 val firstRange = indexRange(10, 1L)
                 it.append(firstRange)
 
@@ -100,7 +100,7 @@ internal class KRaftIndexFileTest : BaseFileTest() {
 
     @Test
     internal fun `allow append if index and offset are correct`() {
-        KRaftIndexFile(newFile).use {
+        IndexFile(newFile).use {
             val firstRange = indexRange(10, 1L)
             it.append(firstRange)
 

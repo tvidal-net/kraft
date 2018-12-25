@@ -12,13 +12,13 @@ import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.io.File
 
-class KRaftDataFile private constructor(
+class DataFile private constructor(
     val buffer: ByteBufferStream
 ) : MutableIndexRange, KRaftFileState {
 
-    companion object : KRaftLogging() {
+    internal companion object : KRaftLogging() {
 
-        fun open(file: File) = KRaftDataFile(
+        fun open(file: File) = DataFile(
             ByteBufferStream(file, file.length())
         ).apply {
             if (!validateHeader()) {
@@ -26,7 +26,7 @@ class KRaftDataFile private constructor(
             }
         }
 
-        fun create(file: File, fileSize: Long = 1024L, firstIndex: Long = 1L) = KRaftDataFile(
+        fun create(file: File, fileSize: Long = 1024L, firstIndex: Long = 1L) = DataFile(
             ByteBufferStream(file, fileSize)
         ).apply {
             if (validateHeader()) {
@@ -45,7 +45,7 @@ class KRaftDataFile private constructor(
     var size: Int = 0
         private set
 
-    operator fun get(range: KRaftIndexEntryRange): KRaftEntries = entries(
+    operator fun get(range: IndexEntryRange): KRaftEntries = entries(
         range.map { get(it) }
     )
 
@@ -58,9 +58,9 @@ class KRaftDataFile private constructor(
     }
 
     fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
-        if (immutable) {
+        if (immutable)
             throw IllegalStateException("Cannot modify files in $state state")
-        }
+
 
         var count = 0
         try {
@@ -118,7 +118,7 @@ class KRaftDataFile private constructor(
     }
 
     private fun validateHeader(): Boolean {
-        if (buffer.buffer.limit() == 0) return false
+        if (buffer.isEmpty) return false
         val header = readHeader()
         if (header.magicNumber == KRAFT_MAGIC_NUMBER) {
             size = header.entryCount
@@ -164,4 +164,6 @@ class KRaftDataFile private constructor(
     }
 
     fun close(state: FileState) = writeHeader(newState = state)
+
+    override fun toString() = "DataFile[($range) $state size=$size]"
 }

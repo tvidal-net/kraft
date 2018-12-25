@@ -7,11 +7,11 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.nio.file.Path
 
-data class KRaftFileName(
+data class FileName(
     val name: String,
     val id: Int = 1,
     val state: FileState = ACTIVE
-) : Comparable<KRaftFileName> {
+) : Comparable<FileName> {
 
     companion object : KRaftLogging() {
 
@@ -25,11 +25,11 @@ data class KRaftFileName(
 
         private val regex = Regex("(\\w+)-(\\d+)(\\.\\w)?$INDEX_FILE?$")
 
-        fun parseFrom(fileName: String): KRaftFileName? {
+        fun parseFrom(fileName: String): FileName? {
             try {
                 val match = regex.matchEntire(fileName.trim().toLowerCase())
                 if (match != null) {
-                    return KRaftFileName(
+                    return FileName(
                         name = match.groupValues[1],
                         id = match.groupValues[2].toInt(),
                         state = when (match.groupValues[3]) {
@@ -70,7 +70,7 @@ data class KRaftFileName(
     val index: String
         get() = fullName(INDEX_FILE)
 
-    val next: KRaftFileName
+    val next: FileName
         get() = copy(id = id + 1, state = ACTIVE)
 
     fun toFile(path: Path) = path.resolve(current).toFile()
@@ -78,7 +78,7 @@ data class KRaftFileName(
     private fun fullName(extension: String = ""): String =
         String.format(FORMAT, name, id, extension).toLowerCase()
 
-    override fun compareTo(other: KRaftFileName): Int = id.compareTo(other.id)
+    override fun compareTo(other: FileName): Int = id.compareTo(other.id)
 
     override fun toString() = current
 }

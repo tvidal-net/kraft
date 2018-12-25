@@ -8,6 +8,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
 import java.io.File
 import java.nio.ByteBuffer
+import java.util.UUID
 
 const val TEST_SIZE = 11
 
@@ -52,7 +53,7 @@ fun createDataFile(
     }
 }
 
-fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes: Int = TEST_SIZE) = KRaftIndexEntryRange(
+fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes: Int = TEST_SIZE) = IndexEntryRange(
     (0 until count).map {
         val index = firstIndex + it
         val offset = initialOffset + (bytes * it)
@@ -61,6 +62,7 @@ fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes:
 )
 
 fun indexEntry(index: Long = 1L, offset: Int = 0, bytes: Int = TEST_SIZE): IndexEntry = IndexEntry.newBuilder()
+    .setId(UUID.randomUUID().toProto())
     .setIndex(index)
     .setOffset(offset)
     .setBytes(bytes)

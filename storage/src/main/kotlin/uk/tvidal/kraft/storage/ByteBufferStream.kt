@@ -69,4 +69,6 @@ class ByteBufferStream(val buffer: ByteBuffer) {
             buffer.put(array, offset, length)
         }
     }
+
+    override fun toString() = buffer.toString()
 }

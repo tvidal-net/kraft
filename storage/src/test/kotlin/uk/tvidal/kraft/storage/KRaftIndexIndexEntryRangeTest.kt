@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class KRaftIndexEntryRangeTest {
+internal class KRaftIndexIndexEntryRangeTest {
 
     @Test
     internal fun `creates the index range correctly`() {
@@ -32,7 +32,7 @@ internal class KRaftIndexEntryRangeTest {
 
     @Test
     internal fun `an empty range is created for an empty list of entries`() {
-        with(KRaftIndexEntryRange(emptyList())) {
+        with(IndexEntryRange(emptyList())) {
             assertEquals(0, size)
             assertEquals(1L, firstIndex)
             assertEquals(0L, lastIndex)
@@ -44,7 +44,7 @@ internal class KRaftIndexEntryRangeTest {
     @Test
     internal fun `validates the entries within the range`() {
         assertThrows<IllegalStateException> {
-            KRaftIndexEntryRange(
+            IndexEntryRange(
                 listOf(
                     indexEntry(3, 0),
                     indexEntry(5, 0)

@@ -6,7 +6,7 @@ import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.TreeMap
 
 class KRaftFileStorage(
-    val config: KRaftFileStorageConfig
+    val config: FileStorageConfig
 ) : KRaftStorage {
 
     internal companion object : KRaftLogging()
@@ -41,7 +41,7 @@ class KRaftFileStorage(
                 currentFile = lastFile.value
             }
         } else {
-            createNewFile(firstLogIndex)
+            createNewFile(firstLogIndex, config.firstFileName)
         }
     }
 
@@ -135,13 +135,13 @@ class KRaftFileStorage(
         files.remove(file.range)
     }
 
-    private fun createNewFile(firstIndex: Long) {
+    private fun createNewFile(firstIndex: Long, fileName: FileName = currentFile.fileName.next) {
         if (firstIndex > FIRST_INDEX) {
             val range = currentFile.range
             files[range] = currentFile
         }
         currentFile = config.create(
-            fileName = currentFile.fileName.next,
+            name = fileName,
             firstIndex = firstIndex
         )
     }

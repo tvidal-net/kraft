@@ -2,15 +2,18 @@ package uk.tvidal.kraft.storage
 
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import java.nio.file.Files
+import java.io.File
 
 internal open class BaseFileTest {
+
     companion object {
-        val dir = Files.createTempDirectory("kraftFileTests").toFile()!!
+
+        val dir = File("/tmp/kraftFileTests")
 
         @BeforeAll
         @JvmStatic
         fun createDirectory() {
+            if (dir.exists()) dir.deleteRecursively()
             dir.mkdirs()
         }
 

@@ -8,9 +8,9 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import java.io.File
 import kotlin.test.assertEquals
 
-internal class KRaftDataFileTest : BaseFileTest() {
+internal class DataFileTest : BaseFileTest() {
 
-    private val existing = KRaftDataFile.open(existingFile)
+    private val existing = DataFile.open(existingFile)
 
     @AfterEach
     internal fun tearDown() {
@@ -28,7 +28,7 @@ internal class KRaftDataFileTest : BaseFileTest() {
         if (file.exists()) file.delete()
 
         assertThrows<IllegalStateException> {
-            KRaftDataFile.open(file)
+            DataFile.open(file)
         }
     }
 
@@ -37,7 +37,7 @@ internal class KRaftDataFileTest : BaseFileTest() {
         val file = File("$dir/testCreate.kr")
         createDataFile(file)
         assertThrows<IllegalStateException> {
-            KRaftDataFile.create(file)
+            DataFile.create(file)
         }
     }
 
@@ -46,7 +46,7 @@ internal class KRaftDataFileTest : BaseFileTest() {
         val file = File("$dir/testReadHeader.kr")
         createDataFile(file, 33)
 
-        KRaftDataFile.open(file).also {
+        DataFile.open(file).also {
             assertEquals(33L, it.firstIndex)
             assertEquals(11, it.size)
             assertEquals(COMMITTED, it.state)
@@ -67,7 +67,7 @@ internal class KRaftDataFileTest : BaseFileTest() {
 
         var index = 1L
         var offset = FILE_INITIAL_POSITION
-        KRaftDataFile.create(file).append(entries).forEach {
+        DataFile.create(file).append(entries).forEach {
             assertEquals(index++, it.index)
             assertEquals(offset, it.offset)
             offset += it.bytes
@@ -79,7 +79,7 @@ internal class KRaftDataFileTest : BaseFileTest() {
 
         @JvmStatic
         @BeforeAll
-        internal fun createFile() {
+        internal fun setUp() {
             createDataFile(existingFile)
         }
     }

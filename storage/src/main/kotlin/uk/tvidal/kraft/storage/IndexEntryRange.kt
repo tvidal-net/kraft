@@ -3,7 +3,7 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import java.util.TreeSet
 
-class KRaftIndexEntryRange internal constructor(
+class IndexEntryRange internal constructor(
     indexEntries: Iterable<IndexEntry>
 ) : Iterable<IndexEntry> {
 
@@ -45,7 +45,7 @@ class KRaftIndexEntryRange internal constructor(
 
     override fun equals(other: Any?) = when {
         this === other -> true
-        other !is KRaftIndexEntryRange -> false
+        other !is IndexEntryRange -> false
         else -> range == other.range && bytes == other.bytes
     }
 
