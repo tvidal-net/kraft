@@ -41,6 +41,9 @@ class KRaftDataFile private constructor(
     var state: FileState = ACTIVE
         private set
 
+    val immutable: Boolean
+        get() = state != ACTIVE
+
     var count: Int = 0
         private set
 
@@ -52,8 +55,6 @@ class KRaftDataFile private constructor(
 
     val range: LongRange
         get() = LongRange(firstIndex, lastIndex)
-
-    private val mark = Stack<Int>()
 
     operator fun contains(index: Long) = index in range
 
@@ -74,6 +75,9 @@ class KRaftDataFile private constructor(
     }
 
     fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
+        if (immutable)
+            throw IllegalStateException("Cannot modify files in $state state")
+
         try {
             for (entry in data) {
                 val proto = entry.toProto()
@@ -128,17 +132,6 @@ class KRaftDataFile private constructor(
         }
     }
 
-    private inline fun <T> buffer(block: ByteBuffer.() -> T): T {
-        with(stream.buffer) {
-            mark.push(stream.position)
-            try {
-                return block()
-            } finally {
-                stream.position = mark.pop()
-            }
-        }
-    }
-
     private fun validateHeader(): Boolean {
         if (stream.buffer.limit() == 0) return false
         val header = readHeader()
@@ -177,6 +170,19 @@ class KRaftDataFile private constructor(
             count = newCount
             firstIndex = newFirstIndex
             state = newState
+        }
+    }
+
+    private val mark = Stack<Int>()
+
+    private inline fun <T> buffer(block: ByteBuffer.() -> T): T {
+        with(stream.buffer) {
+            mark.push(stream.position)
+            try {
+                return block()
+            } finally {
+                stream.position = mark.pop()
+            }
         }
     }
 }
