@@ -1,50 +1,61 @@
 package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
-import uk.tvidal.kraft.codec.binary.toProto
 import java.io.Closeable
 import java.io.File
 import java.io.OutputStream
-import java.util.UUID
 
 class KRaftIndexFile internal constructor(
     val file: File
 ) : Closeable {
+
+    var range: LongRange
 
     private val data = mutableMapOf<Long, IndexEntry>()
 
     private var outputStream: OutputStream? = null
 
     init {
-        read()
+        range = read()
     }
 
-    private fun read() {
+    private fun read(): LongRange {
+        var first = 0L
+        var last = 0L
         file.inputStream().use { stream ->
             do {
                 val entry = IndexEntry.parseDelimitedFrom(stream)
                 if (entry != null) {
                     data[entry.index] = entry
+                    if (first == 0L) first = entry.index
+                    last = entry.index
                 }
             } while (entry != null)
         }
+        return first..last
     }
 
     operator fun get(index: Long): IndexEntry? = data[index]
 
-    fun append(id: UUID, index: Long, offset: Int, size: Int, checksum: Int) = append(
-        IndexEntry.newBuilder()
-            .setId(id.toProto())
-            .setIndex(index)
-            .setOffset(offset)
-            .setSize(size)
-            .setChecksum(checksum)
-            .build()
-    )
+    fun read(fromIndex: Long, byteLimit: Int): KRaftEntryRange {
+        val list = mutableListOf<IndexEntry>()
+        var size = 0
+        var index = fromIndex
+        while (index <= range.last) {
+            val entry = data[index++]!!
+            val bytes = entry.bytes
+            if (size + bytes <= byteLimit) {
+                size += bytes
+                list.add(entry)
+            }
+        }
+        return KRaftEntryRange(list)
+    }
 
     fun append(entry: IndexEntry) {
         ensureOpen()
         entry.writeDelimitedTo(outputStream)
+        range = range.first..entry.index
     }
 
     private fun ensureOpen() {

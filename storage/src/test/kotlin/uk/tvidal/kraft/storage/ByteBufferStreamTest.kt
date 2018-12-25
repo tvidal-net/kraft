@@ -2,22 +2,20 @@ package uk.tvidal.kraft.storage
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import uk.tvidal.kraft.codec.binary.BinaryCodec.Entry
+import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.codec.binary.uuid
 import java.nio.ByteBuffer
 import java.util.UUID
 import kotlin.test.assertEquals
 
-internal class ByteBufferOutputStreamTest {
+internal class ByteBufferStreamTest {
 
     val id = UUID.randomUUID()!!
 
     val buffer: ByteBuffer = ByteBuffer.allocate(128)
 
-    val outputStream = ByteBufferOutputStream(buffer)
-
-    val inputStream = ByteBufferInputStream(buffer)
+    val stream = ByteBufferStream(buffer)
 
     @BeforeEach
     internal fun setUp() {
@@ -25,12 +23,14 @@ internal class ByteBufferOutputStreamTest {
     }
 
     @Test
-    internal fun `writes to the underlying byteBuffer`() {
-        val toWrite = id.toProto()
-        toWrite.writeDelimitedTo(outputStream)
+    internal fun `can read and write to the underlying buffer`() {
+
+        id.toProto()
+            .writeDelimitedTo(stream.output)
+
         buffer.flip()
 
-        val fromRead = Entry.parseDelimitedFrom(inputStream)
-        assertEquals(id, uuid(fromRead))
+        val read = UniqueID.parseDelimitedFrom(stream.input)
+        assertEquals(id, uuid(read))
     }
 }

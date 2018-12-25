@@ -3,25 +3,39 @@ syntax = "proto3";
 package uk.tvidal.kraft.codec.binary;
 
 message DataEntry {
-    Entry id = 1;
+    UniqueID id = 1;
     EntryType type = 2;
+    int64 term = 9;
     bytes payload = 10;
-    int64 term = 11;
 }
 
 message IndexEntry {
-    Entry id = 1;
+    UniqueID id = 1;
     int64 index = 2;
     int32 offset = 3;
-    int32 size = 4;
+    int32 bytes = 4;
     sint32 checksum = 20;
 }
 
-message Entry {
+message FileHeader {
+    UniqueID magic_number = 1;
+    int32 version = 2;
+    FileState state = 3;
+    fixed64 first_index = 4;
+    fixed32 entry_count = 5;
+}
+
+message UniqueID {
     fixed64 low = 1;
     fixed64 high = 2;
 }
 
 enum EntryType {
     DEFAULT = 0;
+}
+
+enum FileState {
+    ACTIVE = 0;
+    COMMITTED = 1;
+    DISCARDED = 8;
 }

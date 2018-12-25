@@ -1,5 +1,6 @@
 package uk.tvidal.kraft.storage
 
+import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import java.util.zip.CRC32
 
 const val DEFAULT_FILE_SIZE = 4L * 1024 * 1024 // 4 MB
@@ -14,3 +15,5 @@ fun checksum(data: ByteArray): Int {
     crc.update(data)
     return crc.value.toInt()
 }
+
+internal val indexEntryComparator: Comparator<IndexEntry> = Comparator { a, b -> (a.index - b.index).toInt() }

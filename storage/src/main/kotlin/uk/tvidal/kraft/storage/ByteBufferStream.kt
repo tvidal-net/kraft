@@ -1,10 +1,34 @@
 package uk.tvidal.kraft.storage
 
+import java.io.InputStream
 import java.io.OutputStream
 import java.nio.ByteBuffer
 
-class ByteBufferOutputStream(val buffer: ByteBuffer): OutputStream() {
-    override fun write(b: Int) {
-        TODO("not implemented")
+class ByteBufferStream(val buffer: ByteBuffer) {
+
+    val input: InputStream = ByteBufferInputStream()
+    val output: OutputStream = ByteBufferOutputStream()
+
+    private inner class ByteBufferInputStream : InputStream() {
+
+        override fun read(): Int = buffer.get().toInt()
+
+        override fun read(array: ByteArray, offset: Int, length: Int): Int {
+            buffer.get(array, offset, length)
+            return length
+        }
+
+        override fun available(): Int = buffer.remaining()
+    }
+
+    private inner class ByteBufferOutputStream : OutputStream() {
+
+        override fun write(byte: Int) {
+            buffer.put(byte.toByte())
+        }
+
+        override fun write(array: ByteArray, offset: Int, length: Int) {
+            buffer.put(array, offset, length)
+        }
     }
 }

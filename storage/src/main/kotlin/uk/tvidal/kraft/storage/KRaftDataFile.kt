@@ -15,20 +15,21 @@ import java.nio.file.StandardOpenOption.WRITE
 
 class KRaftDataFile(
     file: Path,
-    config: KRaftFileStorageConfig
+    fileSize: Long,
+    private val indexAppender: (IndexEntry) -> Unit
 ) {
 
     private val buffer: ByteBuffer
 
     init {
         buffer = (Files.newByteChannel(file, CREATE, READ, WRITE) as FileChannel).use {
-            it.map(READ_WRITE, 0, config.fileSize)
+            it.map(READ_WRITE, 0, fileSize)
         }
     }
 
     operator fun get(index: IndexEntry): KRaftEntry {
         buffer.position(index.offset)
-        val array = ByteArray(index.size)
+        val array = ByteArray(index.bytes)
         buffer.get(array)
         val data = DataEntry.parseFrom(array)
         val payload = data.payload.toByteArray()
@@ -47,7 +48,7 @@ class KRaftDataFile(
             .setId(entry.id)
             .setIndex(index)
             .setOffset(offset)
-            .setSize(array.size)
+            .setBytes(array.size)
             .setChecksum(checksum)
             .build()
     }
