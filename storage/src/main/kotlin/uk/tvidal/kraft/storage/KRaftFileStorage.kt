@@ -45,6 +45,9 @@ class KRaftFileStorage(
         }
     }
 
+    override fun commit(commitIndex: Long) {
+    }
+
     override fun append(entries: KRaftEntries, fromIndex: Long): Long {
         truncateAt(fromIndex)
         var index = fromIndex

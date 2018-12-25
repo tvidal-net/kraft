@@ -15,4 +15,6 @@ interface KRaftStorage {
 
     // should be 0 for index 0
     fun termAt(index: Long): Long
+
+    fun commit(commitIndex: Long)
 }

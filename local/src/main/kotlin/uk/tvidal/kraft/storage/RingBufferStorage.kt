@@ -21,4 +21,6 @@ class RingBufferStorage(size: Int = 4096) : AbstractRingBufferStorage(size) {
         }
         return read(fromIndex until index)
     }
+
+    override fun commit(commitIndex: Long) {}
 }

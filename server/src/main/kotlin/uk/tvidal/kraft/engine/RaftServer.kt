@@ -127,6 +127,7 @@ class RaftServer internal constructor(
     private fun commit(index: Long) {
         leaderCommitIndex = index
         commitIndex = index
+        storage.commit(index)
         followers.values.forEach(RaftFollower::commit)
         consumers.commit(index)
     }
