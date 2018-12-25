@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
@@ -9,22 +10,32 @@ import uk.tvidal.kraft.codec.binary.uuid
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.io.File
 import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
-import java.nio.channels.FileChannel.MapMode.READ_WRITE
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption.CREATE
-import java.nio.file.StandardOpenOption.READ
-import java.nio.file.StandardOpenOption.WRITE
 
-class KRaftDataFile(
-    file: File,
-    fileSize: Long,
-    val firstLogIndex: Long,
-    private val indexAppender: (IndexEntry) -> Unit
+class KRaftDataFile private constructor(
+    buffer: ByteBuffer
 ) {
-    private companion object : KRaftLogging()
 
-    private val stream: ByteBufferStream
+    companion object : KRaftLogging() {
+        fun open(file: File) = KRaftDataFile(
+            openMemoryMappedFile(file, file.length())
+        ).apply {
+            if (!readHeader()) {
+                throw IllegalStateException("Could not open file:  $file")
+            }
+        }
+
+        fun create(file: File, fileSize: Long, firstIndex: Long) = KRaftDataFile(
+            openMemoryMappedFile(file, fileSize)
+        ).apply {
+            if (readHeader()) {
+                throw IllegalStateException("Cannot overwrite existing file: $file")
+            }
+            writeHeader(newFirstIndex = firstIndex)
+            buffer.position(FILE_INITIAL_POSITION)
+        }
+    }
+
+    val stream = ByteBufferStream(buffer)
 
     private val buffer: ByteBuffer
         get() = stream.buffer
@@ -35,12 +46,16 @@ class KRaftDataFile(
     var count: Int = 0
         private set
 
-    init {
-        val buffer = (Files.newByteChannel(file.toPath(), CREATE, READ, WRITE) as FileChannel).use {
-            it.map(READ_WRITE, 0, fileSize)
-        }
-        stream = ByteBufferStream(buffer)
-    }
+    var firstIndex: Long = 0L
+        private set
+
+    val lastIndex: Long
+        get() = firstIndex + count - 1
+
+    val range: LongRange
+        get() = LongRange(firstIndex, lastIndex)
+
+    operator fun contains(index: Long) = index in range
 
     fun commit(commitIndex: Long) {
         TODO("$commitIndex")
@@ -70,5 +85,46 @@ class KRaftDataFile(
             .setBytes(array.size)
             .setChecksum(checksum)
             .build()
+    }
+
+    private fun writeHeader(
+        newCount: Int = count,
+        newFirstIndex: Long = firstIndex,
+        newState: FileState = state
+    ) {
+        buffer.mark()
+        try {
+            buffer.position(0)
+            FileHeader.newBuilder()
+                .setMagicNumber(KRAFT_MAGIC_NUMBER.toProto())
+                .setState(newState)
+                .setFirstIndex(newFirstIndex)
+                .setEntryCount(newCount)
+                .build()
+                .writeDelimitedTo(stream.output)
+
+            count = newCount
+            firstIndex = newFirstIndex
+            state = newState
+        } finally {
+            buffer.reset()
+        }
+    }
+
+    private fun readHeader(): Boolean {
+        if (buffer.limit() == 0) return false
+        buffer.mark()
+        try {
+            val header = FileHeader.parseDelimitedFrom(stream.input)
+            if (uuid(header.magicNumber) == KRAFT_MAGIC_NUMBER) {
+                count = header.entryCount
+                firstIndex = header.firstIndex
+                state = header.state
+                return true
+            }
+            return false
+        } finally {
+            buffer.reset()
+        }
     }
 }

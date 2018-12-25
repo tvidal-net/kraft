@@ -15,6 +15,7 @@ import java.util.zip.CRC32
 internal val KRAFT_MAGIC_NUMBER: UUID = UUID.fromString("f328feab-43a1-48f5-82ca-25acb702e7ee")
 
 const val DEFAULT_FILE_SIZE = 4L * 1024 * 1024 // 4 MB
+const val FILE_INITIAL_POSITION = 48 // allocate a few bytes for the header
 const val FILE_NAME_FORMAT = "%s_%d.%s"
 const val FILE_EXTENSION = "kr"
 const val FILE_EXTENSION_COMMIT = "c.kr"
