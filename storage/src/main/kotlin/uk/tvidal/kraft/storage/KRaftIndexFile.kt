@@ -6,33 +6,35 @@ import java.io.File
 import java.io.OutputStream
 
 class KRaftIndexFile internal constructor(
-    val file: File
+    val file: File,
+    firstIndex: Long = 1L
 ) : Closeable {
 
     var range: LongRange
 
-    private val data = mutableMapOf<Long, IndexEntry>()
+    private val data = LinkedHashMap<Long, IndexEntry>()
 
     private var outputStream: OutputStream? = null
 
     init {
-        range = read()
+        if (!file.exists()) file.createNewFile()
+        range = readFile(firstIndex)
     }
 
-    private fun read(): LongRange {
-        var first = 0L
+    private fun readFile(firstIndex: Long): LongRange {
+        var first: Long? = null
         var last = 0L
         file.inputStream().use { stream ->
             do {
                 val entry = IndexEntry.parseDelimitedFrom(stream)
                 if (entry != null) {
                     data[entry.index] = entry
-                    if (first == 0L) first = entry.index
+                    if (first == null) first = entry.index
                     last = entry.index
                 }
             } while (entry != null)
         }
-        return first..last
+        return LongRange(first ?: firstIndex, last)
     }
 
     operator fun get(index: Long): IndexEntry? = data[index]
@@ -52,10 +54,31 @@ class KRaftIndexFile internal constructor(
         return KRaftIndexEntryRange(list)
     }
 
+    fun append(range: Iterable<IndexEntry>) {
+        range.forEach(this::append)
+    }
+
     fun append(entry: IndexEntry) {
+        validateEntry(entry)
         ensureOpen()
         entry.writeDelimitedTo(outputStream)
-        range = range.first..entry.index
+        data[entry.index] = entry
+        range = LongRange(range.first, entry.index)
+        outputStream?.flush()
+    }
+
+    private fun validateEntry(entry: IndexEntry) {
+        val index = range.first + data.size
+
+        if (entry.index != index)
+            throw IllegalArgumentException("Invalid Entry Index: expected=$index actual=${entry.index}")
+
+        if (data.isNotEmpty()) {
+            val last = data[range.last]!!
+            val offset = last.offset + last.bytes
+            if (entry.offset != offset)
+                throw IllegalArgumentException("Invalid Entry Offset: expected=$offset actual=${entry.offset}")
+        }
     }
 
     private fun ensureOpen() {

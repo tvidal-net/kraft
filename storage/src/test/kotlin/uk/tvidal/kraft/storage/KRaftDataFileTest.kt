@@ -1,18 +1,12 @@
 package uk.tvidal.kraft.storage
 
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
-import uk.tvidal.kraft.codec.binary.toProto
 import java.io.File
 import kotlin.test.assertEquals
 
-internal class KRaftDataFileTest {
+internal class KRaftDataFileTest : BaseFileTest() {
 
     @Test
     internal fun `prevent opening of non existing file`() {
@@ -27,7 +21,7 @@ internal class KRaftDataFileTest {
     @Test
     internal fun `prevent creation of existing file`() {
         val file = File("$dir/testCreate.kr")
-        createFile(file)
+        createDataFile(file)
         assertThrows<IllegalStateException> {
             KRaftDataFile.create(file)
         }
@@ -36,7 +30,7 @@ internal class KRaftDataFileTest {
     @Test
     internal fun `read the header after open`() {
         val file = File("$dir/testReadHeader.kr")
-        createFile(
+        createDataFile(
             file = file,
             firstIndex = 33L,
             count = 5,
@@ -68,39 +62,6 @@ internal class KRaftDataFileTest {
             assertEquals(index++, it.index)
             assertEquals(offset, it.offset)
             offset += it.bytes
-        }
-    }
-
-    private fun createFile(file: File, firstIndex: Long = 1L, count: Int = 0, state: FileState = ACTIVE) {
-        file.outputStream().use {
-            FileHeader.newBuilder()
-                .setMagicNumber(KRAFT_MAGIC_NUMBER.toProto())
-                .setOffset(FILE_INITIAL_POSITION)
-                .setFirstIndex(firstIndex)
-                .setEntryCount(count)
-                .setState(state)
-                .build()
-                .writeDelimitedTo(it)
-
-            // Adds trailing space
-            it.write(ByteArray(128))
-        }
-    }
-
-    companion object {
-
-        private val dir = File("/tmp/kraftDataFileTest")
-
-        @BeforeAll
-        @JvmStatic
-        fun createDirectory() {
-            dir.mkdirs()
-        }
-
-        @AfterAll
-        @JvmStatic
-        fun deleteDirectory() {
-            dir.deleteRecursively()
         }
     }
 }

@@ -13,20 +13,27 @@ class KRaftIndexEntryRange internal constructor(
     val size: Int
         get() = entries.size
 
-    val firstIndex = entries.first().index
+    val isEmpty: Boolean
+        get() = entries.isEmpty()
 
-    val lastIndex = entries.last().index
+    val firstIndex: Long
+    val lastIndex: Long
 
-    val range = LongRange(
-        start = firstIndex,
-        endInclusive = firstIndex + size - 1
-    )
+    val range: LongRange
 
     val bytes: Int = entries.sumBy(IndexEntry::getBytes)
 
     init {
+        if (entries.isEmpty()) {
+            firstIndex = 1
+            lastIndex = 0
+        } else {
+            firstIndex = entries.first().index
+            lastIndex = entries.last().index
+        }
+        range = LongRange(firstIndex, firstIndex + size - 1)
         if (range.last != lastIndex) {
-            throw IllegalStateException("There are gaps in the range")
+            throw IllegalStateException("There are gaps in the range: expectedLastIndex=${range.last} actual=$lastIndex")
         }
     }
 
