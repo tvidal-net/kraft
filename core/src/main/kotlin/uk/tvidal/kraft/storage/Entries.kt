@@ -37,7 +37,9 @@ fun singleEntry(entry: KRaftEntry) = KRaftEntries(listOf(entry))
 
 fun entries(entries: Collection<KRaftEntry>) = KRaftEntries(entries)
 
-fun entries(vararg entries: KRaftEntry) = entries(entries.toList())
+fun entries(entries: Iterable<KRaftEntry>) = KRaftEntries(entries.toList())
+
+fun entries(vararg entries: KRaftEntry) = entries(entries.asIterable())
 
 fun flush(term: Long) = singleEntry(emptyEntry(term))
 

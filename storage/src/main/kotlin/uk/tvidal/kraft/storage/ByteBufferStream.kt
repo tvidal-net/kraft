@@ -1,10 +1,13 @@
 package uk.tvidal.kraft.storage
 
+import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.ByteBuffer
 
 class ByteBufferStream(val buffer: ByteBuffer) {
+
+    constructor(file: File, size: Long) : this(openMemoryMappedFile(file, size))
 
     val input: InputStream = ByteBufferInputStream()
     val output: OutputStream = ByteBufferOutputStream()

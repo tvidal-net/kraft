@@ -1,13 +1,13 @@
 package uk.tvidal.kraft.storage
 
-import java.nio.file.Path
+import java.io.File
 
 class KRaftFile(
-    val file: Path,
+    val file: File,
     val fileSize: Long
 ) {
-    private val indexFile = KRaftIndexFile(file.toFile())
-    private val dataFile = KRaftDataFile(file, fileSize, indexFile::append)
+    private val indexFile = KRaftIndexFile(file)
+    private val dataFile = KRaftDataFile(file, fileSize, 0L, indexFile::append)
 
     operator fun contains(index: Long) = index in indexFile.range
 
