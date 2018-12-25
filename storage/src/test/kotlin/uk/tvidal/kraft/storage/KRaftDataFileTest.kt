@@ -29,7 +29,7 @@ internal class KRaftDataFileTest {
         val file = File("$dir/testCreate.kr")
         createFile(file)
         assertThrows<IllegalStateException> {
-            KRaftDataFile.create(file, 1024, 1L)
+            KRaftDataFile.create(file)
         }
     }
 
@@ -50,15 +50,40 @@ internal class KRaftDataFileTest {
         }
     }
 
+    @Test
+    internal fun `test write entries to file`() {
+        val file = File("$dir/testAppend.kr")
+        val entries = entries(
+            entryOf("ABC"),
+            entryOf(2L),
+            entryOf("MyTest"),
+            entryOf(5L),
+            entryOf("DataDataData"),
+            entryOf(0xDEAD_EEL)
+        )
+
+        var index = 1L
+        var offset = FILE_INITIAL_POSITION
+        KRaftDataFile.create(file).append(entries).forEach {
+            assertEquals(index++, it.index)
+            assertEquals(offset, it.offset)
+            offset += it.bytes
+        }
+    }
+
     private fun createFile(file: File, firstIndex: Long = 1L, count: Int = 0, state: FileState = ACTIVE) {
         file.outputStream().use {
             FileHeader.newBuilder()
                 .setMagicNumber(KRAFT_MAGIC_NUMBER.toProto())
+                .setOffset(FILE_INITIAL_POSITION)
                 .setFirstIndex(firstIndex)
                 .setEntryCount(count)
                 .setState(state)
                 .build()
                 .writeDelimitedTo(it)
+
+            // Adds trailing space
+            it.write(ByteArray(128))
         }
     }
 

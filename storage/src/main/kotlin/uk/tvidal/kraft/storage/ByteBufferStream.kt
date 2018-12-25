@@ -12,6 +12,21 @@ class ByteBufferStream(val buffer: ByteBuffer) {
     val input: InputStream = ByteBufferInputStream()
     val output: OutputStream = ByteBufferOutputStream()
 
+    var position: Int
+        get() = buffer.position()
+        set(value) {
+            buffer.position(value)
+        }
+
+    val isEmpty: Boolean
+        get() = buffer.limit() == 0
+
+    val available: Int
+        get() = buffer.remaining()
+
+    val isFull: Boolean
+        get() = available == 0
+
     private inner class ByteBufferInputStream : InputStream() {
 
         override fun read(): Int = buffer.get().toInt()

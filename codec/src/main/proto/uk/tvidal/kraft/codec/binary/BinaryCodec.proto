@@ -14,15 +14,15 @@ message IndexEntry {
     int64 index = 2;
     int32 offset = 3;
     int32 bytes = 4;
-    sint32 checksum = 20;
 }
 
 message FileHeader {
     UniqueID magic_number = 1;
     int32 version = 2;
     FileState state = 3;
-    fixed64 first_index = 4;
-    fixed32 entry_count = 5;
+    int64 first_index = 4;
+    int32 entry_count = 5;
+    int32 offset = 6;
 }
 
 message UniqueID {

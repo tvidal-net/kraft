@@ -1,5 +1,7 @@
 package uk.tvidal.kraft.storage
 
+import com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag
+import com.google.protobuf.MessageLite
 import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
@@ -14,31 +16,27 @@ import java.nio.ByteBuffer
 class KRaftDataFile private constructor(
     buffer: ByteBuffer
 ) {
-
     companion object : KRaftLogging() {
         fun open(file: File) = KRaftDataFile(
             openMemoryMappedFile(file, file.length())
         ).apply {
-            if (!readHeader()) {
+            if (!validateHeader()) {
                 throw IllegalStateException("Could not open file:  $file")
             }
         }
 
-        fun create(file: File, fileSize: Long, firstIndex: Long) = KRaftDataFile(
+        fun create(file: File, fileSize: Long = 1024L, firstIndex: Long = 1L) = KRaftDataFile(
             openMemoryMappedFile(file, fileSize)
         ).apply {
-            if (readHeader()) {
+            if (validateHeader()) {
                 throw IllegalStateException("Cannot overwrite existing file: $file")
             }
+            stream.position = FILE_INITIAL_POSITION
             writeHeader(newFirstIndex = firstIndex)
-            buffer.position(FILE_INITIAL_POSITION)
         }
     }
 
     val stream = ByteBufferStream(buffer)
-
-    private val buffer: ByteBuffer
-        get() = stream.buffer
 
     var state: FileState = ACTIVE
         private set
@@ -61,30 +59,69 @@ class KRaftDataFile private constructor(
         TODO("$commitIndex")
     }
 
-    operator fun get(index: IndexEntry): KRaftEntry {
-        buffer.position(index.offset)
-        val array = ByteArray(index.bytes)
-        buffer.get(array)
-        val data = DataEntry.parseFrom(array)
-        val payload = data.payload.toByteArray()
-        val id = uuid(data.id)
-        return KRaftEntry(payload, data.term, id)
+    fun append(data: KRaftEntries) = sequence {
+        try {
+            for (entry in data) {
+                val proto = entry.toProto()
+                val size = computeSize(proto)
+                if (size <= stream.available) {
+                    val index = append(proto)
+                    count++
+
+                    yield(index)
+                } else break
+            }
+        } finally {
+            writeHeader()
+        }
     }
 
-    fun append(index: Long, data: KRaftEntry): IndexEntry {
-        // TODO: Add delimiters so it can be read as a stream if index is lost
-        val offset = buffer.position()
-        val entry = data.toProto()
-        val array = entry.toByteArray()
-        val checksum = checksum(array)
-        buffer.put(array)
+    private fun append(entry: DataEntry): IndexEntry {
+        val index = lastIndex + 1
+        val offset = stream.position
+        entry.writeDelimitedTo(stream.output)
+        val bytes = stream.position - offset
         return IndexEntry.newBuilder()
             .setId(entry.id)
             .setIndex(index)
             .setOffset(offset)
-            .setBytes(array.size)
-            .setChecksum(checksum)
+            .setBytes(bytes)
             .build()
+    }
+
+    private fun computeSize(entry: MessageLite): Int {
+        val messageBytes = entry.serializedSize
+        val sizeBytes = computeUInt32SizeNoTag(messageBytes)
+        return messageBytes + sizeBytes
+    }
+
+    private inline fun <T> buffer(block: ByteBuffer.() -> T): T {
+        with(stream.buffer) {
+            val mark = stream.position
+            try {
+                return block()
+            } finally {
+                stream.position = mark
+            }
+        }
+    }
+
+    private fun validateHeader(): Boolean {
+        if (stream.buffer.limit() == 0) return false
+        val header = readHeader()
+        if (uuid(header.magicNumber) == KRAFT_MAGIC_NUMBER) {
+            count = header.entryCount
+            firstIndex = header.firstIndex
+            state = header.state
+            stream.position = header.offset
+            return true
+        }
+        return false
+    }
+
+    private fun readHeader(): FileHeader = buffer {
+        position(0)
+        FileHeader.parseDelimitedFrom(stream.input)
     }
 
     private fun writeHeader(
@@ -92,39 +129,21 @@ class KRaftDataFile private constructor(
         newFirstIndex: Long = firstIndex,
         newState: FileState = state
     ) {
-        buffer.mark()
-        try {
-            buffer.position(0)
+        buffer {
+            val offset = stream.position
+            stream.position = 0
             FileHeader.newBuilder()
                 .setMagicNumber(KRAFT_MAGIC_NUMBER.toProto())
-                .setState(newState)
                 .setFirstIndex(newFirstIndex)
                 .setEntryCount(newCount)
+                .setState(newState)
+                .setOffset(offset)
                 .build()
                 .writeDelimitedTo(stream.output)
 
             count = newCount
             firstIndex = newFirstIndex
             state = newState
-        } finally {
-            buffer.reset()
-        }
-    }
-
-    private fun readHeader(): Boolean {
-        if (buffer.limit() == 0) return false
-        buffer.mark()
-        try {
-            val header = FileHeader.parseDelimitedFrom(stream.input)
-            if (uuid(header.magicNumber) == KRAFT_MAGIC_NUMBER) {
-                count = header.entryCount
-                firstIndex = header.firstIndex
-                state = header.state
-                return true
-            }
-            return false
-        } finally {
-            buffer.reset()
         }
     }
 }
