@@ -5,6 +5,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
+import java.nio.file.Path
 
 data class KRaftFileName(
     val name: String,
@@ -44,6 +45,9 @@ data class KRaftFileName(
             return null
         }
 
+        fun isValidFileName(fileName: String): Boolean =
+            regex.matches(fileName.trim().toLowerCase())
+
         fun extension(state: FileState): String = when (state) {
             COMMITTED -> COMMITTED_EXT + DATA_FILE
             DISCARDED -> DISCARDED_EXT + DATA_FILE
@@ -68,6 +72,8 @@ data class KRaftFileName(
 
     val next: KRaftFileName
         get() = copy(id = id + 1, state = ACTIVE)
+
+    fun toFile(path: Path) = path.resolve(current).toFile()
 
     private fun fullName(extension: String = ""): String =
         String.format(FORMAT, name, id, extension).toLowerCase()

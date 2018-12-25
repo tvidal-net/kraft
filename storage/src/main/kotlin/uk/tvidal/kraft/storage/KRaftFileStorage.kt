@@ -1,5 +1,6 @@
 package uk.tvidal.kraft.storage
 
+import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.TreeMap
@@ -10,22 +11,38 @@ class KRaftFileStorage(
 
     internal companion object : KRaftLogging()
 
-    internal val files = TreeMap<LongRange, KRaftFile>()
+    internal val files = TreeMap<LongRange, KRaftFile>(
+        config.files()
+            .associateBy(KRaftFile::range)
+    )
 
     internal lateinit var currentFile: KRaftFile
 
-    override var firstLogIndex: Long = 0L
+    override var firstLogIndex: Long = FIRST_INDEX
         private set
 
     override var lastLogIndex: Long = 0L
         private set
 
     override var lastLogTerm: Long = 0L
-        private set
+        get() = termAt(lastLogIndex)
 
     init {
-        firstLogIndex = if (files.isEmpty()) 1L
-        else files.firstKey().first
+        if (files.isNotEmpty()) {
+            val lastFile = files.lastEntry()
+            firstLogIndex = files.firstKey().first
+            lastLogIndex = lastFile.key.last
+
+            if (lastFile.value.dataFile.immutable) {
+                createNewFile(nextLogIndex)
+                currentFile.prev = lastFile.value
+            } else {
+                files.remove(lastFile.key)
+                currentFile = lastFile.value
+            }
+        } else {
+            createNewFile(firstLogIndex)
+        }
     }
 
     override fun append(entries: KRaftEntries, fromIndex: Long): Long {
@@ -92,7 +109,7 @@ class KRaftFileStorage(
             discard(currentFile)
             val prev = currentFile.prev
             if (prev == null) {
-                if (index > 1L)
+                if (index > FIRST_INDEX)
                     throw IllegalStateException("Cannot truncate behind the first file!")
 
                 createNewFile(index)
@@ -101,7 +118,7 @@ class KRaftFileStorage(
             currentFile = prev
         }
         if (index in currentFile) {
-            currentFile.truncateAt(index)
+            currentFile.dataFile.truncateAt(index)
             createNewFile(index)
         }
     }
@@ -115,13 +132,14 @@ class KRaftFileStorage(
         files.remove(file.range)
     }
 
-    private fun createNewFile(index: Long) {
-        val range = currentFile.range
-        files[range] = currentFile
-        currentFile = KRaftFile(
-            firstIndex = index,
-            name = currentFile.fileName.next,
-            config = config
+    private fun createNewFile(firstIndex: Long) {
+        if (firstIndex > FIRST_INDEX) {
+            val range = currentFile.range
+            files[range] = currentFile
+        }
+        currentFile = config.create(
+            fileName = currentFile.fileName.next,
+            firstIndex = firstIndex
         )
     }
 }

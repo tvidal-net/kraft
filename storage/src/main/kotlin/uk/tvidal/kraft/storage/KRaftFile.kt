@@ -1,40 +1,31 @@
 package uk.tvidal.kraft.storage
 
+import uk.tvidal.kraft.ChainNode
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import java.io.File
 
-class KRaftFile(
-    val firstIndex: Long,
+class KRaftFile internal constructor(
+    val dataFile: KRaftDataFile,
     name: KRaftFileName,
     config: KRaftFileStorageConfig
-) {
+) : ChainNode<KRaftFile>,
+    KRaftFileState by dataFile,
+    MutableIndexRange by dataFile {
+
+    var fileName: KRaftFileName = name
 
     private val path = config.path
 
-    var next: KRaftFile? = null
+    private var file: File = path.resolve(fileName.current).toFile()
 
-    var prev: KRaftFile? = null
+    override var next: KRaftFile? = null
 
-    var fileName: KRaftFileName = name
-        private set
+    override var prev: KRaftFile? = null
 
-    val file: File
-        get() = path.resolve(fileName.current).toFile()
-
-    val dataFile: KRaftDataFile
-    val indexFile = KRaftIndexFile(file, firstIndex)
-
-    val range: LongRange
-        get() = indexFile.range
+    val indexFile = KRaftIndexFile(file, dataFile.firstIndex)
 
     init {
-        file.let {
-            dataFile = if (it.exists()) KRaftDataFile.open(it)
-            else KRaftDataFile.create(it, config.fileSize, firstIndex)
-        }
-
         val index = path.resolve(fileName.index).toFile()
         if (!index.exists()) {
             indexFile.append(dataFile.rebuildIndex())
@@ -42,24 +33,19 @@ class KRaftFile(
         }
     }
 
-    operator fun contains(index: Long) = index in range
-
     operator fun get(index: Long): KRaftEntry = dataFile[indexFile[index]]
 
     fun append(entries: KRaftEntries): Int = indexFile.append(dataFile.append(entries))
 
     fun read(index: Long, byteLimit: Int): KRaftEntries = dataFile[indexFile.read(index, byteLimit)]
 
-    fun truncateAt(index: Long) {
-        if (dataFile.immutable)
-            throw IllegalStateException("Cannot truncate behind the committed data")
-    }
-
     fun close(state: FileState) {
-        if (state == DISCARDED && dataFile.state == COMMITTED)
+        if (state == DISCARDED && committed)
             throw IllegalStateException("Cannot discard a committed file!")
 
         indexFile.close()
+        dataFile.close(state)
+
         fileName = fileName.copy(state = state)
         file.renameTo(path.resolve(fileName.current).toFile())
     }

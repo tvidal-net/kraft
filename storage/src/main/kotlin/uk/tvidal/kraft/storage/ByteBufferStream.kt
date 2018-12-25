@@ -5,6 +5,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
+import java.util.Stack
 
 class ByteBufferStream(val buffer: ByteBuffer) {
 
@@ -33,6 +34,17 @@ class ByteBufferStream(val buffer: ByteBuffer) {
     fun force() {
         val mappedByteBuffer = buffer as? MappedByteBuffer
         mappedByteBuffer?.force()
+    }
+
+    private val mark = Stack<Int>()
+
+    operator fun <T> invoke(block: ByteBuffer.() -> T): T = with(buffer) {
+        mark.push(position)
+        try {
+            block()
+        } finally {
+            position = mark.pop()
+        }
     }
 
     private inner class ByteBufferInputStream : InputStream() {

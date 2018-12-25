@@ -8,9 +8,9 @@ import java.io.OutputStream
 class KRaftIndexFile internal constructor(
     val file: File,
     firstIndex: Long = 1L
-) : Closeable {
+) : Closeable, MutableIndexRange {
 
-    var range: LongRange
+    override var range = LongRange.EMPTY
 
     private val data = LinkedHashMap<Long, IndexEntry>()
 
@@ -62,14 +62,16 @@ class KRaftIndexFile internal constructor(
     private fun append(entry: IndexEntry) {
         validateEntry(entry)
         ensureOpen()
+
         entry.writeDelimitedTo(outputStream)
+        outputStream!!.flush()
+
         data[entry.index] = entry
-        range = LongRange(range.first, entry.index)
-        outputStream?.flush()
+        lastIndex++
     }
 
     private fun validateEntry(entry: IndexEntry) {
-        val index = range.first + data.size
+        val index = firstIndex + data.size
 
         if (entry.index != index)
             throw IllegalArgumentException("Invalid Entry Index: expected=$index actual=${entry.index}")

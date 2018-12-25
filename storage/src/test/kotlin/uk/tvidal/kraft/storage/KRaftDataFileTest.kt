@@ -14,7 +14,7 @@ internal class KRaftDataFileTest : BaseFileTest() {
 
     @AfterEach
     internal fun tearDown() {
-        existing.stream.buffer.release()
+        existing.buffer.buffer.release()
     }
 
     @Test
