@@ -1,6 +1,8 @@
 package uk.tvidal.kraft.codec.binary
 
 import com.google.protobuf.ByteString
+import com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag
+import com.google.protobuf.MessageLite
 import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.EntryType.DEFAULT
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
@@ -20,3 +22,16 @@ fun KRaftEntry.toProto(): DataEntry = DataEntry.newBuilder()
     .setPayload(ByteString.copyFrom(payload))
     .setTerm(term)
     .build()
+
+fun entryOf(proto: DataEntry) = KRaftEntry(
+    id = uuid(proto.id),
+    term = proto.term,
+    payload = proto.payload.toByteArray()
+)
+
+fun computeSerialisedSize(entry: MessageLite): Int {
+    val messageBytes = entry.serializedSize
+    val sizeBytes = computeUInt32SizeNoTag(messageBytes)
+    return messageBytes + sizeBytes
+}
+

@@ -1,6 +1,8 @@
 package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
+import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
+import uk.tvidal.kraft.codec.binary.toProto
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -12,7 +14,9 @@ import java.nio.file.StandardOpenOption.WRITE
 import java.util.UUID
 import java.util.zip.CRC32
 
-internal val KRAFT_MAGIC_NUMBER: UUID = UUID.fromString("f328feab-43a1-48f5-82ca-25acb702e7ee")
+internal val KRAFT_MAGIC_NUMBER: UniqueID = UUID
+    .fromString("ACEDBABE-BEEF-F00D-DEAD-180182C0FFEE")
+    .toProto()
 
 const val DEFAULT_FILE_SIZE = 4L * 1024 * 1024 // 4 MB
 const val FILE_INITIAL_POSITION = 48 // allocate a few bytes for the header

@@ -1,5 +1,7 @@
 package uk.tvidal.kraft.storage
 
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
@@ -7,6 +9,18 @@ import java.io.File
 import kotlin.test.assertEquals
 
 internal class KRaftDataFileTest : BaseFileTest() {
+
+    private val existing = KRaftDataFile.open(existingFile)
+
+    @AfterEach
+    internal fun tearDown() {
+        existing.stream.buffer.release()
+    }
+
+    @Test
+    internal fun `can read entries from file`() {
+        assertEquals(testEntries, existing[testRange])
+    }
 
     @Test
     internal fun `prevent opening of non existing file`() {
@@ -30,16 +44,11 @@ internal class KRaftDataFileTest : BaseFileTest() {
     @Test
     internal fun `read the header after open`() {
         val file = File("$dir/testReadHeader.kr")
-        createDataFile(
-            file = file,
-            firstIndex = 33L,
-            count = 5,
-            state = COMMITTED
-        )
+        createDataFile(file, 33)
 
         KRaftDataFile.open(file).also {
             assertEquals(33L, it.firstIndex)
-            assertEquals(5, it.count)
+            assertEquals(11, it.count)
             assertEquals(COMMITTED, it.state)
         }
     }
@@ -62,6 +71,16 @@ internal class KRaftDataFileTest : BaseFileTest() {
             assertEquals(index++, it.index)
             assertEquals(offset, it.offset)
             offset += it.bytes
+        }
+    }
+
+    companion object {
+        val existingFile = File("$dir/existingDataFile.kr")
+
+        @JvmStatic
+        @BeforeAll
+        internal fun createFile() {
+            createDataFile(existingFile)
         }
     }
 }

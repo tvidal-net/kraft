@@ -2,28 +2,57 @@ package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
+import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
 import java.io.File
+import java.nio.ByteBuffer
 
-fun createDataFile(file: File, firstIndex: Long = 1L, count: Int = 0, state: FileState = ACTIVE) {
+const val TEST_SIZE = 11
+
+val testEntry = entryOf("12345678901", 11L)
+val testEntryBytes = testEntry.toProto().serializedSize + 1
+
+val testEntries = (0 until TEST_SIZE)
+    .map { testEntry }
+    .let { entries(it) }
+
+val testRange = indexRange(TEST_SIZE, 1L, FILE_INITIAL_POSITION, testEntryBytes)
+
+fun createDataFile(
+    file: File,
+    firstIndex: Long = 1L,
+    fileState: FileState = COMMITTED,
+    magicNumber: UniqueID = KRAFT_MAGIC_NUMBER,
+    entries: KRaftEntries = testEntries
+) {
+    val buffer = ByteBuffer.allocate(1024)
+    val stream = ByteBufferStream(buffer)
+
+    stream.position = FILE_INITIAL_POSITION
+    entries.map(KRaftEntry::toProto)
+        .forEach { it.writeDelimitedTo(stream.output) }
+
+    val offset = stream.position
+    stream.position = 0
+
+    FileHeader.newBuilder()
+        .setMagicNumber(magicNumber)
+        .setEntryCount(entries.size)
+        .setFirstIndex(firstIndex)
+        .setState(fileState)
+        .setOffset(offset)
+        .build()
+        .writeDelimitedTo(stream.output)
+
+    buffer.flip()
     file.outputStream().use {
-        FileHeader.newBuilder()
-            .setMagicNumber(KRAFT_MAGIC_NUMBER.toProto())
-            .setOffset(FILE_INITIAL_POSITION)
-            .setFirstIndex(firstIndex)
-            .setEntryCount(count)
-            .setState(state)
-            .build()
-            .writeDelimitedTo(it)
-
-        // Adds trailing space
-        it.write(ByteArray(128))
+        it.write(buffer.array())
     }
 }
 
-fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes: Int = 11) = KRaftIndexEntryRange(
+fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes: Int = TEST_SIZE) = KRaftIndexEntryRange(
     (0 until count).map {
         val index = firstIndex + it
         val offset = initialOffset + (bytes * it)
@@ -31,7 +60,7 @@ fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes:
     }
 )
 
-fun indexEntry(index: Long = 1L, offset: Int = 0, bytes: Int = 8): IndexEntry = IndexEntry.newBuilder()
+fun indexEntry(index: Long = 1L, offset: Int = 0, bytes: Int = TEST_SIZE): IndexEntry = IndexEntry.newBuilder()
     .setIndex(index)
     .setOffset(offset)
     .setBytes(bytes)

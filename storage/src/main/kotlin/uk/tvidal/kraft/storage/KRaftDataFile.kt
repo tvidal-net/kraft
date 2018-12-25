@@ -1,17 +1,17 @@
 package uk.tvidal.kraft.storage
 
-import com.google.protobuf.CodedOutputStream.computeUInt32SizeNoTag
-import com.google.protobuf.MessageLite
 import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
+import uk.tvidal.kraft.codec.binary.computeSerialisedSize
+import uk.tvidal.kraft.codec.binary.entryOf
 import uk.tvidal.kraft.codec.binary.toProto
-import uk.tvidal.kraft.codec.binary.uuid
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.io.File
 import java.nio.ByteBuffer
+import java.util.Stack
 
 class KRaftDataFile private constructor(
     buffer: ByteBuffer
@@ -53,17 +53,31 @@ class KRaftDataFile private constructor(
     val range: LongRange
         get() = LongRange(firstIndex, lastIndex)
 
+    private val mark = Stack<Int>()
+
     operator fun contains(index: Long) = index in range
 
     fun commit(commitIndex: Long) {
         TODO("$commitIndex")
     }
 
-    fun append(data: KRaftEntries) = sequence {
+    operator fun get(range: KRaftIndexEntryRange): KRaftEntries = entries(
+        range.map { get(it) }
+    )
+
+    operator fun get(index: IndexEntry): KRaftEntry = buffer {
+        stream.position = index.offset
+        entryOf(
+            DataEntry
+                .parseDelimitedFrom(stream.input)
+        )
+    }
+
+    fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
         try {
             for (entry in data) {
                 val proto = entry.toProto()
-                val size = computeSize(proto)
+                val size = computeSerialisedSize(proto)
                 if (size <= stream.available) {
                     val index = append(proto)
                     count++
@@ -74,7 +88,7 @@ class KRaftDataFile private constructor(
         } finally {
             writeHeader()
         }
-    }
+    }.asIterable()
 
     private fun append(entry: DataEntry): IndexEntry {
         val index = lastIndex + 1
@@ -89,19 +103,38 @@ class KRaftDataFile private constructor(
             .build()
     }
 
-    private fun computeSize(entry: MessageLite): Int {
-        val messageBytes = entry.serializedSize
-        val sizeBytes = computeUInt32SizeNoTag(messageBytes)
-        return messageBytes + sizeBytes
+    fun rebuildIndex(): Iterable<IndexEntry> = object : Iterable<IndexEntry>, Iterator<IndexEntry> {
+
+        private var index = firstIndex
+        private var offset = FILE_INITIAL_POSITION
+
+        override fun iterator(): Iterator<IndexEntry> = this
+        override fun hasNext(): Boolean = index in range
+
+        override fun next(): IndexEntry = buffer {
+            position(offset)
+            val proto = DataEntry.parseDelimitedFrom(stream.input)
+            val bytes = position() - offset
+
+            val index = IndexEntry.newBuilder()
+                .setId(proto.id)
+                .setIndex(index++)
+                .setOffset(offset)
+                .setBytes(bytes)
+                .build()
+
+            offset += bytes
+            index
+        }
     }
 
     private inline fun <T> buffer(block: ByteBuffer.() -> T): T {
         with(stream.buffer) {
-            val mark = stream.position
+            mark.push(stream.position)
             try {
                 return block()
             } finally {
-                stream.position = mark
+                stream.position = mark.pop()
             }
         }
     }
@@ -109,7 +142,7 @@ class KRaftDataFile private constructor(
     private fun validateHeader(): Boolean {
         if (stream.buffer.limit() == 0) return false
         val header = readHeader()
-        if (uuid(header.magicNumber) == KRAFT_MAGIC_NUMBER) {
+        if (header.magicNumber == KRAFT_MAGIC_NUMBER) {
             count = header.entryCount
             firstIndex = header.firstIndex
             state = header.state
@@ -133,7 +166,7 @@ class KRaftDataFile private constructor(
             val offset = stream.position
             stream.position = 0
             FileHeader.newBuilder()
-                .setMagicNumber(KRAFT_MAGIC_NUMBER.toProto())
+                .setMagicNumber(KRAFT_MAGIC_NUMBER)
                 .setFirstIndex(newFirstIndex)
                 .setEntryCount(newCount)
                 .setState(newState)

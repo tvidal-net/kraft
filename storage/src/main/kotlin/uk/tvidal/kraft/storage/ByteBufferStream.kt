@@ -4,8 +4,11 @@ import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.ByteBuffer
+import java.nio.MappedByteBuffer
 
 class ByteBufferStream(val buffer: ByteBuffer) {
+
+    constructor(size: Int = 1024) : this(ByteBuffer.allocate(size))
 
     constructor(file: File, size: Long) : this(openMemoryMappedFile(file, size))
 
@@ -26,6 +29,11 @@ class ByteBufferStream(val buffer: ByteBuffer) {
 
     val isFull: Boolean
         get() = available == 0
+
+    fun force() {
+        val mappedByteBuffer = buffer as? MappedByteBuffer
+        mappedByteBuffer?.force()
+    }
 
     private inner class ByteBufferInputStream : InputStream() {
 
