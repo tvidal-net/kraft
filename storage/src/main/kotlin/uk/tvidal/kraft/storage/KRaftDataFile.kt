@@ -43,6 +43,7 @@ class KRaftDataFile(
     }
 
     fun commit(commitIndex: Long) {
+        TODO("$commitIndex")
     }
 
     operator fun get(index: IndexEntry): KRaftEntry {
