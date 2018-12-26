@@ -9,5 +9,5 @@ interface IndexFile : Closeable, Iterable<IndexEntry> {
 
     fun write(entry: IndexEntry)
 
-    fun truncateAt(index: Long)
+    fun truncateAt(index: Long): Long
 }

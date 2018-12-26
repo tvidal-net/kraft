@@ -2,7 +2,7 @@ package uk.tvidal.kraft.logging
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import uk.tvidal.kraft.className
+import uk.tvidal.kraft.qualifiedClassName
 import kotlin.reflect.KClass
 
 class KRaftLogger(val logger: Logger) {
@@ -13,7 +13,7 @@ class KRaftLogger(val logger: Logger) {
 
     constructor(cls: KClass<*>) : this(loggerName(cls))
 
-    constructor(block: Function<*>) : this(block.className())
+    constructor(block: Function<*>) : this(block.qualifiedClassName())
 
     companion object {
         private const val COMPANION_SUFFIX = ".Companion"

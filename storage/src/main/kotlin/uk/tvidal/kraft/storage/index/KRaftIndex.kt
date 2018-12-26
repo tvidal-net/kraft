@@ -58,8 +58,8 @@ class KRaftIndex internal constructor(
     }
 
     fun truncateAt(index: Long) {
-        file.truncateAt(index)
-        lastIndex = index - 1
+        lastIndex = file.truncateAt(index)
+        data.entries.removeIf { it.key !in range }
     }
 
     private fun validateEntry(entry: IndexEntry) {

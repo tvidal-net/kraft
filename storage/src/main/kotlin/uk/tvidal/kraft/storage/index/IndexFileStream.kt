@@ -15,7 +15,7 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
         if (!file.exists()) file.createNewFile()
     }
 
-    override fun truncateAt(index: Long) {
+    override fun truncateAt(index: Long): Long {
         close()
         val truncatedFile = File("$file.truncate")
         file.renameTo(truncatedFile)
@@ -24,6 +24,7 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
                 .forEach(this::write)
         }
         truncatedFile.delete()
+        return index - 1
     }
 
     override fun write(entry: IndexEntry) {
