@@ -33,11 +33,14 @@ class DataFile private constructor(
                 throw IllegalStateException("Cannot overwrite existing file: $file")
             }
             buffer.position = FILE_INITIAL_POSITION
-            writeHeader(newFirstIndex = firstIndex)
+            writeHeader(
+                newFirstIndex = firstIndex,
+                newState = ACTIVE
+            )
         }
     }
 
-    override var range = LongRange.EMPTY
+    override var range: LongRange = LongRange.EMPTY
 
     override var state: FileState = ACTIVE
         private set
@@ -60,7 +63,6 @@ class DataFile private constructor(
     fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
         if (immutable)
             throw IllegalStateException("Cannot modify files in $state state")
-
 
         var count = 0
         try {
@@ -132,7 +134,11 @@ class DataFile private constructor(
 
     private fun readHeader(): FileHeader = buffer {
         position(0)
-        FileHeader.parseDelimitedFrom(buffer.input)
+        val header = FileHeader.parseDelimitedFrom(buffer.input)
+        size = header.entryCount
+        range = header.firstIndex until header.firstIndex + size
+        state = header.state
+        header
     }
 
     private fun writeHeader(
@@ -153,7 +159,7 @@ class DataFile private constructor(
                 .writeDelimitedTo(buffer.output)
 
             size = newCount
-            firstIndex = newFirstIndex
+            range = newFirstIndex until newFirstIndex + newCount
             state = newState
         }
     }

@@ -13,19 +13,19 @@ data class FileStorageConfig(
     internal val firstFileName: FileName
         get() = FileName(fileName)
 
-    internal fun files() = path.toFile()
+    internal fun listFiles() = path.toFile()
         .list { _, name -> isValidFileName(name) }
         .mapNotNull(FileName.Companion::parseFrom)
-        .map(this::open)
+        .map(this::openFile)
         .also { createLinks(it) }
 
-    internal fun open(fileName: FileName): KRaftFile {
+    internal fun openFile(fileName: FileName): KRaftFile {
         val file = fileName.toFile(path)
         val dataFile = DataFile.open(file)
         return KRaftFile(dataFile, fileName, this)
     }
 
-    internal fun create(
+    internal fun createFile(
         name: FileName = firstFileName,
         firstIndex: Long = FIRST_INDEX
     ): KRaftFile {

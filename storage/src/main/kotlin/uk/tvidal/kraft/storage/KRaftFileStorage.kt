@@ -12,7 +12,7 @@ class KRaftFileStorage(
     internal companion object : KRaftLogging()
 
     internal val files = TreeMap<LongRange, KRaftFile>(
-        config.files()
+        config.listFiles()
             .associateBy(KRaftFile::range)
     )
 
@@ -140,7 +140,7 @@ class KRaftFileStorage(
             val range = currentFile.range
             files[range] = currentFile
         }
-        currentFile = config.create(
+        currentFile = config.createFile(
             name = fileName,
             firstIndex = firstIndex
         )

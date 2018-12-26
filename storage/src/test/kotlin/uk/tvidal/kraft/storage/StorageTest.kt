@@ -2,7 +2,7 @@ package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
@@ -24,7 +24,7 @@ val testRange = indexRange(TEST_SIZE, 1L, FILE_INITIAL_POSITION, testEntryBytes)
 fun createDataFile(
     file: File,
     firstIndex: Long = 1L,
-    fileState: FileState = COMMITTED,
+    fileState: FileState = ACTIVE,
     magicNumber: UniqueID = KRAFT_MAGIC_NUMBER,
     entries: KRaftEntries = testEntries
 ) {
@@ -67,3 +67,16 @@ fun indexEntry(index: Long = 1L, offset: Int = 0, bytes: Int = TEST_SIZE): Index
     .setOffset(offset)
     .setBytes(bytes)
     .build()
+
+fun main(args: Array<String>) {
+    val dir = File("/tmp/testKraft/kraft-1.kr")
+    dir.toPath().parent.toFile().mkdirs()
+    val config = FileStorageConfig(
+        path = dir.toPath().parent,
+        fileName = "kraft",
+        fileSize = 1024
+    )
+    createDataFile(dir)
+
+    config.openFile(FileName.parseFrom(dir.toPath().fileName.toString())!!)
+}

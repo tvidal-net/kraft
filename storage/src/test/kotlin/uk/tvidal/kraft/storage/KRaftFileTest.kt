@@ -12,7 +12,7 @@ internal class KRaftFileTest : BaseFileTest() {
 
     @Test
     internal fun test() {
-        val file = config.create()
+        val file = config.createFile()
         file.append(testEntries)
         file.truncateAt(20)
     }

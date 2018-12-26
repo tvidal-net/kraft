@@ -4,7 +4,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import java.io.File
 import kotlin.test.assertEquals
 
@@ -49,7 +49,7 @@ internal class DataFileTest : BaseFileTest() {
         DataFile.open(file).also {
             assertEquals(33L, it.firstIndex)
             assertEquals(11, it.size)
-            assertEquals(COMMITTED, it.state)
+            assertEquals(ACTIVE, it.state)
         }
     }
 
