@@ -2,6 +2,7 @@ package uk.tvidal.kraft.storage.index
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.tvidal.kraft.storage.INITIAL_OFFSET
 import uk.tvidal.kraft.storage.indexEntry
 import uk.tvidal.kraft.storage.indexRange
 import kotlin.test.assertEquals
@@ -16,17 +17,17 @@ internal class IndexEntryRangeTest {
         val list = range.toList()
         with(list[0]) {
             assertEquals(1, index)
-            assertEquals(0, offset)
+            assertEquals(INITIAL_OFFSET, offset)
             assertEquals(11, bytes)
         }
         with(list[1]) {
             assertEquals(2, index)
-            assertEquals(11, offset)
+            assertEquals(INITIAL_OFFSET + 11, offset)
             assertEquals(11, bytes)
         }
         with(list[2]) {
             assertEquals(3, index)
-            assertEquals(22, offset)
+            assertEquals(INITIAL_OFFSET + 22, offset)
             assertEquals(11, bytes)
         }
     }

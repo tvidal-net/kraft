@@ -70,24 +70,20 @@ class KRaftData internal constructor(
         }
     }
 
-    fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
-        ensureWritable()
-        var count = 0
-        try {
-            for (entry in data) {
-                val index = firstIndex + size + count++
+    fun append(data: KRaftEntries) = IndexEntryRange(
+        data.also { ensureWritable() }
+            .mapIndexedNotNull { i, entry ->
+                val index = firstIndex + size + i
                 val proto = entry.toProto()
                 val size = computeSerialisedSize(proto)
-                if (size <= buffer.available) yield(append(proto, index))
-                else break
+                if (size <= buffer.available) append(proto, index)
+                else null
             }
-        } finally {
-            if (count > 0) {
-                size += count
-                writeHeader()
+            .also {
+                if (it.isNotEmpty())
+                    writeHeader(size + it.size)
             }
-        }
-    }.asIterable()
+    )
 
     private fun append(entry: DataEntry, index: Long): IndexEntry {
         val offset = buffer.position
@@ -149,14 +145,14 @@ class KRaftData internal constructor(
     }
 
     private fun writeHeader(
-        newCount: Int = size,
+        newSize: Int = size,
         newState: FileState = state,
         newFirstIndex: Long = firstIndex
     ) {
         ensureWritable()
-        buffer.writeHeader(newFirstIndex, newCount, newState)
-        size = newCount
-        range = newFirstIndex until newFirstIndex + newCount
+        buffer.writeHeader(newFirstIndex, newSize, newState)
+        size = newSize
+        range = newFirstIndex until newFirstIndex + newSize
         state = newState
     }
 

@@ -51,6 +51,9 @@ subprojects {
 
         // MockK
         testImplementation "io.mockk:mockk:$mockkVersion"
+
+        // Log
+        testRuntimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
     }
 
     configurations.all {

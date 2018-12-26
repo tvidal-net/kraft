@@ -2,6 +2,7 @@ package uk.tvidal.kraft.storage.index
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.tvidal.kraft.storage.INITIAL_OFFSET
 import uk.tvidal.kraft.storage.indexRange
 import uk.tvidal.kraft.storage.rangeOf
 import uk.tvidal.kraft.storage.testEntryBytes
@@ -63,6 +64,18 @@ internal class KRaftIndexTest {
     }
 
     @Test
+    internal fun `returns the last index on append`() {
+        index.use {
+            val range3 = indexRange(3)
+            assertEquals(3, actual = it.append(range3))
+
+            val offset = INITIAL_OFFSET + range3.bytes
+            val range7 = indexRange(7, 4, offset)
+            assertEquals(7, actual = it.append(range7))
+        }
+    }
+
+    @Test
     internal fun `ensure appended data has a valid offset`() {
         index.use {
             val firstRange = indexRange(10, 1L)
@@ -79,11 +92,11 @@ internal class KRaftIndexTest {
     internal fun `allow append if index and offset are correct`() {
         index.use {
             val firstRange = indexRange(10, 1L)
-            it.append(firstRange)
+            assertEquals(firstRange.size, actual = it.append(firstRange))
 
-            val newRange = indexRange(10, 11, 110)
-            it.append(newRange)
-
+            val offset = INITIAL_OFFSET + firstRange.bytes
+            val newRange = indexRange(10, 11, offset)
+            assertEquals(newRange.size, actual = it.append(newRange))
             assertEquals(1L..20, it.range)
         }
     }

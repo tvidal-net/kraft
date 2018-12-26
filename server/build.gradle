@@ -1,5 +1,3 @@
 dependencies {
     implementation project(':kraft-core')
-
-    testRuntimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
 }

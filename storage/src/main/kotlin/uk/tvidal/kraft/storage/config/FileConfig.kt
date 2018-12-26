@@ -8,7 +8,7 @@ import uk.tvidal.kraft.storage.index.KRaftIndex
 import java.io.File
 import java.nio.file.Path
 
-class FileConfig(
+internal class FileConfig(
     name: FileName,
     val path: Path,
     val size: Long,
