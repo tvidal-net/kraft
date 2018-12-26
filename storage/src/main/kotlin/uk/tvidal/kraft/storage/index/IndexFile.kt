@@ -7,9 +7,7 @@ interface IndexFile : Closeable, Iterable<IndexEntry> {
 
     val isOpen: Boolean
 
-    val isEmpty: Boolean
-
     fun write(entry: IndexEntry)
 
-    fun truncateAt(offset: Long)
+    fun truncateAt(index: Long)
 }

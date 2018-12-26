@@ -1,43 +1,30 @@
 package uk.tvidal.kraft.storage.index
 
+import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.storage.MutableIndexRange
 import java.io.Closeable
 import java.io.File
-import java.io.OutputStream
 
 class KRaftIndex internal constructor(
-    val file: File
-) : Closeable, MutableIndexRange {
+    private val file: IndexFile
+) : MutableIndexRange, Closeable by file {
 
-    override var range = LongRange.EMPTY
+    constructor(file: File) : this(IndexFileStream(file))
 
     private val data = LinkedHashMap<Long, IndexEntry>()
 
-    private var outputStream: OutputStream? = null
+    override var range = readFile()
 
-    init {
-        if (!file.exists()) file.createNewFile()
-        range = readFile(firstIndex)
-    }
-
-    val isOpen: Boolean
-        get() = outputStream != null
-
-    private fun readFile(firstIndex: Long): LongRange {
+    private fun readFile(): LongRange {
         var first: Long? = null
         var last = 0L
-        file.inputStream().use { stream ->
-            while (true) {
-                val entry = IndexEntry.parseDelimitedFrom(stream)
-                if (entry != null && entry.hasId()) {
-                    data[entry.index] = entry
-                    if (first == null) first = entry.index
-                    last = entry.index
-                } else break
-            }
+        for (entry in file) {
+            data[entry.index] = entry
+            if (first == null) first = entry.index
+            last = entry.index
         }
-        return LongRange(first ?: firstIndex, last)
+        return LongRange(first ?: FIRST_INDEX, last)
     }
 
     operator fun get(index: Long): IndexEntry = data[index]!!
@@ -64,10 +51,7 @@ class KRaftIndex internal constructor(
 
     private fun append(entry: IndexEntry) {
         validateEntry(entry)
-        ensureOpen()
-
-        entry.writeDelimitedTo(outputStream)
-        outputStream!!.flush()
+        file.write(entry)
 
         data[entry.index] = entry
         lastIndex++
@@ -87,17 +71,5 @@ class KRaftIndex internal constructor(
         }
     }
 
-    private fun ensureOpen() {
-        if (outputStream == null) {
-            outputStream = file.outputStream()
-        }
-    }
-
-    override fun close() {
-        val os = outputStream
-        outputStream = null
-        os?.close()
-    }
-
-    override fun toString() = "IndexFile[($range) isOpen=$isOpen]"
+    override fun toString() = "IndexFile[($range) open=${file.isOpen}]"
 }
