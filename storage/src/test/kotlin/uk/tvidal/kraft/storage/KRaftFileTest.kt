@@ -1,42 +1,17 @@
 package uk.tvidal.kraft.storage
 
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
-import uk.tvidal.kraft.buffer.ByteBufferStream
-import uk.tvidal.kraft.storage.config.FileConfig
-import uk.tvidal.kraft.storage.config.FileName
-import uk.tvidal.kraft.storage.data.KRaftData
-import uk.tvidal.kraft.storage.index.KRaftIndex
-import uk.tvidal.kraft.storage.index.MockIndexFile
+import uk.tvidal.kraft.storage.mock.mockFileConfig
 import kotlin.test.assertEquals
 
 internal class KRaftFileTest : BaseFileTest() {
 
-    val buffer = ByteBufferStream(testFileBytes)
-        .writeHeader()
-
-    val indexFile = MockIndexFile()
-
-    val data = KRaftData(buffer)
-
-    val index = KRaftIndex(indexFile)
-
-    val name = FileName("testKraft")
-
-    val config = mockk<FileConfig>().also {
-        every { it.name } returns name
-        every { it.data } returns data
-        every { it.index } returns index
-        every { it.close(any()) } just Runs
-    }
+    val config = mockFileConfig()
 
     val file = KRaftFile(config)
 
@@ -48,7 +23,7 @@ internal class KRaftFileTest : BaseFileTest() {
         )
         val list = entries.toList()
 
-        assertEquals(name.next, actual = file.nextFileName)
+        assertEquals(config.name.next, actual = file.nextFileName)
 
         val appended = file.append(entries)
         assertEquals(TEST_SIZE, actual = appended)

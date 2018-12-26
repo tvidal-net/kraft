@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.tvidal.kraft.storage.INITIAL_OFFSET
 import uk.tvidal.kraft.storage.indexRange
+import uk.tvidal.kraft.storage.mock.MockIndexFile
 import uk.tvidal.kraft.storage.rangeOf
 import uk.tvidal.kraft.storage.testEntryBytes
 import uk.tvidal.kraft.storage.testRange
