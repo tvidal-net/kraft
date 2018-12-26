@@ -21,10 +21,20 @@ data class FileName(
         private const val DATA_FILE = ".kr"
         private const val INDEX_FILE = ".krx"
 
-        private const val COMMITTED_EXT = ".c$DATA_FILE"
-        private const val DISCARDED_EXT = ".d$DATA_FILE"
+        private const val COMMITTED_EXT = ".c"
+        private const val DISCARDED_EXT = ".d"
 
         private val regex = Regex("(\\w+)-(\\d+)(\\.\\w)?$INDEX_FILE?$")
+
+        private val extensionParse = mapOf(
+            COMMITTED_EXT to COMMITTED,
+            DISCARDED_EXT to DISCARDED
+        )
+
+        private val extension = mapOf(
+            COMMITTED to "$COMMITTED_EXT$DATA_FILE",
+            DISCARDED to "$DISCARDED_EXT$DATA_FILE"
+        )
 
         fun parseFrom(fileName: String): FileName? {
             try {
@@ -33,11 +43,7 @@ data class FileName(
                     return FileName(
                         name = match.groupValues[1],
                         id = match.groupValues[2].toInt(),
-                        state = when (match.groupValues[3]) {
-                            COMMITTED_EXT -> COMMITTED
-                            DISCARDED_EXT -> DISCARDED
-                            else -> ACTIVE
-                        }
+                        state = extensionParse[match.groupValues[3]] ?: ACTIVE
                     )
                 }
             } catch (e: Exception) {
@@ -51,23 +57,26 @@ data class FileName(
     }
 
     val current: String
-        get() = fullName(
-            when (state) {
-                COMMITTED -> COMMITTED_EXT
-                DISCARDED -> DISCARDED_EXT
-                else -> DATA_FILE
-            }
-        )
+        get() = fullName(extension[state])
 
     val index: String
         get() = fullName(INDEX_FILE)
+
+    val next: FileName
+        get() = copy(id = id + 1, state = ACTIVE)
 
     fun current(path: Path): File = path.resolve(current).toFile()
 
     fun index(path: Path): File = path.resolve(index).toFile()
 
-    private fun fullName(extension: String = ""): String =
-        String.format(FORMAT, name, id, extension).toLowerCase()
+    private fun fullName(extension: String?): String =
+        String.format(FORMAT, name, id, extension ?: ACTIVE).toLowerCase()
+
+    internal fun rename(state: FileState, path: Path): FileName {
+        val new = copy(state = state)
+        current(path).renameTo(new.current(path))
+        return new
+    }
 
     override fun compareTo(other: FileName): Int = id.compareTo(other.id)
 

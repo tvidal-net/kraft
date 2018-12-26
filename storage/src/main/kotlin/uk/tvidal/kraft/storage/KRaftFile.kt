@@ -3,6 +3,7 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.ChainNode
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.storage.config.FileConfig
+import uk.tvidal.kraft.storage.config.FileName
 import uk.tvidal.kraft.storage.data.DataFile
 
 class KRaftFile internal constructor(private val file: FileConfig) :
@@ -13,6 +14,9 @@ class KRaftFile internal constructor(private val file: FileConfig) :
     override var next: KRaftFile? = null
 
     override var prev: KRaftFile? = null
+
+    val nextFileName: FileName
+        get() = file.name.next
 
     operator fun get(index: Long): KRaftEntry {
         val range = file.index[index]

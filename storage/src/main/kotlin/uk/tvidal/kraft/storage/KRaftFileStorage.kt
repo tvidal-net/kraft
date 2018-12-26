@@ -13,10 +13,7 @@ class KRaftFileStorage(
 
     internal companion object : KRaftLogging()
 
-    internal val files = TreeMap<LongRange, KRaftFile>(
-        config.listFiles()
-            .associateBy(KRaftFile::range)
-    )
+    internal val files = TreeMap<LongRange, KRaftFile>(config.listFiles())
 
     internal lateinit var currentFile: KRaftFile
 
@@ -35,7 +32,7 @@ class KRaftFileStorage(
             firstLogIndex = files.firstKey().first
             lastLogIndex = lastFile.key.last
 
-            if (lastFile.value.dataFile.immutable) {
+            if (lastFile.value.immutable) {
                 createNewFile(nextLogIndex)
                 currentFile.prev = lastFile.value
             } else {
@@ -123,7 +120,7 @@ class KRaftFileStorage(
             currentFile = prev
         }
         if (index in currentFile) {
-            currentFile.dataFile.truncateAt(index)
+            currentFile.truncateAt(index)
             createNewFile(index)
         }
     }
@@ -137,7 +134,7 @@ class KRaftFileStorage(
         files.remove(file.range)
     }
 
-    private fun createNewFile(firstIndex: Long, fileName: FileName = currentFile.fileName.next) {
+    private fun createNewFile(firstIndex: Long, fileName: FileName = currentFile.nextFileName) {
         if (firstIndex > FIRST_INDEX) {
             val range = currentFile.range
             files[range] = currentFile

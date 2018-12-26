@@ -1,5 +1,6 @@
 package uk.tvidal.kraft.storage.config
 
+import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.storage.data.KRaftData
@@ -11,21 +12,20 @@ class FileConfig(
     name: FileName,
     val path: Path,
     val size: Long,
-    val firstIndex: Long
+    val firstIndex: Long = FIRST_INDEX
 ) {
-
-    var name: FileName = name
+    internal var name: FileName = name
         private set
 
-    val file: File
+    internal val file: File
         get() = name.current(path)
 
-    val data: KRaftData = file.let {
+    internal val data: KRaftData = file.let {
         if (it.exists()) KRaftData.open(file)
         else KRaftData.create(file, size, firstIndex)
     }
 
-    val index = KRaftIndex(name.index(path))
+    internal val index = KRaftIndex(name.index(path))
 
     init {
         if (index.isEmpty() && !data.isEmpty()) {
@@ -34,14 +34,12 @@ class FileConfig(
         }
     }
 
-    fun close(state: FileState) {
+    internal fun close(state: FileState) {
         if (state == DISCARDED && data.committed)
             throw IllegalStateException("Cannot discard a committed file!")
 
         index.close()
         data.close(state)
-
-        name = name.copy(state = state)
-        file.renameTo(path.resolve(name.current).toFile())
+        name = name.rename(state, path)
     }
 }
