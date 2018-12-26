@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.RetryDelay.Companion.FOREVER
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.ConnectMessage
@@ -25,7 +26,6 @@ class ClientTransport(
     @Volatile
     private var connection: SocketConnection? = null
 
-    private val socket get() = connection!!.socket
     private val reader get() = connection!!.reader
     private val messages get() = config.messageReceiver
 
@@ -45,7 +45,7 @@ class ClientTransport(
     private fun connect(): SocketConnection {
         val name = "Client [${config.self} -> $node]"
         val future = CompletableFuture<SocketConnection>()
-        config.readerThread.retry(this::running, maxAttempts = 0, name = name) {
+        config.readerThread.retry(this::running, FOREVER, name = name) {
             connection = SocketConnection(host)
             log.info { "$name connected to ${connection!!.socket}" }
             if (!future.isDone) future.complete(connection)

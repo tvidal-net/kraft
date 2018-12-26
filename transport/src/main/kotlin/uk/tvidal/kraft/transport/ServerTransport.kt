@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.RetryDelay.Companion.FOREVER
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.TransportMessage
@@ -28,7 +29,7 @@ class ServerTransport(
 
     init {
         log.info { "Server [$self] waiting for connections on port ${config.host.port}" }
-        config.serverThread.retry(this::running, maxAttempts = 0, name = "Server") {
+        config.serverThread.retry(this::running, FOREVER, name = "Server") {
             val socket = serverSocket.accept()
             log.debug { "incoming connection ${socket.inetAddress}:${socket.port}" }
             read(socket)
@@ -36,7 +37,7 @@ class ServerTransport(
     }
 
     private fun read(socket: Socket) {
-        config.readerThread.retry(this::running, maxAttempts = 0, name = "Server ($socket)") {
+        config.readerThread.retry(this::running, FOREVER, name = "Server ($socket)") {
             config
                 .codec
                 .reader(socket)
