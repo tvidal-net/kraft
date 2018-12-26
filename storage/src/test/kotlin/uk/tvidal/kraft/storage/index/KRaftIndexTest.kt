@@ -1,105 +1,62 @@
 package uk.tvidal.kraft.storage.index
 
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import uk.tvidal.kraft.storage.BaseFileTest
 import uk.tvidal.kraft.storage.indexRange
-import java.io.File
+import uk.tvidal.kraft.storage.rangeOf
+import uk.tvidal.kraft.storage.testEntryBytes
+import uk.tvidal.kraft.storage.testRange
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class KRaftIndexTest : BaseFileTest() {
+internal class KRaftIndexTest {
 
-    /*
-    * Test Script:
-    * - Create New
-    *   - Already exists
-    * - Open existing
-    *   - Does not exist
-    *
-    * - Append
-    * - Truncate
-    * - Read single
-    * - Read range
-    * - Close
-    *
-    * Assertions:
-    * - Range
-    * - Closed/Open
-    * */
+    val indexFile = MockIndexFile()
 
-    companion object {
+    val index = KRaftIndex(indexFile)
 
-        val existingFile = File("$dir/existingFile.krx")
-
-        @BeforeAll
-        @JvmStatic
-        internal fun createFile() {
-            existingFile.outputStream().use { stream ->
-                val range = indexRange(10, 10)
-                range.forEach { it.writeDelimitedTo(stream) }
-            }
-        }
-    }
-
-    val newFile = File("$dir/newFile.krx")
-
-    init {
-        if (newFile.exists()) newFile.delete()
+    @Test
+    internal fun `index is open and closed properly`() {
+        assertFalse { indexFile.isOpen }
+        index.append(testRange)
+        assertTrue { indexFile.isOpen }
+        index.close()
+        assertFalse { indexFile.isOpen }
     }
 
     @Test
     internal fun `ensures the file is read properly`() {
-        KRaftIndex(existingFile).use {
-            assertEquals(10L..19, it.range)
-            with(it[16]) {
-                assertEquals(16, index)
-                assertEquals(66, offset)
-                assertEquals(11, bytes)
-            }
-
-            with(it[19]) {
-                assertEquals(19, index)
-                assertEquals(99, offset)
-                assertEquals(11, bytes)
-            }
+        val e = testRange.toList()
+        index.append(e)
+        index.use {
+            assertEquals(1L..11, it.range)
+            assertEquals(it.read(1L, Int.MAX_VALUE), testRange)
+            assertEquals(e[2], it[3])
         }
     }
 
     @Test
     internal fun `byte limit is respected on read`() {
-        KRaftIndex(existingFile).use {
-            val emptyRange = it.read(11, 10)
-            assertTrue { emptyRange.isEmpty }
-
-            with(it.read(11, 22)) {
-                assertFalse { isEmpty }
-                assertEquals(2, size)
-                assertEquals(11, firstIndex)
-                assertEquals(12, lastIndex)
-                assertEquals(11L..12, range)
-                assertEquals(22, bytes)
-            }
-
-            with(it.read(16, 60)) {
-                assertFalse { isEmpty }
-                assertEquals(4, size)
-                assertEquals(16L..19, range)
-                assertEquals(44, bytes)
-            }
+        val e = testRange.toList()
+        index.append(e)
+        index.use {
+            assertEquals(IndexEntryRange.EMPTY, it.read(6L, 10))
+            assertEquals(IndexEntryRange.EMPTY, it.read(12L, Int.MAX_VALUE))
+            assertEquals(rangeOf(e[0]), it.read(1L, testEntryBytes * 2 - 1))
+            assertEquals(rangeOf(e[2], e[3]), it.read(3L, testEntryBytes * 2 + 1))
+            assertEquals(rangeOf(e[10]), it.read(11L, testEntryBytes))
         }
     }
 
     @Test
     internal fun `ensure appended data has a valid index`() {
-        assertThrows<IllegalArgumentException> {
-            KRaftIndex(newFile).use {
-                val firstRange = indexRange(10, 1L)
-                it.append(firstRange)
+        index.use {
+            val firstRange = indexRange(10, 1L)
+            it.append(firstRange)
 
-                val newRange = indexRange(10, 15)
+            val newRange = indexRange(10, 15)
+            assertThrows<IllegalArgumentException> {
                 it.append(newRange)
             }
         }
@@ -107,12 +64,12 @@ internal class KRaftIndexTest : BaseFileTest() {
 
     @Test
     internal fun `ensure appended data has a valid offset`() {
-        assertThrows<IllegalArgumentException> {
-            KRaftIndex(newFile).use {
-                val firstRange = indexRange(10, 1L)
-                it.append(firstRange)
+        index.use {
+            val firstRange = indexRange(10, 1L)
+            it.append(firstRange)
 
-                val newRange = indexRange(10, 11)
+            val newRange = indexRange(10, 11)
+            assertThrows<IllegalArgumentException> {
                 it.append(newRange)
             }
         }
@@ -120,7 +77,7 @@ internal class KRaftIndexTest : BaseFileTest() {
 
     @Test
     internal fun `allow append if index and offset are correct`() {
-        KRaftIndex(newFile).use {
+        index.use {
             val firstRange = indexRange(10, 1L)
             it.append(firstRange)
 
@@ -128,6 +85,29 @@ internal class KRaftIndexTest : BaseFileTest() {
             it.append(newRange)
 
             assertEquals(1L..20, it.range)
+        }
+    }
+
+    @Test
+    internal fun `truncates at the correct position`() {
+        val e = testRange.toList()
+        index.append(e)
+        index.use {
+            it.truncateAt(12L)
+            assertEquals(testRange, actual = it.read())
+            assertEquals(1L..11, actual = it.range)
+
+
+            it.truncateAt(6L)
+            assertEquals(rangeOf(e.subList(3, 5)), actual = it.read(4L))
+            assertEquals(1L..5, actual = it.range)
+
+
+            it.truncateAt(4L)
+            assertEquals(rangeOf(e.subList(0, 3)), actual = it.read())
+
+            it.truncateAt(1L)
+            assertEquals(IndexEntryRange.EMPTY, actual = it.read())
         }
     }
 }

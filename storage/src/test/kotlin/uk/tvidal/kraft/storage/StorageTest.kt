@@ -1,10 +1,12 @@
 package uk.tvidal.kraft.storage
 
+import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
+import uk.tvidal.kraft.codec.binary.computeSerialisedSize
 import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.storage.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.index.IndexEntryRange
@@ -15,13 +17,18 @@ import java.util.UUID
 const val TEST_SIZE = 11
 
 val testEntry = entryOf("12345678901", 11L)
-val testEntryBytes = testEntry.toProto().serializedSize + 1
+val testEntryBytes = computeSerialisedSize(testEntry.toProto())
 
 val testEntries = (0 until TEST_SIZE)
     .map { testEntry }
     .let { entries(it) }
 
-val testRange = indexRange(TEST_SIZE, 1L, FILE_INITIAL_POSITION, testEntryBytes)
+val testRange = indexRange(
+    count = TEST_SIZE,
+    firstIndex = FIRST_INDEX,
+    initialOffset = FILE_INITIAL_POSITION,
+    bytes = testEntryBytes
+)
 
 fun createDataFile(
     file: File,
@@ -54,6 +61,10 @@ fun createDataFile(
         it.write(buffer.array())
     }
 }
+
+fun rangeOf(vararg entries: IndexEntry) = rangeOf(entries.toList())
+
+fun rangeOf(entries: Iterable<IndexEntry>) = IndexEntryRange(entries)
 
 fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes: Int = TEST_SIZE) =
     IndexEntryRange(

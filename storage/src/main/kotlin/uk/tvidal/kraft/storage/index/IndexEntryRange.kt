@@ -8,6 +8,10 @@ class IndexEntryRange(
     indexEntries: Iterable<IndexEntry>
 ) : Iterable<IndexEntry> {
 
+    companion object {
+        val EMPTY = IndexEntryRange(emptyList())
+    }
+
     private val entries = TreeSet<IndexEntry>(indexEntryComparator)
         .apply { addAll(indexEntries) }
 

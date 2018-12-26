@@ -29,7 +29,10 @@ class KRaftIndex internal constructor(
 
     operator fun get(index: Long): IndexEntry = data[index]!!
 
-    fun read(fromIndex: Long, byteLimit: Int): IndexEntryRange {
+    fun read(
+        fromIndex: Long = firstIndex,
+        byteLimit: Int = Int.MAX_VALUE
+    ): IndexEntryRange {
         val list = mutableListOf<IndexEntry>()
         var available = byteLimit
         var index = fromIndex
@@ -55,6 +58,11 @@ class KRaftIndex internal constructor(
 
         data[entry.index] = entry
         lastIndex++
+    }
+
+    fun truncateAt(index: Long) {
+        file.truncateAt(index)
+        lastIndex = index - 1
     }
 
     private fun validateEntry(entry: IndexEntry) {
