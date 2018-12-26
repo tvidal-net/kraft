@@ -1,8 +1,8 @@
 package uk.tvidal.kraft.consumer
 
 import uk.tvidal.kraft.RaftNode
-import uk.tvidal.kraft.client.consumer.FIRST_INDEX
-import uk.tvidal.kraft.client.consumer.LAST_INDEX
+import uk.tvidal.kraft.client.consumer.LOG_HEAD
+import uk.tvidal.kraft.client.consumer.LOG_TAIL
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.client.ClientErrorMessage
 import uk.tvidal.kraft.message.client.ClientErrorType
@@ -58,8 +58,8 @@ class RaftConsumerState(
     }
 
     private fun computeIndex(fromIndex: Long): Long = when (fromIndex) {
-        FIRST_INDEX -> storage.firstLogIndex
-        LAST_INDEX -> commitIndex + 1
+        LOG_HEAD -> storage.firstLogIndex
+        LOG_TAIL -> commitIndex + 1
         else -> fromIndex
     }
 

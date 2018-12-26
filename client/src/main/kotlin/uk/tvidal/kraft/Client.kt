@@ -4,7 +4,7 @@ import uk.tvidal.kraft.client.clientNode
 import uk.tvidal.kraft.client.consumer.ConsumerReceiver
 import uk.tvidal.kraft.client.consumer.KRaftConsumer
 import uk.tvidal.kraft.client.consumer.KRaftConsumerImpl
-import uk.tvidal.kraft.client.consumer.LAST_INDEX
+import uk.tvidal.kraft.client.consumer.LOG_TAIL
 import uk.tvidal.kraft.client.producer.KRaftProducer
 import uk.tvidal.kraft.client.producer.KRaftProducerImpl
 import uk.tvidal.kraft.client.producer.ProducerMode
@@ -27,7 +27,7 @@ fun producer(
 
 fun consumer(
     server: Pair<RaftNode, InetSocketAddress>,
-    index: Long = LAST_INDEX,
+    index: Long = LOG_TAIL,
     self: RaftNode = clientNode("Consumer"),
     threadPool: ExecutorService = consumerThreadPool,
     receiver: ConsumerReceiver

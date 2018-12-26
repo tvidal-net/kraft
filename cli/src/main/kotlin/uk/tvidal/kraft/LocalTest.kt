@@ -1,6 +1,6 @@
 package uk.tvidal.kraft
 
-import uk.tvidal.kraft.client.consumer.FIRST_INDEX
+import uk.tvidal.kraft.client.consumer.LOG_HEAD
 import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.server.registerStopServerShutdownHook
 import uk.tvidal.kraft.storage.RingBufferStorage
@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
     }
     // */
 
-    consumer(serverNode to address, index = FIRST_INDEX) {
+    consumer(serverNode to address, index = LOG_HEAD) {
         println("received: ${it.data}")
         true
     }

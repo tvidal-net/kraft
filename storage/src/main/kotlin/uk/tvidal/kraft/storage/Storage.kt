@@ -17,7 +17,7 @@ internal val MAGIC_NUMBER_PROTO: UniqueID = MAGIC_NUMBER
     .toProto()
 
 const val DEFAULT_FILE_NAME = "kraft"
-const val DEFAULT_FILE_SIZE = 4L * 1024 * 1024 // 4 MB
+const val DEFAULT_FILE_SIZE = 1024L * 1024 // 1 MB
 const val INITIAL_OFFSET = 48 // allocate a few bytes for the header
 
 val DEFAULT_FILE_PATH = File(System.getProperty("user.dir"))
