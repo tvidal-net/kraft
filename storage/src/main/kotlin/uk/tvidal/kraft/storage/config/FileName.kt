@@ -70,7 +70,7 @@ data class FileName(
     fun index(path: Path): File = path.resolve(index).toFile()
 
     private fun fullName(extension: String?): String =
-        String.format(FORMAT, name, id, extension ?: ACTIVE).toLowerCase()
+        String.format(FORMAT, name, id, extension ?: DATA_FILE).toLowerCase()
 
     internal fun rename(state: FileState, path: Path): FileName {
         val new = copy(state = state)

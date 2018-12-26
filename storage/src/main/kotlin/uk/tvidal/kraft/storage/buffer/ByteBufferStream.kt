@@ -46,9 +46,10 @@ class ByteBufferStream(buffer: ByteBuffer) {
 
     fun release() {
         // remove the reference to the byteBuffer when releasing
-        val oldBuffer = buffer
-        buffer = emptyBuffer
-        oldBuffer.release()
+        buffer.let {
+            buffer = emptyBuffer
+            it.release()
+        }
     }
 
     private val mark = Stack<Int>()

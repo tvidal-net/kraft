@@ -1,11 +1,16 @@
 package uk.tvidal.kraft.storage.config
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
+import uk.tvidal.kraft.storage.BaseFileTest
 import uk.tvidal.kraft.storage.config.FileName.Companion.parseFrom
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 internal class FileNameTest {
 
@@ -37,5 +42,41 @@ internal class FileNameTest {
     @Test
     internal fun `ignore incorrect extension`() {
         assertNull(parseFrom("newfile-001.c.uk"))
+    }
+
+    @Test
+    internal fun `next file returns the correct id`() {
+        val name = FileName("test", 10)
+        val next = name.next
+        assertEquals(11, actual = next.id)
+        assertEquals("test-11.kr", actual = next.current)
+    }
+
+    @Nested
+    inner class FileTests : BaseFileTest() {
+
+        val path = dir.toPath()!!
+
+        @Test
+        internal fun `renames the file correctly`() {
+
+            val active = FileName("name", 123, ACTIVE)
+            active.current(path).createNewFile()
+            assertFileExists(active)
+
+            val committed = active.rename(COMMITTED, path)
+            assertFileExists(committed)
+
+            val discarded = committed.rename(DISCARDED, path)
+            assertFileExists(discarded)
+
+            val truncated = discarded.rename(TRUNCATED, path)
+            assertFileExists(truncated)
+            assertFileExists(active)
+        }
+
+        private fun assertFileExists(name: FileName) {
+            assertTrue { name.current(path).exists() }
+        }
     }
 }

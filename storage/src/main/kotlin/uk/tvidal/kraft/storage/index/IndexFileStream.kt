@@ -17,7 +17,7 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
 
     override fun truncateAt(index: Long) {
         close()
-        val truncatedFile = File(file.name + ".truncate")
+        val truncatedFile = File("$file.truncate")
         file.renameTo(truncatedFile)
         use {
             IndexIterator(truncatedFile, index)
@@ -28,7 +28,10 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
 
     override fun write(entry: IndexEntry) {
         ensureOpen()
-        entry.writeDelimitedTo(outputStream!!)
+        outputStream?.let {
+            entry.writeDelimitedTo(outputStream)
+            it.flush()
+        }
     }
 
     private fun ensureOpen() {
@@ -38,9 +41,10 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
     }
 
     override fun close() {
-        val os = outputStream
-        outputStream = null
-        os?.close()
+        outputStream?.let {
+            outputStream = null
+            it.close()
+        }
     }
 
     override fun iterator(): Iterator<IndexEntry> = IndexIterator(file)
@@ -64,5 +68,5 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
         }
     }
 
-    override fun toString() = file.toString()
+    override fun toString() = file.name!!
 }

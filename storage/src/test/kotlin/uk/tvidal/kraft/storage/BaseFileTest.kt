@@ -2,13 +2,19 @@ package uk.tvidal.kraft.storage
 
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import uk.tvidal.kraft.name
 import java.io.File
+import java.nio.file.Files
 
 internal open class BaseFileTest {
 
     companion object {
 
-        val dir = File("/tmp/kraftFileTests")
+        fun file(block: () -> Unit) = file(block.name())
+
+        fun file(namePrefix: String) = File("$dir/$namePrefix.kr")
+
+        val dir = Files.createTempDirectory("kraftTests").toFile()!!
 
         @BeforeAll
         @JvmStatic

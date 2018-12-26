@@ -11,3 +11,5 @@ const val BYTE_BYTES = java.lang.Byte.BYTES
 const val FIRST_INDEX = 1L
 
 fun Function<*>.className() = javaClass.name.substringBefore('$')
+
+fun Function<*>.name() = className().substringAfterLast('.')

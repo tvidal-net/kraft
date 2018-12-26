@@ -12,7 +12,6 @@ internal class IndexEntryRangeTest {
 
     @Test
     internal fun `creates the index range correctly`() {
-        // this tests the test method to build the range
         val range = indexRange(3)
         val list = range.toList()
         with(list[0]) {
