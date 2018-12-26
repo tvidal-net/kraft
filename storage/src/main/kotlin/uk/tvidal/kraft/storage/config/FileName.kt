@@ -5,6 +5,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
+import java.io.File
 import java.nio.file.Path
 
 data class FileName(
@@ -20,8 +21,8 @@ data class FileName(
         private const val DATA_FILE = ".kr"
         private const val INDEX_FILE = ".krx"
 
-        private const val COMMITTED_EXT = ".c"
-        private const val DISCARDED_EXT = ".d"
+        private const val COMMITTED_EXT = ".c$DATA_FILE"
+        private const val DISCARDED_EXT = ".d$DATA_FILE"
 
         private val regex = Regex("(\\w+)-(\\d+)(\\.\\w)?$INDEX_FILE?$")
 
@@ -47,33 +48,23 @@ data class FileName(
 
         fun isValidFileName(fileName: String): Boolean =
             regex.matches(fileName.trim().toLowerCase())
-
-        fun extension(state: FileState): String = when (state) {
-            COMMITTED -> COMMITTED_EXT + DATA_FILE
-            DISCARDED -> DISCARDED_EXT + DATA_FILE
-            else -> DATA_FILE
-        }
     }
 
     val current: String
-        get() = fullName(extension(state))
-
-    val active: String
-        get() = fullName()
-
-    val committed: String
-        get() = fullName(extension(COMMITTED))
-
-    val discarded: String
-        get() = fullName(extension(DISCARDED))
+        get() = fullName(
+            when (state) {
+                COMMITTED -> COMMITTED_EXT
+                DISCARDED -> DISCARDED_EXT
+                else -> DATA_FILE
+            }
+        )
 
     val index: String
         get() = fullName(INDEX_FILE)
 
-    val next: FileName
-        get() = copy(id = id + 1, state = ACTIVE)
+    fun current(path: Path): File = path.resolve(current).toFile()
 
-    fun toFile(path: Path) = path.resolve(current).toFile()
+    fun index(path: Path): File = path.resolve(index).toFile()
 
     private fun fullName(extension: String = ""): String =
         String.format(FORMAT, name, id, extension).toLowerCase()

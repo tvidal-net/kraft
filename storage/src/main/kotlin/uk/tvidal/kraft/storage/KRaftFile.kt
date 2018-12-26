@@ -2,60 +2,34 @@ package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.ChainNode
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
-import uk.tvidal.kraft.storage.config.FileName
-import uk.tvidal.kraft.storage.config.FileStorageConfig
+import uk.tvidal.kraft.storage.config.FileConfig
 import uk.tvidal.kraft.storage.data.DataFile
-import uk.tvidal.kraft.storage.data.KRaftData
-import uk.tvidal.kraft.storage.index.KRaftIndex
-import java.io.File
 
-class KRaftFile internal constructor(
-    val dataFile: KRaftData,
-    name: FileName,
-    config: FileStorageConfig
-) : ChainNode<KRaftFile>,
-    DataFile by dataFile,
-    MutableIndexRange by dataFile {
-
-    var fileName: FileName = name
-        private set
-
-    private val path = config.path
-
-    private var file: File = path.resolve(fileName.current).toFile()
+class KRaftFile internal constructor(private val file: FileConfig) :
+    ChainNode<KRaftFile>,
+    DataFile by file.data,
+    MutableIndexRange by file.index {
 
     override var next: KRaftFile? = null
 
     override var prev: KRaftFile? = null
 
-    val indexFile = KRaftIndex(
-        file = path.resolve(fileName.index).toFile()
-    )
-
-    init {
-        if (indexFile.isEmpty() && !dataFile.isEmpty()) {
-            indexFile.append(dataFile.rebuildIndex())
-            if (dataFile.immutable) indexFile.close()
-        }
+    operator fun get(index: Long): KRaftEntry {
+        val range = file.index[index]
+        return file.data[range]
     }
 
-    operator fun get(index: Long): KRaftEntry = dataFile[indexFile[index]]
-
-    fun append(entries: KRaftEntries): Int = indexFile.append(dataFile.append(entries))
-
-    fun read(index: Long, byteLimit: Int): KRaftEntries = dataFile[indexFile.read(index, byteLimit)]
-
-    fun close(state: FileState) {
-        if (state == DISCARDED && committed)
-            throw IllegalStateException("Cannot discard a committed file!")
-
-        indexFile.close()
-        dataFile.close(state)
-
-        fileName = fileName.copy(state = state)
-        file.renameTo(path.resolve(fileName.current).toFile())
+    fun append(entries: KRaftEntries): Int {
+        val range = file.data.append(entries)
+        return file.index.append(range)
     }
 
-    override fun toString() = "File[($range) $fileName $state]"
+    fun read(fromIndex: Long, byteLimit: Int): KRaftEntries {
+        val range = file.index.read(fromIndex, byteLimit)
+        return file.data[range]
+    }
+
+    fun close(state: FileState) = file.close(state)
+
+    override fun toString() = "File[($range) ${file.name} $state]"
 }
