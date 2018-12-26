@@ -1,5 +1,7 @@
 package uk.tvidal.kraft
 
+import java.util.UUID
+
 const val DEFAULT_CLUSTER_NAME = "KRaft"
 const val MAX_CLUSTER_NAME_LENGTH = 16
 
@@ -9,6 +11,9 @@ const val SHORT_BYTES = java.lang.Short.BYTES
 const val BYTE_BYTES = java.lang.Byte.BYTES
 
 const val FIRST_INDEX = 1L
+
+val MAGIC_NUMBER: UUID = UUID
+    .fromString("acedBabe-dead-f00d-beef-180182c0ffee")
 
 fun Function<*>.qualifiedClassName() = javaClass.name.substringBefore('$')
 

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
-import uk.tvidal.kraft.storage.buffer.ByteBufferStream
+import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.config.FileConfig
 import uk.tvidal.kraft.storage.config.FileName
 import uk.tvidal.kraft.storage.data.KRaftData

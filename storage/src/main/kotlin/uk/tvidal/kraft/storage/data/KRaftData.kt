@@ -14,7 +14,7 @@ import uk.tvidal.kraft.storage.INITIAL_OFFSET
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 import uk.tvidal.kraft.storage.MutableIndexRange
-import uk.tvidal.kraft.storage.buffer.ByteBufferStream
+import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.index.IndexEntryRange
 import uk.tvidal.kraft.storage.isValid

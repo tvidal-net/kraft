@@ -1,30 +1,36 @@
-package uk.tvidal.kraft.storage.buffer
+package uk.tvidal.kraft.buffer
 
 import org.junit.jupiter.api.Test
-import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
-import uk.tvidal.kraft.storage.KRAFT_MAGIC_NUMBER
+import uk.tvidal.kraft.MAGIC_NUMBER
 import java.nio.ByteBuffer
+import java.nio.ByteBuffer.allocate
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 internal class ByteBufferStreamTest {
 
-    val id = KRAFT_MAGIC_NUMBER
+    val id = MAGIC_NUMBER
 
-    val buffer: ByteBuffer = ByteBuffer.allocate(128)
+    val buffer: ByteBuffer = allocate(128)
 
     val stream = ByteBufferStream(buffer)
 
     @Test
     internal fun `can read and write to the underlying buffer`() {
 
-        id.writeDelimitedTo(stream.output)
+        val writeArray = id.toString().toByteArray()
+        stream.output.write(writeArray)
 
         buffer.flip()
 
-        val read = UniqueID.parseDelimitedFrom(stream.input)
-        assertEquals(id, read)
+        val readArray = ByteArray(writeArray.size)
+        val length = stream.input.read(readArray)
+        assertEquals(writeArray.size, actual = length)
+
+        val read = String(readArray)
+        assertEquals(id, UUID.fromString(read))
     }
 
     @Test

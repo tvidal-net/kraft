@@ -10,7 +10,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
-import uk.tvidal.kraft.storage.buffer.ByteBufferStream
+import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
 import uk.tvidal.kraft.storage.index.IndexEntryRange
