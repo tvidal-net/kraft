@@ -3,6 +3,8 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
+import uk.tvidal.kraft.storage.config.FileName
+import uk.tvidal.kraft.storage.config.FileStorageConfig
 import java.util.TreeMap
 
 class KRaftFileStorage(

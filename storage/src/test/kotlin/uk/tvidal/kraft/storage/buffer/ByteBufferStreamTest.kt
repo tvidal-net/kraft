@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.buffer
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

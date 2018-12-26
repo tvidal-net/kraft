@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.buffer
 
 import java.nio.ByteBuffer
 

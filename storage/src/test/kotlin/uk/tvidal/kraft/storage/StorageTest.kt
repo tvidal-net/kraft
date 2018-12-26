@@ -6,6 +6,8 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
+import uk.tvidal.kraft.storage.buffer.ByteBufferStream
+import uk.tvidal.kraft.storage.index.IndexEntryRange
 import java.io.File
 import java.nio.ByteBuffer
 import java.util.UUID
@@ -53,13 +55,14 @@ fun createDataFile(
     }
 }
 
-fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes: Int = TEST_SIZE) = IndexEntryRange(
-    (0 until count).map {
-        val index = firstIndex + it
-        val offset = initialOffset + (bytes * it)
-        indexEntry(index, offset, bytes)
-    }
-)
+fun indexRange(count: Int, firstIndex: Long = 1L, initialOffset: Int = 0, bytes: Int = TEST_SIZE) =
+    IndexEntryRange(
+        (0 until count).map {
+            val index = firstIndex + it
+            val offset = initialOffset + (bytes * it)
+            indexEntry(index, offset, bytes)
+        }
+    )
 
 fun indexEntry(index: Long = 1L, offset: Int = 0, bytes: Int = TEST_SIZE): IndexEntry = IndexEntry.newBuilder()
     .setId(UUID.randomUUID().toProto())
@@ -67,16 +70,3 @@ fun indexEntry(index: Long = 1L, offset: Int = 0, bytes: Int = TEST_SIZE): Index
     .setOffset(offset)
     .setBytes(bytes)
     .build()
-
-fun main(args: Array<String>) {
-    val dir = File("/tmp/testKraft/kraft-1.kr")
-    dir.toPath().parent.toFile().mkdirs()
-    val config = FileStorageConfig(
-        path = dir.toPath().parent,
-        fileName = "kraft",
-        fileSize = 1024
-    )
-    createDataFile(dir)
-
-    config.openFile(FileName.parseFrom(dir.toPath().fileName.toString())!!)
-}

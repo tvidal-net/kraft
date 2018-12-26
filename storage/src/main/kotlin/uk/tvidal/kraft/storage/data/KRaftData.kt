@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.data
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
@@ -10,15 +10,23 @@ import uk.tvidal.kraft.codec.binary.computeSerialisedSize
 import uk.tvidal.kraft.codec.binary.entryOf
 import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.logging.KRaftLogging
+import uk.tvidal.kraft.storage.FILE_INITIAL_POSITION
+import uk.tvidal.kraft.storage.KRAFT_MAGIC_NUMBER
+import uk.tvidal.kraft.storage.KRaftEntries
+import uk.tvidal.kraft.storage.KRaftEntry
+import uk.tvidal.kraft.storage.MutableIndexRange
+import uk.tvidal.kraft.storage.buffer.ByteBufferStream
+import uk.tvidal.kraft.storage.entries
+import uk.tvidal.kraft.storage.index.IndexEntryRange
 import java.io.File
 
-class DataFile private constructor(
+class KRaftData private constructor(
     val buffer: ByteBufferStream
-) : MutableIndexRange, KRaftFileState {
+) : MutableIndexRange, DataFileState {
 
     internal companion object : KRaftLogging() {
 
-        fun open(file: File) = DataFile(
+        fun open(file: File) = KRaftData(
             ByteBufferStream(file, file.length())
         ).apply {
             if (!validateHeader()) {
@@ -26,7 +34,7 @@ class DataFile private constructor(
             }
         }
 
-        fun create(file: File, fileSize: Long = 1024L, firstIndex: Long = 1L) = DataFile(
+        fun create(file: File, fileSize: Long = 1024L, firstIndex: Long = 1L) = KRaftData(
             ByteBufferStream(file, fileSize)
         ).apply {
             if (validateHeader()) {

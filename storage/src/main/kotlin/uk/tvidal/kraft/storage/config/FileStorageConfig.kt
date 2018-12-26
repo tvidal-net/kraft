@@ -1,8 +1,10 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.config
 
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.createLinks
-import uk.tvidal.kraft.storage.FileName.Companion.isValidFileName
+import uk.tvidal.kraft.storage.data.KRaftData
+import uk.tvidal.kraft.storage.KRaftFile
+import uk.tvidal.kraft.storage.config.FileName.Companion.isValidFileName
 import java.nio.file.Path
 
 data class FileStorageConfig(
@@ -21,7 +23,7 @@ data class FileStorageConfig(
 
     internal fun openFile(fileName: FileName): KRaftFile {
         val file = fileName.toFile(path)
-        val dataFile = DataFile.open(file)
+        val dataFile = KRaftData.open(file)
         return KRaftFile(dataFile, fileName, this)
     }
 
@@ -30,7 +32,7 @@ data class FileStorageConfig(
         firstIndex: Long = FIRST_INDEX
     ): KRaftFile {
         val file = name.toFile(path)
-        val dataFile = DataFile.create(file, fileSize, firstIndex)
+        val dataFile = KRaftData.create(file, fileSize, firstIndex)
         return KRaftFile(dataFile, name, this)
     }
 }

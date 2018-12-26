@@ -1,9 +1,9 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.config
 
 import org.junit.jupiter.api.Test
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
-import uk.tvidal.kraft.storage.FileName.Companion.parseFrom
+import uk.tvidal.kraft.storage.config.FileName.Companion.parseFrom
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 

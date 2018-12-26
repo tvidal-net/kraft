@@ -3,14 +3,19 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.ChainNode
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
+import uk.tvidal.kraft.storage.config.FileName
+import uk.tvidal.kraft.storage.config.FileStorageConfig
+import uk.tvidal.kraft.storage.data.KRaftData
+import uk.tvidal.kraft.storage.data.DataFileState
+import uk.tvidal.kraft.storage.index.KRaftIndex
 import java.io.File
 
 class KRaftFile internal constructor(
-    val dataFile: DataFile,
+    val dataFile: KRaftData,
     name: FileName,
     config: FileStorageConfig
 ) : ChainNode<KRaftFile>,
-    KRaftFileState by dataFile,
+    DataFileState by dataFile,
     MutableIndexRange by dataFile {
 
     var fileName: FileName = name
@@ -24,7 +29,7 @@ class KRaftFile internal constructor(
 
     override var prev: KRaftFile? = null
 
-    val indexFile = IndexFile(
+    val indexFile = KRaftIndex(
         file = path.resolve(fileName.index).toFile()
     )
 

@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.config
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE

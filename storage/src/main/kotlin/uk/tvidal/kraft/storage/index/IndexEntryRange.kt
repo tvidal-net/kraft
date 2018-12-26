@@ -1,6 +1,7 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.index
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
+import uk.tvidal.kraft.storage.indexEntryComparator
 import java.util.TreeSet
 
 class IndexEntryRange internal constructor(

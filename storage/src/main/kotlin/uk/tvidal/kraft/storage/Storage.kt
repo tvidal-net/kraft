@@ -3,6 +3,7 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
+import uk.tvidal.kraft.storage.config.FileStorageConfig
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel

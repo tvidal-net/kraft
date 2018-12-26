@@ -1,16 +1,52 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.data
 
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
+import uk.tvidal.kraft.storage.BaseFileTest
+import uk.tvidal.kraft.storage.FILE_INITIAL_POSITION
+import uk.tvidal.kraft.storage.buffer.release
+import uk.tvidal.kraft.storage.createDataFile
+import uk.tvidal.kraft.storage.entries
+import uk.tvidal.kraft.storage.entryOf
+import uk.tvidal.kraft.storage.testEntries
+import uk.tvidal.kraft.storage.testRange
 import java.io.File
 import kotlin.test.assertEquals
 
-internal class DataFileTest : BaseFileTest() {
+internal class KRaftDataTest : BaseFileTest() {
 
-    private val existing = DataFile.open(existingFile)
+    private val existing = KRaftData.open(existingFile)
+
+    /*
+        Test Script:
+        - Create new file
+            - Existing File
+        - Open existing
+            - Invalid Header
+        - Release
+            - Read After Release
+            - Append After Release
+
+        - Append
+            - Without available space
+        - Read single
+        - Read range
+        - Rebuild Index
+        - Close (Commit/Truncate/Discard)
+            - Write after closed
+            - Truncate after closed
+
+        Test File:
+        - Fixed size entries
+        - 10 entries per file
+
+        Validate State changes:
+        - firstIndex, lastIndex, range
+        - fileState (immutable, committed)
+     */
 
     @AfterEach
     internal fun tearDown() {
@@ -28,7 +64,7 @@ internal class DataFileTest : BaseFileTest() {
         if (file.exists()) file.delete()
 
         assertThrows<IllegalStateException> {
-            DataFile.open(file)
+            KRaftData.open(file)
         }
     }
 
@@ -37,7 +73,7 @@ internal class DataFileTest : BaseFileTest() {
         val file = File("$dir/testCreate.kr")
         createDataFile(file)
         assertThrows<IllegalStateException> {
-            DataFile.create(file)
+            KRaftData.create(file)
         }
     }
 
@@ -46,7 +82,7 @@ internal class DataFileTest : BaseFileTest() {
         val file = File("$dir/testReadHeader.kr")
         createDataFile(file, 33)
 
-        DataFile.open(file).also {
+        KRaftData.open(file).also {
             assertEquals(33L, it.firstIndex)
             assertEquals(11, it.size)
             assertEquals(ACTIVE, it.state)
@@ -67,7 +103,7 @@ internal class DataFileTest : BaseFileTest() {
 
         var index = 1L
         var offset = FILE_INITIAL_POSITION
-        DataFile.create(file).append(entries).forEach {
+        KRaftData.create(file).append(entries).forEach {
             assertEquals(index++, it.index)
             assertEquals(offset, it.offset)
             offset += it.bytes

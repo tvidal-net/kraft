@@ -1,11 +1,12 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.index
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
+import uk.tvidal.kraft.storage.MutableIndexRange
 import java.io.Closeable
 import java.io.File
 import java.io.OutputStream
 
-class IndexFile internal constructor(
+class KRaftIndex internal constructor(
     val file: File
 ) : Closeable, MutableIndexRange {
 

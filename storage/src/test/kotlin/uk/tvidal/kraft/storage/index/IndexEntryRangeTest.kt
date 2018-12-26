@@ -1,12 +1,14 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.index
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.tvidal.kraft.storage.indexEntry
+import uk.tvidal.kraft.storage.indexRange
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class KRaftIndexIndexEntryRangeTest {
+internal class IndexEntryRangeTest {
 
     @Test
     internal fun `creates the index range correctly`() {

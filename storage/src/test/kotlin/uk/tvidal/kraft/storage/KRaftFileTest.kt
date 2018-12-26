@@ -1,6 +1,7 @@
 package uk.tvidal.kraft.storage
 
 import org.junit.jupiter.api.Test
+import uk.tvidal.kraft.storage.config.FileStorageConfig
 
 internal class KRaftFileTest : BaseFileTest() {
 

@@ -1,14 +1,34 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.index
 
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.tvidal.kraft.storage.BaseFileTest
+import uk.tvidal.kraft.storage.indexRange
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class IndexFileTest : BaseFileTest() {
+internal class KRaftIndexTest : BaseFileTest() {
+
+    /*
+    * Test Script:
+    * - Create New
+    *   - Already exists
+    * - Open existing
+    *   - Does not exist
+    *
+    * - Append
+    * - Truncate
+    * - Read single
+    * - Read range
+    * - Close
+    *
+    * Assertions:
+    * - Range
+    * - Closed/Open
+    * */
 
     companion object {
 
@@ -32,7 +52,7 @@ internal class IndexFileTest : BaseFileTest() {
 
     @Test
     internal fun `ensures the file is read properly`() {
-        IndexFile(existingFile).use {
+        KRaftIndex(existingFile).use {
             assertEquals(10L..19, it.range)
             with(it[16]) {
                 assertEquals(16, index)
@@ -50,7 +70,7 @@ internal class IndexFileTest : BaseFileTest() {
 
     @Test
     internal fun `byte limit is respected on read`() {
-        IndexFile(existingFile).use {
+        KRaftIndex(existingFile).use {
             val emptyRange = it.read(11, 10)
             assertTrue { emptyRange.isEmpty }
 
@@ -75,7 +95,7 @@ internal class IndexFileTest : BaseFileTest() {
     @Test
     internal fun `ensure appended data has a valid index`() {
         assertThrows<IllegalArgumentException> {
-            IndexFile(newFile).use {
+            KRaftIndex(newFile).use {
                 val firstRange = indexRange(10, 1L)
                 it.append(firstRange)
 
@@ -88,7 +108,7 @@ internal class IndexFileTest : BaseFileTest() {
     @Test
     internal fun `ensure appended data has a valid offset`() {
         assertThrows<IllegalArgumentException> {
-            IndexFile(newFile).use {
+            KRaftIndex(newFile).use {
                 val firstRange = indexRange(10, 1L)
                 it.append(firstRange)
 
@@ -100,7 +120,7 @@ internal class IndexFileTest : BaseFileTest() {
 
     @Test
     internal fun `allow append if index and offset are correct`() {
-        IndexFile(newFile).use {
+        KRaftIndex(newFile).use {
             val firstRange = indexRange(10, 1L)
             it.append(firstRange)
 

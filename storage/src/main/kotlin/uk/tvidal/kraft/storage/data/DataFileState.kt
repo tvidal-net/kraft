@@ -1,10 +1,10 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.data
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 
-interface KRaftFileState {
+interface DataFileState {
 
     val state: FileState
 

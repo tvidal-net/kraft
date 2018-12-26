@@ -1,5 +1,6 @@
-package uk.tvidal.kraft.storage
+package uk.tvidal.kraft.storage.buffer
 
+import uk.tvidal.kraft.storage.openMemoryMappedFile
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
