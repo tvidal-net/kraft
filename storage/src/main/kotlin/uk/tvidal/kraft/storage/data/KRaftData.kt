@@ -10,7 +10,7 @@ import uk.tvidal.kraft.codec.binary.computeSerialisedSize
 import uk.tvidal.kraft.codec.binary.entryOf
 import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.logging.KRaftLogging
-import uk.tvidal.kraft.storage.FILE_INITIAL_POSITION
+import uk.tvidal.kraft.storage.INITIAL_OFFSET
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 import uk.tvidal.kraft.storage.MutableIndexRange
@@ -64,11 +64,14 @@ class KRaftData internal constructor(
         )
     }
 
-    fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
-
-        if (immutable)
+    private fun ensureWritable() {
+        if (immutable) {
             throw IllegalStateException("Cannot modify files in $state state")
+        }
+    }
 
+    fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
+        ensureWritable()
         var count = 0
         try {
             for (entry in data) {
@@ -102,7 +105,7 @@ class KRaftData internal constructor(
 
         private val range = firstIndex..(firstIndex + size - 1)
         private var index = firstIndex
-        private var offset = FILE_INITIAL_POSITION
+        private var offset = INITIAL_OFFSET
 
         override fun iterator(): Iterator<IndexEntry> = this
         override fun hasNext(): Boolean = index in range
@@ -150,6 +153,7 @@ class KRaftData internal constructor(
         newState: FileState = state,
         newFirstIndex: Long = firstIndex
     ) {
+        ensureWritable()
         buffer.writeHeader(newFirstIndex, newCount, newState)
         size = newCount
         range = newFirstIndex until newFirstIndex + newCount
@@ -157,11 +161,15 @@ class KRaftData internal constructor(
     }
 
     override fun truncateAt(index: Long) {
-        val count = index - firstIndex + 1
+        ensureWritable()
+        val count = index - firstIndex
         writeHeader(count.toInt(), TRUNCATED)
     }
 
-    fun close(state: FileState) = writeHeader(newState = state)
+    fun close(state: FileState) {
+        ensureWritable()
+        writeHeader(newState = state)
+    }
 
     override fun release() = buffer.release()
 

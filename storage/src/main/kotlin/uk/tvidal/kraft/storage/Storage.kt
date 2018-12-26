@@ -26,7 +26,7 @@ internal val KRAFT_MAGIC_NUMBER: UniqueID = UUID
 
 const val DEFAULT_FILE_NAME = "kraft"
 const val DEFAULT_FILE_SIZE = 4L * 1024 * 1024 // 4 MB
-const val FILE_INITIAL_POSITION = 48 // allocate a few bytes for the header
+const val INITIAL_OFFSET = 48 // allocate a few bytes for the header
 
 val DEFAULT_FILE_PATH = File(System.getProperty("user.dir"))
 
@@ -68,7 +68,7 @@ fun ByteBufferStream.writeHeader(
     offset: Int = position
 ): ByteBufferStream = this {
 
-    val actualOffset = if (isEmpty || offset == 0) FILE_INITIAL_POSITION else offset
+    val actualOffset = if (isEmpty || offset == 0) INITIAL_OFFSET else offset
 
     position = 0
     FileHeader.newBuilder()

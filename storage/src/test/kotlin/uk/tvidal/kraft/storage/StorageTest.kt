@@ -12,6 +12,7 @@ const val TEST_SIZE = 11
 
 val testEntry = entryOf("12345678901", 11L)
 val testEntryBytes = computeSerialisedSize(testEntry.toProto())
+val testFileBytes = INITIAL_OFFSET + TEST_SIZE * testEntryBytes
 
 val testEntries = (0 until TEST_SIZE)
     .map { testEntry }
@@ -43,7 +44,7 @@ fun KRaftData.write(entries: KRaftEntries = testEntries) = IndexEntryRange(appen
 
 fun KRaftEntries.toIndex(
     fromIndex: Long = FIRST_INDEX,
-    initialOffset: Int = FILE_INITIAL_POSITION
+    initialOffset: Int = INITIAL_OFFSET
 ) = IndexEntryRange(
     mapIndexed { i, it ->
         IndexEntry.newBuilder()
