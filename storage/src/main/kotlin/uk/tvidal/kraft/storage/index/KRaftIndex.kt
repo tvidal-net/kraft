@@ -29,10 +29,7 @@ class KRaftIndex internal constructor(
 
     operator fun get(index: Long): IndexEntry = data[index]!!
 
-    fun read(
-        fromIndex: Long = firstIndex,
-        byteLimit: Int = Int.MAX_VALUE
-    ): IndexEntryRange {
+    fun read(fromIndex: Long, byteLimit: Int): IndexEntryRange {
         val list = mutableListOf<IndexEntry>()
         var available = byteLimit
         var index = fromIndex

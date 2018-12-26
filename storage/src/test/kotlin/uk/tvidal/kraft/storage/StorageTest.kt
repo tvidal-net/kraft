@@ -1,17 +1,11 @@
 package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.FIRST_INDEX
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
-import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.computeSerialisedSize
 import uk.tvidal.kraft.codec.binary.toProto
-import uk.tvidal.kraft.storage.buffer.ByteBufferStream
+import uk.tvidal.kraft.storage.data.KRaftData
 import uk.tvidal.kraft.storage.index.IndexEntryRange
-import java.io.File
-import java.nio.ByteBuffer
 import java.util.UUID
 
 const val TEST_SIZE = 11
@@ -23,44 +17,7 @@ val testEntries = (0 until TEST_SIZE)
     .map { testEntry }
     .let { entries(it) }
 
-val testRange = indexRange(
-    count = TEST_SIZE,
-    firstIndex = FIRST_INDEX,
-    initialOffset = FILE_INITIAL_POSITION,
-    bytes = testEntryBytes
-)
-
-fun createDataFile(
-    file: File,
-    firstIndex: Long = 1L,
-    fileState: FileState = ACTIVE,
-    magicNumber: UniqueID = KRAFT_MAGIC_NUMBER,
-    entries: KRaftEntries = testEntries
-) {
-    val buffer = ByteBuffer.allocate(1024)
-    val stream = ByteBufferStream(buffer)
-
-    stream.position = FILE_INITIAL_POSITION
-    entries.map(KRaftEntry::toProto)
-        .forEach { it.writeDelimitedTo(stream.output) }
-
-    val offset = stream.position
-    stream.position = 0
-
-    FileHeader.newBuilder()
-        .setMagicNumber(magicNumber)
-        .setEntryCount(entries.size)
-        .setFirstIndex(firstIndex)
-        .setState(fileState)
-        .setOffset(offset)
-        .build()
-        .writeDelimitedTo(stream.output)
-
-    buffer.flip()
-    file.outputStream().use {
-        it.write(buffer.array())
-    }
-}
+val testRange = testEntries.toIndex()
 
 fun rangeOf(vararg entries: IndexEntry) = rangeOf(entries.toList())
 
@@ -81,3 +38,19 @@ fun indexEntry(index: Long = 1L, offset: Int = 0, bytes: Int = TEST_SIZE): Index
     .setOffset(offset)
     .setBytes(bytes)
     .build()
+
+fun KRaftData.write(entries: KRaftEntries = testEntries) = IndexEntryRange(append(entries))
+
+fun KRaftEntries.toIndex(
+    fromIndex: Long = FIRST_INDEX,
+    initialOffset: Int = FILE_INITIAL_POSITION
+) = IndexEntryRange(
+    mapIndexed { i, it ->
+        IndexEntry.newBuilder()
+            .setId(it.id.toProto())
+            .setIndex(fromIndex + i)
+            .setOffset(initialOffset + i * testEntryBytes)
+            .setBytes(testEntryBytes)
+            .build()
+    }
+)

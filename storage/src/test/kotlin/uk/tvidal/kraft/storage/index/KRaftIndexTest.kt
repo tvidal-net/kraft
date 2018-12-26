@@ -31,7 +31,7 @@ internal class KRaftIndexTest {
         index.append(e)
         index.use {
             assertEquals(1L..11, it.range)
-            assertEquals(it.read(1L, Int.MAX_VALUE), testRange)
+            assertEquals(testRange, it.read(1L, Int.MAX_VALUE))
             assertEquals(e[2], it[3])
         }
     }
@@ -94,20 +94,22 @@ internal class KRaftIndexTest {
         index.append(e)
         index.use {
             it.truncateAt(12L)
-            assertEquals(testRange, actual = it.read())
+            assertEquals(testRange, actual = read())
             assertEquals(1L..11, actual = it.range)
 
 
             it.truncateAt(6L)
-            assertEquals(rangeOf(e.subList(3, 5)), actual = it.read(4L))
+            assertEquals(rangeOf(e.subList(3, 5)), actual = read(4L))
             assertEquals(1L..5, actual = it.range)
 
 
             it.truncateAt(4L)
-            assertEquals(rangeOf(e.subList(0, 3)), actual = it.read())
+            assertEquals(rangeOf(e.subList(0, 3)), actual = read())
 
             it.truncateAt(1L)
-            assertEquals(IndexEntryRange.EMPTY, actual = it.read())
+            assertEquals(IndexEntryRange.EMPTY, actual = read())
         }
     }
+
+    private fun read(fromIndex: Long = index.firstIndex, byteLimit: Int = Int.MAX_VALUE) = index.read(fromIndex, byteLimit)
 }

@@ -11,40 +11,36 @@ import uk.tvidal.kraft.codec.binary.entryOf
 import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.FILE_INITIAL_POSITION
-import uk.tvidal.kraft.storage.KRAFT_MAGIC_NUMBER
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 import uk.tvidal.kraft.storage.MutableIndexRange
 import uk.tvidal.kraft.storage.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.index.IndexEntryRange
+import uk.tvidal.kraft.storage.isValid
+import uk.tvidal.kraft.storage.readHeader
+import uk.tvidal.kraft.storage.writeHeader
 import java.io.File
 
 class KRaftData internal constructor(
-    val buffer: ByteBufferStream = ByteBufferStream()
+    val buffer: ByteBufferStream
 ) : MutableIndexRange, DataFile {
 
     internal companion object : KRaftLogging() {
 
         fun open(file: File) = KRaftData(
             ByteBufferStream(file, file.length())
-        ).apply {
-            if (!validateHeader()) {
-                throw IllegalStateException("Could not open file:  $file")
-            }
-        }
+        )
 
         fun create(file: File, fileSize: Long = 1024L, firstIndex: Long = 1L) = KRaftData(
             ByteBufferStream(file, fileSize)
-        ).apply {
-            if (validateHeader()) {
-                throw IllegalStateException("Cannot overwrite existing file: $file")
-            }
-            buffer.position = FILE_INITIAL_POSITION
-            writeHeader(
-                newFirstIndex = firstIndex,
-                newState = ACTIVE
-            )
+                .writeHeader(firstIndex)
+        )
+    }
+
+    init {
+        if (!validateHeader()) {
+            throw IllegalStateException("Invalid file header: $this")
         }
     }
 
@@ -69,6 +65,7 @@ class KRaftData internal constructor(
     }
 
     fun append(data: KRaftEntries): Iterable<IndexEntry> = sequence {
+
         if (immutable)
             throw IllegalStateException("Cannot modify files in $state state")
 
@@ -130,7 +127,7 @@ class KRaftData internal constructor(
     private fun validateHeader(): Boolean {
         if (buffer.isEmpty) return false
         val header = readHeader()
-        if (header.magicNumber == KRAFT_MAGIC_NUMBER) {
+        if (header.isValid()) {
             size = header.entryCount
             firstIndex = header.firstIndex
             state = header.state
@@ -140,13 +137,12 @@ class KRaftData internal constructor(
         return false
     }
 
-    private fun readHeader(): FileHeader = buffer {
-        position(0)
-        val header = FileHeader.parseDelimitedFrom(buffer.input)
+    private fun readHeader(): FileHeader {
+        val header = buffer.readHeader()
         size = header.entryCount
         range = header.firstIndex until header.firstIndex + size
         state = header.state
-        header
+        return header
     }
 
     private fun writeHeader(
@@ -154,22 +150,10 @@ class KRaftData internal constructor(
         newState: FileState = state,
         newFirstIndex: Long = firstIndex
     ) {
-        buffer {
-            val offset = buffer.position
-            buffer.position = 0
-            FileHeader.newBuilder()
-                .setMagicNumber(KRAFT_MAGIC_NUMBER)
-                .setFirstIndex(newFirstIndex)
-                .setEntryCount(newCount)
-                .setState(newState)
-                .setOffset(offset)
-                .build()
-                .writeDelimitedTo(buffer.output)
-
-            size = newCount
-            range = newFirstIndex until newFirstIndex + newCount
-            state = newState
-        }
+        buffer.writeHeader(newFirstIndex, newCount, newState)
+        size = newCount
+        range = newFirstIndex until newFirstIndex + newCount
+        state = newState
     }
 
     override fun truncateAt(index: Long) {

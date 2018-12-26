@@ -1,122 +1,134 @@
 package uk.tvidal.kraft.storage.data
 
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
+import com.google.protobuf.InvalidProtocolBufferException.InvalidWireTypeException
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
-import uk.tvidal.kraft.storage.BaseFileTest
 import uk.tvidal.kraft.storage.FILE_INITIAL_POSITION
-import uk.tvidal.kraft.storage.buffer.release
-import uk.tvidal.kraft.storage.createDataFile
+import uk.tvidal.kraft.storage.TEST_SIZE
+import uk.tvidal.kraft.storage.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
+import uk.tvidal.kraft.storage.index.IndexEntryRange
 import uk.tvidal.kraft.storage.testEntries
+import uk.tvidal.kraft.storage.testEntryBytes
 import uk.tvidal.kraft.storage.testRange
-import java.io.File
+import uk.tvidal.kraft.storage.write
+import uk.tvidal.kraft.storage.writeHeader
 import kotlin.test.assertEquals
 
-internal class KRaftDataTest : BaseFileTest() {
-
-    private val existing = KRaftData.open(existingFile)
-
-    /*
-        Test Script:
-        - Create new file
-            - Existing File
-        - Open existing
-            - Invalid Header
-        - Release
-            - Read After Release
-            - Append After Release
-
-        - Append
-            - Without available space
-        - Read single
-        - Read range
-        - Rebuild Index
-        - Close (Commit/Truncate/Discard)
-            - Write after closed
-            - Truncate after closed
-
-        Test File:
-        - Fixed size entries
-        - 10 entries per file
-
-        Validate State changes:
-        - firstIndex, lastIndex, range
-        - fileState (immutable, committed)
-     */
-
-    @AfterEach
-    internal fun tearDown() {
-        existing.buffer.buffer.release()
-    }
+internal class KRaftDataTest {
 
     @Test
-    internal fun `can read entries from file`() {
-        assertEquals(testEntries, existing[testRange])
-    }
-
-    @Test
-    internal fun `prevent opening of non existing file`() {
-        val file = File("$dir/testOpen.kr")
-        if (file.exists()) file.delete()
-
+    internal fun `cannot open with empty buffer`() {
         assertThrows<IllegalStateException> {
-            KRaftData.open(file)
+            KRaftData(ByteBufferStream(0))
         }
     }
 
     @Test
-    internal fun `prevent creation of existing file`() {
-        val file = File("$dir/testCreate.kr")
-        createDataFile(file)
+    internal fun `cannot open if buffer has no header`() {
         assertThrows<IllegalStateException> {
-            KRaftData.create(file)
+            KRaftData(ByteBufferStream())
         }
     }
 
     @Test
-    internal fun `read the header after open`() {
-        val file = File("$dir/testReadHeader.kr")
-        createDataFile(file, 33)
-
-        KRaftData.open(file).also {
-            assertEquals(33L, it.firstIndex)
-            assertEquals(11, it.size)
-            assertEquals(ACTIVE, it.state)
+    internal fun `cannot open with corrupted header`() {
+        val buffer = ByteBufferStream()
+        buffer {
+            putLong(Long.MAX_VALUE)
+            putInt(Int.MAX_VALUE)
+            put("NewCorruptedHeader".toByteArray())
+        }
+        assertThrows<InvalidWireTypeException> {
+            KRaftData(buffer)
         }
     }
 
     @Test
-    internal fun `test write entries to file`() {
-        val file = File("$dir/testAppend.kr")
-        val entries = entries(
-            entryOf("ABC"),
-            entryOf(2L),
-            entryOf("MyTest"),
-            entryOf(5L),
-            entryOf("DataDataData"),
-            entryOf(0xDEAD_EEL)
-        )
-
-        var index = 1L
-        var offset = FILE_INITIAL_POSITION
-        KRaftData.create(file).append(entries).forEach {
-            assertEquals(index++, it.index)
-            assertEquals(offset, it.offset)
-            offset += it.bytes
-        }
+    internal fun `returns an empty range when cannot write`() {
+        val fileSize = FILE_INITIAL_POSITION + TEST_SIZE * testEntryBytes
+        val buffer = ByteBufferStream(fileSize).writeHeader()
+        val data = KRaftData(buffer)
+        assertEquals(testRange, actual = data.write())
+        assertEquals(IndexEntryRange.EMPTY, actual = data.write())
     }
 
-    companion object {
-        val existingFile = File("$dir/existingDataFile.kr")
+    @Nested
+    inner class OperationsTests {
 
-        @JvmStatic
-        @BeforeAll
-        internal fun setUp() {
-            createDataFile(existingFile)
+        val buffer = ByteBufferStream()
+            .writeHeader()
+
+        val data = KRaftData(buffer)
+
+        @Test
+        internal fun `can read a range of entries`() {
+            assertEquals(testRange, actual = data.write())
+            assertState(1L..11, ACTIVE)
+
+            assertEquals(testEntries, actual = data[testRange])
+        }
+
+        @Test
+        internal fun `can read a single entry`() {
+            val index = data.write().toList()
+            val entries = testEntries.toList()
+            assertEquals(entries[3], actual = data[index[3]])
+            assertEquals(entries[7], actual = data[index[7]])
+        }
+
+        @Test
+        internal fun `read the header after open`() {
+            assertState(1L..0, ACTIVE)
+        }
+
+        @Test
+        internal fun `test write entries to file`() {
+            val entries = entries(
+                entryOf("ABC"),
+                entryOf(2L),
+                entryOf("MyTest"),
+                entryOf(5L),
+                entryOf("DataDataData"),
+                entryOf(0xDEAD_EEL)
+            )
+
+            var index = data.lastIndex + 1
+            var offset = buffer.position
+            data.append(entries).forEach {
+                assertEquals(index++, it.index)
+                assertEquals(offset, it.offset)
+                offset += it.bytes
+            }
+            assertState(1L..6)
+        }
+
+        @Test
+        internal fun `can rebuild index from data`() {
+            data.write()
+            assertEquals(testRange.toList(), actual = data.rebuildIndex().toList())
+        }
+
+        fun assertState(
+            range: LongRange? = null,
+            state: FileState? = null
+        ) {
+            if (range != null) {
+                assertEquals(range, actual = data.range)
+                assertEquals(range.first, actual = data.firstIndex)
+                assertEquals(range.start, actual = data.firstIndex)
+                assertEquals(range.last, actual = data.lastIndex)
+                assertEquals(range.endInclusive, actual = data.lastIndex)
+                assertEquals(range.last - range.first + 1, actual = data.size.toLong())
+            }
+
+            if (state != null) {
+                assertEquals(state, actual = data.state)
+            }
         }
     }
 }

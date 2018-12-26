@@ -1,8 +1,13 @@
 package uk.tvidal.kraft.storage
 
+import uk.tvidal.kraft.FIRST_INDEX
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
+import uk.tvidal.kraft.storage.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.config.FileStorageConfig
 import java.io.File
 import java.nio.ByteBuffer
@@ -48,3 +53,33 @@ fun fileStorage(
 ) = KRaftFileStorage(
     FileStorageConfig(dir.toPath(), name, size)
 )
+
+fun FileHeader.isValid(): Boolean = hasMagicNumber() && magicNumber == KRAFT_MAGIC_NUMBER
+
+fun ByteBufferStream.readHeader(): FileHeader = this {
+    position = 0
+    FileHeader.parseDelimitedFrom(input)
+}
+
+fun ByteBufferStream.writeHeader(
+    firstIndex: Long = FIRST_INDEX,
+    entryCount: Int = 0,
+    state: FileState = ACTIVE,
+    offset: Int = position
+): ByteBufferStream = this {
+
+    val actualOffset = if (isEmpty || offset == 0) FILE_INITIAL_POSITION else offset
+
+    position = 0
+    FileHeader.newBuilder()
+        .setMagicNumber(KRAFT_MAGIC_NUMBER)
+        .setFirstIndex(firstIndex)
+        .setEntryCount(entryCount)
+        .setOffset(actualOffset)
+        .setState(state)
+        .build()
+        .writeDelimitedTo(output)
+
+    position = actualOffset
+    this@writeHeader
+}
