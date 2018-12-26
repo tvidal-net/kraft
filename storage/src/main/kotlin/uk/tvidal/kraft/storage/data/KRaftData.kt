@@ -20,9 +20,9 @@ import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.index.IndexEntryRange
 import java.io.File
 
-class KRaftData private constructor(
-    val buffer: ByteBufferStream
-) : MutableIndexRange, DataFileState {
+class KRaftData internal constructor(
+    val buffer: ByteBufferStream = ByteBufferStream()
+) : MutableIndexRange, DataFile {
 
     internal companion object : KRaftLogging() {
 
@@ -178,6 +178,8 @@ class KRaftData private constructor(
     }
 
     fun close(state: FileState) = writeHeader(newState = state)
+
+    override fun release() = buffer.release()
 
     override fun toString() = "DataFile[($range) $state size=$size]"
 }

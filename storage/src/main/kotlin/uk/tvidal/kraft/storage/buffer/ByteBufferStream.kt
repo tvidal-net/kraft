@@ -8,11 +8,18 @@ import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.util.Stack
 
-class ByteBufferStream(val buffer: ByteBuffer) {
+class ByteBufferStream(buffer: ByteBuffer) {
 
     constructor(size: Int = 1024) : this(ByteBuffer.allocate(size))
 
     constructor(file: File, size: Long) : this(openMemoryMappedFile(file, size))
+
+    companion object {
+        private val emptyBuffer = ByteBuffer.allocate(0)
+    }
+
+    var buffer: ByteBuffer = buffer
+        private set
 
     val input: InputStream = ByteBufferInputStream()
     val output: OutputStream = ByteBufferOutputStream()
@@ -35,6 +42,13 @@ class ByteBufferStream(val buffer: ByteBuffer) {
     fun force() {
         val mappedByteBuffer = buffer as? MappedByteBuffer
         mappedByteBuffer?.force()
+    }
+
+    fun release() {
+        // remove the reference to the byteBuffer when releasing
+        val oldBuffer = buffer
+        buffer = emptyBuffer
+        oldBuffer.release()
     }
 
     private val mark = Stack<Int>()

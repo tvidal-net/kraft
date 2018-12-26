@@ -5,8 +5,8 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.storage.config.FileName
 import uk.tvidal.kraft.storage.config.FileStorageConfig
+import uk.tvidal.kraft.storage.data.DataFile
 import uk.tvidal.kraft.storage.data.KRaftData
-import uk.tvidal.kraft.storage.data.DataFileState
 import uk.tvidal.kraft.storage.index.KRaftIndex
 import java.io.File
 
@@ -15,7 +15,7 @@ class KRaftFile internal constructor(
     name: FileName,
     config: FileStorageConfig
 ) : ChainNode<KRaftFile>,
-    DataFileState by dataFile,
+    DataFile by dataFile,
     MutableIndexRange by dataFile {
 
     var fileName: FileName = name

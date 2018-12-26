@@ -4,7 +4,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 
-interface DataFileState {
+interface DataFile {
 
     val state: FileState
 
@@ -15,4 +15,6 @@ interface DataFileState {
         get() = state == COMMITTED
 
     fun truncateAt(index: Long)
+
+    fun release()
 }

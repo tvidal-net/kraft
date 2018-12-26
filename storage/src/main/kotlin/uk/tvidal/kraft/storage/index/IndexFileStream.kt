@@ -4,9 +4,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import java.io.File
 import java.io.OutputStream
 
-class IndexFileStream(
-    val file: File
-) : IndexFile {
+class IndexFileStream internal constructor(val file: File) : IndexFile {
 
     private var outputStream: OutputStream? = null
 
