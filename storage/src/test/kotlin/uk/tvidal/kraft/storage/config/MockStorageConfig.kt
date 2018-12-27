@@ -1,8 +1,6 @@
 package uk.tvidal.kraft.storage.config
 
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.buffer.ByteBufferStream
@@ -40,7 +38,10 @@ internal fun mockFileConfig(
         every { it.fileLength } returns size
         every { it.data } returns data
         every { it.index } returns index
-        every { it.close(any()) } just Runs
+        every { it.close(any()) } answers {
+            index.close()
+            data.close(firstArg())
+        }
     }
 }
 

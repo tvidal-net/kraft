@@ -35,5 +35,5 @@ class KRaftFile internal constructor(private val file: FileConfig) :
 
     fun close(state: FileState) = file.close(state)
 
-    override fun toString() = "[$range $state ${file.name}]"
+    override fun toString() = "${file.name}/$state::$range"
 }

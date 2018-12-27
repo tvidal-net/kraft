@@ -25,7 +25,9 @@ internal class KRaftFileStorageTest : BaseFileTest() {
             assertEquals(TEST_SIZE * 3L, actual = index)
 
             // truncate the current file
-            storage.write(TEST_SIZE - 1, index)
+            index = storage.write(1, index)
+
+            storage.write(1, index - TEST_SIZE * 2)
         }
     }
 

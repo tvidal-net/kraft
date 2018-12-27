@@ -1,9 +1,9 @@
 package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.FIRST_INDEX
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.CLOSED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
-import uk.tvidal.kraft.storage.config.FileName
 import uk.tvidal.kraft.storage.config.FileStorageConfig
 import java.util.TreeMap
 
@@ -16,7 +16,7 @@ class KRaftFileStorage(
     internal val files = TreeMap<LongRange, KRaftFile>(longRangeComparator)
         .apply { putAll(config.listFiles()) }
 
-    internal lateinit var currentFile: KRaftFile
+    internal var currentFile: KRaftFile
         private set
 
     override var firstLogIndex: Long = FIRST_INDEX
@@ -31,19 +31,20 @@ class KRaftFileStorage(
     init {
         log.info { "starting config=$config" }
         if (files.isNotEmpty()) {
-            val lastFile = files.lastEntry()
+            currentFile = files[files.lastKey()]!!
             firstLogIndex = files.firstKey().first
-            lastLogIndex = lastFile.key.last
+            lastLogIndex = currentFile.lastIndex
 
-            if (lastFile.value.immutable) {
-                createNewFile(nextLogIndex)
-                currentFile.prev = lastFile.value
-            } else {
-                files.remove(lastFile.key)
-                currentFile = lastFile.value
-            }
+            // file range can still change,
+            // so it should be removed from the list
+            if (currentFile.immutable) createNewFile()
+            else files.remove(currentFile.range)
         } else {
-            createNewFile(firstLogIndex, config.firstFileName)
+            // Empty directory, create the first file
+            currentFile = config.createFile(
+                name = config.firstFileName,
+                firstIndex = FIRST_INDEX
+            )
         }
     }
 
@@ -101,7 +102,7 @@ class KRaftFileStorage(
 
             if (appended < toAppend.size) {
                 // file is full, rotate
-                createNewFile(lastLogIndex + 1)
+                createNewFile()
             }
             toAppend -= appended
         }
@@ -109,51 +110,56 @@ class KRaftFileStorage(
     }
 
     private fun truncateAt(index: Long) {
-        if (index > nextLogIndex)
+        if (index > nextLogIndex) {
             throw IllegalStateException("Cannot truncate after the current file")
-
+        }
         while (index < currentFile.firstIndex) {
             val prev = currentFile.prev
+            discard()
             if (prev == null) {
-                if (index > FIRST_INDEX)
+                if (index > FIRST_INDEX) {
                     throw IllegalStateException("Cannot truncate behind the first file!")
-
-                createNewFile(index)
+                }
+                lastLogIndex = 0L
+                createNewFile()
                 return
             }
-            discard(currentFile)
             currentFile = prev
         }
         if (index in currentFile) {
             currentFile.truncateAt(index)
-            createNewFile(index)
+            lastLogIndex = index - 1
+            createNewFile()
         }
     }
 
-    private fun commit() {
+    private fun createNewFile() {
+        if (!currentFile.immutable)
+            currentFile.close(CLOSED)
+
+        val range = currentFile.range
+        files[range] = currentFile
+
+        val prev = currentFile
+        currentFile = config.createFile(
+            name = currentFile.nextFileName,
+            firstIndex = nextLogIndex
+        )
+        currentFile.prev = prev
+        prev.next = currentFile
+        log.info { "created file $currentFile" }
     }
 
-    private fun discard(file: KRaftFile) {
-        remove(file)
-        file.close(DISCARDED)
+    private fun discard() {
+        currentFile.close(DISCARDED)
+        remove(currentFile)
+        log.info { "discarded file $currentFile" }
     }
 
     private fun remove(file: KRaftFile) {
         file.removeFromChain()
         files.remove(file.range)
         log.info { "removed file $file" }
-    }
-
-    private fun createNewFile(firstIndex: Long, fileName: FileName = currentFile.nextFileName) {
-        if (firstIndex > FIRST_INDEX) {
-            val range = currentFile.range
-            files[range] = currentFile
-        }
-        currentFile = config.createFile(
-            name = fileName,
-            firstIndex = firstIndex
-        )
-        log.info { "created file $currentFile" }
     }
 
     override fun toString() = "($firstLogIndex..$lastLogIndex) file=$currentFile"

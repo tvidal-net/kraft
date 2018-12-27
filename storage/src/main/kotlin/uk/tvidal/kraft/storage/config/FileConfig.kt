@@ -34,9 +34,9 @@ internal class FileConfig(
     }
 
     internal fun close(state: FileState) {
-        if (state == DISCARDED && data.committed)
+        if (state == DISCARDED && data.committed) {
             throw IllegalStateException("Cannot discard a committed file!")
-
+        }
         index.close()
         data.close(state)
         name = name.rename(state, path)

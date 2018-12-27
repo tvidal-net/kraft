@@ -149,7 +149,6 @@ class KRaftData internal constructor(
     }
 
     fun close(state: FileState) {
-        ensureWritable()
         writeHeader(newState = state)
     }
 

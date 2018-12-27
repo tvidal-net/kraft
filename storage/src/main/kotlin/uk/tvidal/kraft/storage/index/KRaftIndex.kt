@@ -62,5 +62,5 @@ class KRaftIndex internal constructor(
         data.entries.removeIf { it.key !in range }
     }
 
-    override fun toString() = "$file[$range${if (file.isOpen) " open" else ""}]"
+    override fun toString() = "$file($range${if (file.isOpen) " open" else ""})"
 }
