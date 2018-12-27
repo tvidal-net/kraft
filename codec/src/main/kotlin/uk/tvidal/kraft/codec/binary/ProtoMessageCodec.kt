@@ -8,6 +8,7 @@ import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.codec.MessageCodec
 import uk.tvidal.kraft.codec.binary.BinaryCodec.MessageProto
 import uk.tvidal.kraft.codec.json.adapter.RaftNodeAdapter
+import uk.tvidal.kraft.message.DataMessage
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
@@ -15,7 +16,6 @@ import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
 import kotlin.reflect.KClass
-import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
 object ProtoMessageCodec {
@@ -39,12 +39,8 @@ object ProtoMessageCodec {
     }
 
     private fun MessageProto.Builder.setPayload(message: Message): MessageProto.Builder {
-        val payloadProperty = message::class
-            .memberProperties
-            .firstOrNull(::isPayloadProperty)
-
-        if (payloadProperty != null) {
-            val payload = payloadProperty.call(message) as KRaftEntries
+        if (message is DataMessage<*>) {
+            val payload = DataMessage<KRaftEntries>::data.call(message)
             payload.forEach { addEntries(it.toProto()) }
         }
         return this

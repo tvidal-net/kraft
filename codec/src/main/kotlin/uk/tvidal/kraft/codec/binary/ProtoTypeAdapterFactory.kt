@@ -5,8 +5,10 @@ import com.google.gson.TypeAdapter
 import com.google.gson.TypeAdapterFactory
 import com.google.gson.reflect.TypeToken
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.Payload
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSuperclassOf
 
 object ProtoTypeAdapterFactory : TypeAdapterFactory {
@@ -18,7 +20,7 @@ object ProtoTypeAdapterFactory : TypeAdapterFactory {
             val messageClass = kClass as KClass<out Message>
             val properties: Map<MessageProperty<*>, TypeAdapter<Any?>> = messageClass
                 .declaredMemberProperties
-                .filterNot(::isPayloadProperty)
+                .filter { it.findAnnotation<Payload>() == null }
                 .associateWith { gson.getAdapter(it) }
 
             val adapter = ProtoMessageAdapter(messageClass, properties)

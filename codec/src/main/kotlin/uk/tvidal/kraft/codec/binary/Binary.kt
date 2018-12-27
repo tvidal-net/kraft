@@ -13,14 +13,12 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.MessageProto
 import uk.tvidal.kraft.codec.binary.BinaryCodec.RaftNodeProto
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.message.Message
-import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 import java.util.UUID
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
-import kotlin.reflect.full.isSuperclassOf
 
 typealias MessageProperty<T> = KProperty1<out Message, T>
 
@@ -73,6 +71,3 @@ fun <T> Gson.getAdapter(property: KCallable<T>): TypeAdapter<T> =
 
 val TypeToken<*>.kotlin
     get() = (rawType as Class<*>).kotlin
-
-fun isPayloadProperty(property: KCallable<*>): Boolean =
-    KRaftEntries::class.isSuperclassOf(property.returnType.rawType)
