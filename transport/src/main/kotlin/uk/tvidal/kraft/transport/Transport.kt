@@ -14,11 +14,14 @@ val networkWriterThread = singleThreadPool("NetworkWriter")
 
 const val BASE_PORT = 1800
 
-fun localCluster(nodes: Collection<RaftNode>, basePort: Int = BASE_PORT): Map<RaftNode, InetSocketAddress> = nodes.associate {
+fun localCluster(
+    nodes: Collection<RaftNode>,
+    basePort: Int = BASE_PORT
+): Map<RaftNode, InetSocketAddress> = nodes.associate {
     it to InetSocketAddress(localNetworkSiteAddress, basePort + it.index)
 }
 
-fun networkTransportConfig(cluster: Map<RaftNode, InetSocketAddress>): List<NetworkTransportConfig> = cluster.map { (node, _) ->
+fun networkTransportConfig(cluster: Map<RaftNode, InetSocketAddress>) = cluster.map { (node, _) ->
     NetworkTransportConfig(node, cluster)
 }
 

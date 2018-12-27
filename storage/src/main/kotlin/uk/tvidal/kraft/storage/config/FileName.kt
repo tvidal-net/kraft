@@ -1,9 +1,9 @@
 package uk.tvidal.kraft.storage.config
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.io.File
 import java.nio.file.Path
@@ -52,8 +52,11 @@ data class FileName(
             return null
         }
 
-        fun isValidFileName(fileName: String): Boolean =
-            regex.matches(fileName.trim().toLowerCase())
+        fun isValidFileName(fileName: String, name: String): Boolean {
+            val lowerName = name.trim().toLowerCase()
+            return regex.matchEntire(fileName.trim().toLowerCase())
+                ?.let { it.groupValues[1] == lowerName } ?: false
+        }
     }
 
     val current: String

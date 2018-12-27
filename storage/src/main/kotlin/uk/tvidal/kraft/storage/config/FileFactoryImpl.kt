@@ -12,7 +12,8 @@ data class FileFactoryImpl(
 ) : FileFactory {
 
     override fun open() = path.toFile()
-        .list { _, name -> isValidFileName(name) }
+        .list { _, it -> isValidFileName(it, fileName) }
+        .orEmpty()
         .mapNotNull(FileName.Companion::parseFrom)
         .map(this::openFile)
         .also { createLinks(it) }
@@ -25,5 +26,5 @@ data class FileFactoryImpl(
         file = FileViewImpl(FileName(fileName, fileIndex), firstIndex, fileLength, path)
     )
 
-    override fun toString() = "${javaClass.simpleName}[$fileName fileLength=$fileLength path=$path]"
+    override fun toString() = "$fileName[fileLength=$fileLength path=$path]"
 }

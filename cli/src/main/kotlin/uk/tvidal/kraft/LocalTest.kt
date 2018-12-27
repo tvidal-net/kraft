@@ -3,11 +3,12 @@ package uk.tvidal.kraft
 import uk.tvidal.kraft.client.consumer.LOG_HEAD
 import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.server.registerStopServerShutdownHook
-import uk.tvidal.kraft.storage.RingBufferStorage
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
+import uk.tvidal.kraft.storage.fileStorage
 import uk.tvidal.kraft.transport.localCluster
 import uk.tvidal.kraft.transport.networkTransport
+import java.io.File
 import java.lang.Thread.sleep
 import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
@@ -17,11 +18,15 @@ private val random get() = ThreadLocalRandom.current()
 fun main(args: Array<String>) {
     logbackConsoleConfiguration()
 
+    val storagePath = File("/tmp/kraft")
+    if (storagePath.exists()) storagePath.deleteRecursively()
+    storagePath.mkdirs()
+
     val nodes = raftNodes(2)
     val cluster = raftCluster(nodes)
     val transport = networkTransport(nodes)
     val config = cluster.map {
-        KRaftServerConfig(it, transport[it.self]!!, RingBufferStorage())
+        KRaftServerConfig(it, transport[it.self]!!, fileStorage(it.self, storagePath.toPath()))
     }
     val server = singleThreadClusterServer(config)
     registerStopServerShutdownHook(server)

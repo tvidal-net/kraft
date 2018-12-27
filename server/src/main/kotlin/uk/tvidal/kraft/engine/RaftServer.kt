@@ -74,7 +74,7 @@ class RaftServer internal constructor(
             }
             val newRole = role.run(now, this)
             updateRole(now, newRole)
-        } catch (e: Error) {
+        } catch (e: Throwable) {
             updateRole(now, ERROR)
             throw e
         }

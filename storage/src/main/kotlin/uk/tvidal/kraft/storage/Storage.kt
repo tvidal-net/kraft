@@ -2,6 +2,7 @@ package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.MAGIC_NUMBER
+import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
@@ -10,17 +11,17 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.storage.config.FileFactoryImpl
-import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.zip.CRC32
 
 internal val MAGIC_NUMBER_PROTO: UniqueID = MAGIC_NUMBER
     .toProto()
 
-const val DEFAULT_FILE_NAME = "kraft"
 const val DEFAULT_FILE_SIZE = 1024L * 1024 // 1 MB
 const val INITIAL_OFFSET = 64 // allocate a few extra bytes for the header
 
-val DEFAULT_FILE_PATH = File(System.getProperty("user.dir"))
+val DEFAULT_FILE_PATH = Paths.get(System.getProperty("user.dir"))!!
 
 fun checksum(data: ByteArray): Int {
     val crc = CRC32()
@@ -40,11 +41,11 @@ internal val longRangeComparator = Comparator<LongRange> { a, b ->
 }
 
 fun fileStorage(
-    name: String = DEFAULT_FILE_NAME,
-    dir: File = DEFAULT_FILE_PATH,
+    node: RaftNode,
+    dir: Path = DEFAULT_FILE_PATH,
     size: Long = DEFAULT_FILE_SIZE
 ) = KRaftFileStorage(
-    FileFactoryImpl(name, size, dir.toPath())
+    FileFactoryImpl(node.name, size, dir)
 )
 
 fun FileHeader.isValid(): Boolean = hasMagicNumber() && magicNumber == MAGIC_NUMBER_PROTO

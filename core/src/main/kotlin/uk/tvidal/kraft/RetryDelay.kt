@@ -10,7 +10,8 @@ data class RetryDelay(
     val fallbackFactor: Double = 2.0
 ) {
     companion object {
-        val FOREVER = RetryDelay(0)
+        val FOREVER: RetryDelay
+            get() = RetryDelay(0)
     }
 
     var current: Long = initialDelay

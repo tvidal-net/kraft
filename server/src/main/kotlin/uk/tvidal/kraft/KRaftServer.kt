@@ -14,7 +14,7 @@ const val NOW = 0L
 const val BEFORE_LOG = 0L
 
 fun raftNodes(size: Int, clusterName: String = DEFAULT_CLUSTER_NAME): List<RaftNode> =
-    (0 until size).map { RaftNode(it, clusterName) }
+    (1..size).map { RaftNode(it, clusterName) }
 
 fun raftCluster(nodes: List<RaftNode>): List<RaftCluster> =
     (0 until nodes.size).map { RaftCluster(it, nodes) }

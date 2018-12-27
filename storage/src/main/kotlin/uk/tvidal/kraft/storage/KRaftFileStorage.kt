@@ -9,17 +9,20 @@ import java.util.TreeMap
 
 class KRaftFileStorage(
     val factory: FileFactory
-) : KRaftStorage {
+) : KRaftStorage,
+    MutableIndexRange {
 
     internal companion object : KRaftLogging()
 
     internal val files = TreeMap<LongRange, KRaftFile>(longRangeComparator)
 
-    override var firstLogIndex: Long = FIRST_INDEX
-        private set
+    override var range: LongRange = LongRange.EMPTY
 
-    override var lastLogIndex: Long = 0L
-        private set
+    override val firstLogIndex: Long
+        get() = range.first
+
+    override val lastLogIndex: Long
+        get() = range.last
 
     override var lastLogTerm: Long = 0L
         get() = termAt(lastLogIndex)
@@ -49,8 +52,7 @@ class KRaftFileStorage(
 
         if (files.isNotEmpty()) {
             currentFile = files[files.lastKey()]!!
-            firstLogIndex = files.firstKey().first
-            lastLogIndex = currentFile.lastIndex
+            range = LongRange(files.firstKey().first, currentFile.lastIndex)
 
             // file range can still change,
             // so it should be removed from the list
@@ -66,7 +68,9 @@ class KRaftFileStorage(
     }
 
     override fun read(fromIndex: Long, byteLimit: Int): KRaftEntries {
-        assert(fromIndex in firstLogIndex..lastLogIndex)
+        if (fromIndex == nextLogIndex) {
+            return emptyEntries()
+        }
         var entries = emptyEntries()
         var bytes = byteLimit
         var index = fromIndex
@@ -81,11 +85,9 @@ class KRaftFileStorage(
         return entries
     }
 
-    override fun termAt(index: Long): Long {
-        val file = fileSearch(index)
-        val entry = file[index]
-        return entry.term
-    }
+    override fun termAt(index: Long): Long =
+        if (index == 0L) 0L
+        else fileSearch(index)[index].term
 
     private fun fileSearch(index: Long): KRaftFile {
         val prev = currentFile.prev
@@ -112,7 +114,7 @@ class KRaftFileStorage(
         var toAppend = entries
         while (!toAppend.isEmpty) {
             val appended = currentFile.append(toAppend)
-            lastLogIndex += appended
+            lastIndex += appended
 
             if (appended < toAppend.size) {
                 // file is full, rotate
@@ -134,7 +136,7 @@ class KRaftFileStorage(
                 if (index > FIRST_INDEX) {
                     throw TruncateOutOfRangeException("Cannot truncate behind the first file!")
                 }
-                lastLogIndex = 0L
+                lastIndex = 0L
                 createNewFile()
                 return
             }
@@ -147,7 +149,7 @@ class KRaftFileStorage(
                 currentFile.truncateAt(index)
             } else discard()
 
-            lastLogIndex = index - 1
+            lastIndex = index - 1
             createNewFile()
         }
     }
