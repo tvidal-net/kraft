@@ -18,7 +18,7 @@ internal val MAGIC_NUMBER_PROTO: UniqueID = MAGIC_NUMBER
 
 const val DEFAULT_FILE_NAME = "kraft"
 const val DEFAULT_FILE_SIZE = 1024L * 1024 // 1 MB
-const val INITIAL_OFFSET = 48 // allocate a few bytes for the header
+const val INITIAL_OFFSET = 64 // allocate a few extra bytes for the header
 
 val DEFAULT_FILE_PATH = File(System.getProperty("user.dir"))
 
@@ -28,14 +28,23 @@ fun checksum(data: ByteArray): Int {
     return crc.value.toInt()
 }
 
-internal val indexEntryComparator: Comparator<IndexEntry> = Comparator { a, b -> (a.index - b.index).toInt() }
+internal val indexEntryComparator = Comparator<IndexEntry> { a, b -> (a.index - b.index).toInt() }
+
+internal val longRangeComparator = Comparator<LongRange> { a, b ->
+    when {
+        a == b -> 0
+        a.first > b.last -> 1
+        b.first > a.last -> -1
+        else -> throw IllegalStateException("Cannot compare colliding ranges!")
+    }
+}
 
 fun fileStorage(
-    dir: File = DEFAULT_FILE_PATH,
     name: String = DEFAULT_FILE_NAME,
+    dir: File = DEFAULT_FILE_PATH,
     size: Long = DEFAULT_FILE_SIZE
 ) = KRaftFileStorage(
-    FileStorageConfig(dir.toPath(), name, size)
+    FileStorageConfig(name, size, dir.toPath())
 )
 
 fun FileHeader.isValid(): Boolean = hasMagicNumber() && magicNumber == MAGIC_NUMBER_PROTO
@@ -48,11 +57,10 @@ fun ByteBufferStream.readHeader(): FileHeader = this {
 fun ByteBufferStream.writeHeader(
     firstIndex: Long = FIRST_INDEX,
     entryCount: Int = 0,
-    state: FileState = ACTIVE,
-    offset: Int = position
-): ByteBufferStream = this {
+    state: FileState = ACTIVE
+): ByteBufferStream = buffer.run {
 
-    val actualOffset = if (isEmpty || offset == 0) INITIAL_OFFSET else offset
+    val actualOffset = if (isEmpty || position == 0) INITIAL_OFFSET else position
 
     position = 0
     FileHeader.newBuilder()

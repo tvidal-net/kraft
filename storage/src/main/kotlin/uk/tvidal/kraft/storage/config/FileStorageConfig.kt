@@ -7,9 +7,9 @@ import uk.tvidal.kraft.storage.config.FileName.Companion.isValidFileName
 import java.nio.file.Path
 
 data class FileStorageConfig(
-    val path: Path,
     val fileName: String,
-    val fileSize: Long
+    val fileLength: Long,
+    val path: Path
 ) {
     internal val firstFileName: FileName
         get() = FileName(fileName)
@@ -22,13 +22,15 @@ data class FileStorageConfig(
         .associateBy(KRaftFile::range)
 
     internal fun openFile(name: FileName) = KRaftFile(
-        file = FileConfig(name, path, fileSize)
+        file = FileConfig(name, Long.MAX_VALUE, fileLength, path)
     )
 
     internal fun createFile(
         name: FileName = firstFileName,
         firstIndex: Long = FIRST_INDEX
     ) = KRaftFile(
-        file = FileConfig(name, path, fileSize, firstIndex)
+        file = FileConfig(name, firstIndex, fileLength, path)
     )
+
+    override fun toString() = "${javaClass.simpleName}[$fileName fileLength=$fileLength path=$path]"
 }

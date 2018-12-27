@@ -53,7 +53,13 @@ subprojects {
         testImplementation "io.mockk:mockk:$mockkVersion"
 
         // Log
+        testRuntimeOnly "org.slf4j:slf4j-api:$slf4jVersion"
         testRuntimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
+
+        // add :kraft-core:testRuntime to all other subprojects
+        if (name != 'kraft-test') {
+            testRuntimeOnly project(':kraft-test')
+        }
     }
 
     configurations.all {
@@ -71,5 +77,14 @@ subprojects {
                     'Implementation-Version': project.version
             )
         }
+    }
+
+    task testJar(type: Jar) {
+        classifier = 'test'
+        from sourceSets.test.output
+    }
+
+    artifacts {
+        testJar
     }
 }

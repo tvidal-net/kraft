@@ -5,18 +5,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
-import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
 import uk.tvidal.kraft.storage.index.IndexEntryRange
 import uk.tvidal.kraft.storage.testEntries
 import uk.tvidal.kraft.storage.testEntryBytes
-import uk.tvidal.kraft.storage.testFileBytes
+import uk.tvidal.kraft.storage.testFileLength
 import uk.tvidal.kraft.storage.testRange
 import uk.tvidal.kraft.storage.write
 import uk.tvidal.kraft.storage.writeHeader
@@ -56,7 +56,7 @@ internal class KRaftDataTest {
     @Test
     internal fun `returns an empty range when cannot write`() {
         val data = KRaftData(
-            ByteBufferStream(testFileBytes)
+            ByteBufferStream(testFileLength)
                 .writeHeader()
         )
         assertEquals(testRange, actual = data.write())
@@ -66,11 +66,17 @@ internal class KRaftDataTest {
     @Test
     internal fun `returns a partial range if cannot write everything`() {
         val data = KRaftData(
-            ByteBufferStream(testFileBytes - (testEntryBytes * 2.5).toInt())
+            ByteBufferStream(testFileLength - (testEntryBytes * 2.5).toInt())
                 .writeHeader()
         )
         val expected = testRange.take(8)
         assertEquals(expected, actual = data.write().toList())
+    }
+
+    @Test
+    internal fun `create a file from an arbitrary position`() {
+        val data = KRaftData(ByteBufferStream().writeHeader(15L))
+        assertEquals(15L, actual = data.firstIndex)
     }
 
     @Nested

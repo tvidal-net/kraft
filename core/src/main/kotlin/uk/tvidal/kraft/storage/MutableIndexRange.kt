@@ -16,6 +16,12 @@ interface MutableIndexRange : ClosedRange<Long> {
             range = firstIndex..newLast
         }
 
+    var size: Int
+        get() = (lastIndex - firstIndex + 1).toInt()
+        set (newSize) {
+            lastIndex = firstIndex + newSize - 1
+        }
+
     override val start: Long
         get() = range.first
 

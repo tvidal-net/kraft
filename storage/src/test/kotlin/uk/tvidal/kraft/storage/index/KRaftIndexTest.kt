@@ -1,10 +1,9 @@
 package uk.tvidal.kraft.storage.index
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import uk.tvidal.kraft.storage.INITIAL_OFFSET
+import uk.tvidal.kraft.storage.TEST_SIZE
 import uk.tvidal.kraft.storage.indexRange
-import uk.tvidal.kraft.storage.mock.MockIndexFile
 import uk.tvidal.kraft.storage.rangeOf
 import uk.tvidal.kraft.storage.testEntryBytes
 import uk.tvidal.kraft.storage.testRange
@@ -15,7 +14,6 @@ import kotlin.test.assertTrue
 internal class KRaftIndexTest {
 
     val indexFile = MockIndexFile()
-
     val index = KRaftIndex(indexFile)
 
     @Test
@@ -52,19 +50,6 @@ internal class KRaftIndexTest {
     }
 
     @Test
-    internal fun `ensure appended data has a valid index`() {
-        index.use {
-            val firstRange = indexRange(10, 1L)
-            it.append(firstRange)
-
-            val newRange = indexRange(10, 15)
-            assertThrows<IllegalArgumentException> {
-                it.append(newRange)
-            }
-        }
-    }
-
-    @Test
     internal fun `returns the last index on append`() {
         index.use {
             val range3 = indexRange(3)
@@ -73,19 +58,6 @@ internal class KRaftIndexTest {
             val offset = INITIAL_OFFSET + range3.bytes
             val range7 = indexRange(7, 4, offset)
             assertEquals(7, actual = it.append(range7))
-        }
-    }
-
-    @Test
-    internal fun `ensure appended data has a valid offset`() {
-        index.use {
-            val firstRange = indexRange(10, 1L)
-            it.append(firstRange)
-
-            val newRange = indexRange(10, 11)
-            assertThrows<IllegalArgumentException> {
-                it.append(newRange)
-            }
         }
     }
 
@@ -123,6 +95,15 @@ internal class KRaftIndexTest {
             it.truncateAt(1L)
             assertEquals(IndexEntryRange.EMPTY, actual = read())
         }
+    }
+
+    @Test
+    internal fun `can append to an arbitrary index on empty index`() {
+        val firstIndex = 1801L
+        val range = indexRange(TEST_SIZE, firstIndex)
+        val appended = index.append(range)
+        assertEquals(TEST_SIZE, actual = appended)
+        assertEquals(firstIndex, actual = index.firstIndex)
     }
 
     private fun read(fromIndex: Long = index.firstIndex, byteLimit: Int = Int.MAX_VALUE) = index.read(fromIndex, byteLimit)

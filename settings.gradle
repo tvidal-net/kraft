@@ -6,6 +6,7 @@ include ':codec'
 include ':core'
 include ':server'
 include ':storage'
+include ':test'
 include ':transport'
 include ':local'
 

@@ -51,5 +51,5 @@ class IndexEntryRange(
         else -> range == other.range && bytes == other.bytes
     }
 
-    override fun toString() = "IndexRange[($range) size=$size bytes=$bytes]"
+    override fun toString() = "IndexRange[$range size=$size bytes=$bytes]"
 }

@@ -12,7 +12,7 @@ const val TEST_SIZE = 11
 
 val testEntry = entryOf("12345678901", 11L)
 val testEntryBytes = computeSerialisedSize(testEntry.toProto())
-val testFileBytes = INITIAL_OFFSET + TEST_SIZE * testEntryBytes
+val testFileLength = INITIAL_OFFSET + TEST_SIZE * testEntryBytes
 
 val testEntries = (0 until TEST_SIZE)
     .map { testEntry }

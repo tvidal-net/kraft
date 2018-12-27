@@ -3,6 +3,11 @@ package uk.tvidal.kraft
 interface ChainNode<T : ChainNode<T>> {
     var next: T?
     var prev: T?
+
+    fun removeFromChain() {
+        next?.prev = prev
+        prev?.next = next
+    }
 }
 
 fun <T : ChainNode<T>> createLinks(items: Iterable<T>) {

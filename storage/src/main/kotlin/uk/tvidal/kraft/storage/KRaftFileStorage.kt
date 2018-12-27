@@ -13,9 +13,11 @@ class KRaftFileStorage(
 
     internal companion object : KRaftLogging()
 
-    internal val files = TreeMap<LongRange, KRaftFile>(config.listFiles())
+    internal val files = TreeMap<LongRange, KRaftFile>(longRangeComparator)
+        .apply { putAll(config.listFiles()) }
 
     internal lateinit var currentFile: KRaftFile
+        private set
 
     override var firstLogIndex: Long = FIRST_INDEX
         private set
@@ -27,6 +29,7 @@ class KRaftFileStorage(
         get() = termAt(lastLogIndex)
 
     init {
+        log.info { "starting config=$config" }
         if (files.isNotEmpty()) {
             val lastFile = files.lastEntry()
             firstLogIndex = files.firstKey().first
@@ -45,20 +48,6 @@ class KRaftFileStorage(
     }
 
     override fun commit(commitIndex: Long) {
-    }
-
-    override fun append(entries: KRaftEntries, fromIndex: Long): Long {
-        truncateAt(fromIndex)
-        var index = fromIndex
-        var toAppend = entries
-        while (!toAppend.isEmpty) {
-            val appended = currentFile.append(toAppend)
-            toAppend -= appended
-            index += appended
-        }
-        lastLogIndex = index
-        assert(lastLogIndex == currentFile.range.last)
-        return lastLogIndex
     }
 
     override fun read(fromIndex: Long, byteLimit: Int): KRaftEntries {
@@ -103,12 +92,27 @@ class KRaftFileStorage(
         throw IllegalArgumentException("Could not find file containing entry: $index")
     }
 
+    override fun append(entries: KRaftEntries, fromIndex: Long): Long {
+        truncateAt(fromIndex)
+        var toAppend = entries
+        while (!toAppend.isEmpty) {
+            val appended = currentFile.append(toAppend)
+            lastLogIndex += appended
+
+            if (appended < toAppend.size) {
+                // file is full, rotate
+                createNewFile(lastLogIndex + 1)
+            }
+            toAppend -= appended
+        }
+        return lastLogIndex
+    }
+
     private fun truncateAt(index: Long) {
         if (index > nextLogIndex)
-            throw IllegalStateException("Cannot truncate after he current file!")
+            throw IllegalStateException("Cannot truncate after the current file")
 
-        while (index < firstLogIndex) {
-            discard(currentFile)
+        while (index < currentFile.firstIndex) {
             val prev = currentFile.prev
             if (prev == null) {
                 if (index > FIRST_INDEX)
@@ -117,6 +121,7 @@ class KRaftFileStorage(
                 createNewFile(index)
                 return
             }
+            discard(currentFile)
             currentFile = prev
         }
         if (index in currentFile) {
@@ -125,13 +130,18 @@ class KRaftFileStorage(
         }
     }
 
+    private fun commit() {
+    }
+
     private fun discard(file: KRaftFile) {
+        remove(file)
         file.close(DISCARDED)
-        val next = file.next
-        if (next != null) next.prev = file.prev
-        val prev = (file.prev)
-        if (prev != null) prev.next = file.next
+    }
+
+    private fun remove(file: KRaftFile) {
+        file.removeFromChain()
         files.remove(file.range)
+        log.info { "removed file $file" }
     }
 
     private fun createNewFile(firstIndex: Long, fileName: FileName = currentFile.nextFileName) {
@@ -143,5 +153,8 @@ class KRaftFileStorage(
             name = fileName,
             firstIndex = firstIndex
         )
+        log.info { "created file $currentFile" }
     }
+
+    override fun toString() = "($firstLogIndex..$lastLogIndex) file=$currentFile"
 }

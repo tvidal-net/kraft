@@ -18,7 +18,9 @@ class KRaftEntries(
 
     operator fun plus(other: KRaftEntries) = KRaftEntries(data + other.data)
 
-    operator fun minus(count: Int) = if (count > data.size) KRaftEntries(data.drop(count)) else emptyEntries()
+    operator fun minus(count: Int) =
+        if (count < data.size) KRaftEntries(data.drop(count))
+        else emptyEntries()
 
     override fun iterator() = data.iterator()
 

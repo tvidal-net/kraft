@@ -1,7 +1,7 @@
 package uk.tvidal.kraft.storage.data
 
+import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
@@ -14,7 +14,6 @@ import uk.tvidal.kraft.storage.INITIAL_OFFSET
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 import uk.tvidal.kraft.storage.MutableIndexRange
-import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.index.IndexEntryRange
 import uk.tvidal.kraft.storage.isValid
@@ -32,16 +31,10 @@ class KRaftData internal constructor(
             ByteBufferStream(file, file.length())
         )
 
-        fun create(file: File, fileSize: Long = 1024L, firstIndex: Long = 1L) = KRaftData(
-            ByteBufferStream(file, fileSize)
+        fun create(file: File, fileLength: Long, firstIndex: Long) = KRaftData(
+            ByteBufferStream(file, fileLength)
                 .writeHeader(firstIndex)
         )
-    }
-
-    init {
-        if (!validateHeader()) {
-            throw IllegalStateException("Invalid file header: $this")
-        }
     }
 
     override var range: LongRange = LongRange.EMPTY
@@ -49,8 +42,11 @@ class KRaftData internal constructor(
     override var state: FileState = ACTIVE
         private set
 
-    var size: Int = 0
-        private set
+    init {
+        if (!validateHeader()) {
+            throw IllegalStateException("Invalid file header: $this")
+        }
+    }
 
     operator fun get(range: IndexEntryRange): KRaftEntries = entries(
         range.map { get(it) }
@@ -125,10 +121,10 @@ class KRaftData internal constructor(
 
     private fun validateHeader(): Boolean {
         if (buffer.isEmpty) return false
-        val header = readHeader()
+        val header = buffer.readHeader()
         if (header.isValid()) {
-            size = header.entryCount
             firstIndex = header.firstIndex
+            size = header.entryCount
             state = header.state
             buffer.position = header.offset
             return true
@@ -136,23 +132,13 @@ class KRaftData internal constructor(
         return false
     }
 
-    private fun readHeader(): FileHeader {
-        val header = buffer.readHeader()
-        size = header.entryCount
-        range = header.firstIndex until header.firstIndex + size
-        state = header.state
-        return header
-    }
-
     private fun writeHeader(
         newSize: Int = size,
-        newState: FileState = state,
-        newFirstIndex: Long = firstIndex
+        newState: FileState = state
     ) {
         ensureWritable()
-        buffer.writeHeader(newFirstIndex, newSize, newState)
+        buffer.writeHeader(firstIndex, newSize, newState)
         size = newSize
-        range = newFirstIndex until newFirstIndex + newSize
         state = newState
     }
 
@@ -169,5 +155,5 @@ class KRaftData internal constructor(
 
     override fun release() = buffer.release()
 
-    override fun toString() = "DataFile[($range) $state size=$size]"
+    override fun toString() = "DataFile[$range $state size=$size available=${buffer.available}]"
 }

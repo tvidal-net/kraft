@@ -9,7 +9,7 @@ import uk.tvidal.kraft.storage.data.DataFile
 class KRaftFile internal constructor(private val file: FileConfig) :
     ChainNode<KRaftFile>,
     DataFile by file.data,
-    MutableIndexRange by file.index {
+    MutableIndexRange by file.data {
 
     override var next: KRaftFile? = null
 
@@ -35,5 +35,5 @@ class KRaftFile internal constructor(private val file: FileConfig) :
 
     fun close(state: FileState) = file.close(state)
 
-    override fun toString() = "File[($range) ${file.name} $state]"
+    override fun toString() = "[$range $state ${file.name}]"
 }

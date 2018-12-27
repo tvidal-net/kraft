@@ -1,6 +1,5 @@
 package uk.tvidal.kraft.storage.config
 
-import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.storage.data.KRaftData
@@ -10,9 +9,9 @@ import java.nio.file.Path
 
 internal class FileConfig(
     name: FileName,
-    val path: Path,
-    val size: Long,
-    val firstIndex: Long = FIRST_INDEX
+    val firstIndex: Long,
+    val fileLength: Long,
+    val path: Path
 ) {
     internal var name: FileName = name
         private set
@@ -22,7 +21,7 @@ internal class FileConfig(
 
     internal val data: KRaftData = file.let {
         if (it.exists()) KRaftData.open(file)
-        else KRaftData.create(file, size, firstIndex)
+        else KRaftData.create(file, fileLength, firstIndex)
     }
 
     internal val index = KRaftIndex(name.index(path))
@@ -42,4 +41,6 @@ internal class FileConfig(
         data.close(state)
         name = name.rename(state, path)
     }
+
+    override fun toString() = "$name[fromIndex=$firstIndex size=$fileLength]"
 }

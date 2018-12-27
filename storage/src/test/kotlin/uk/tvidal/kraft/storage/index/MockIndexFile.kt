@@ -1,7 +1,6 @@
-package uk.tvidal.kraft.storage.mock
+package uk.tvidal.kraft.storage.index
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
-import uk.tvidal.kraft.storage.index.IndexFile
 import uk.tvidal.kraft.storage.indexEntryComparator
 
 class MockIndexFile(entries: Collection<IndexEntry> = emptyList()) : IndexFile {

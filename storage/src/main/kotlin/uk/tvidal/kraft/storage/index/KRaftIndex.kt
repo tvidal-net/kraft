@@ -50,11 +50,11 @@ class KRaftIndex internal constructor(
             .count()
 
     private fun append(entry: IndexEntry) {
-        validateEntry(entry)
         file.write(entry)
-
-        data[entry.index] = entry
-        lastIndex++
+        val index = entry.index
+        data[index] = entry
+        if (range.isEmpty()) range = index..index
+        else lastIndex++
     }
 
     fun truncateAt(index: Long) {
@@ -62,19 +62,5 @@ class KRaftIndex internal constructor(
         data.entries.removeIf { it.key !in range }
     }
 
-    private fun validateEntry(entry: IndexEntry) {
-        val index = firstIndex + data.size
-
-        if (entry.index != index)
-            throw IllegalArgumentException("Invalid Entry Index: expected=$index actual=${entry.index}")
-
-        if (data.isNotEmpty()) {
-            val last = data[range.last]!!
-            val offset = last.offset + last.bytes
-            if (entry.offset != offset)
-                throw IllegalArgumentException("Invalid Entry Offset: expected=$offset actual=${entry.offset}")
-        }
-    }
-
-    override fun toString() = "IndexFile[($range) open=${file.isOpen}]"
+    override fun toString() = "$file[$range${if (file.isOpen) " open" else ""}]"
 }
