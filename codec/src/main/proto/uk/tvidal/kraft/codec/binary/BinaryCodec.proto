@@ -2,6 +2,15 @@ syntax = "proto3";
 
 package uk.tvidal.kraft.codec.binary;
 
+message MessageProto {
+    string message_type = 1;
+    int32 version = 2;
+    RaftNodeProto from = 3;
+    int64 term = 4;
+    string message = 5;
+    repeated DataEntry entries = 10;
+}
+
 message DataEntry {
     UniqueID id = 1;
     EntryType type = 2;
@@ -24,6 +33,12 @@ message FileHeader {
     int64 first_index = 4;
     int32 entry_count = 5;
     int32 offset = 6;
+}
+
+message RaftNodeProto {
+    bool client_node = 1;
+    int32 index = 2;
+    string cluster = 3;
 }
 
 message UniqueID {

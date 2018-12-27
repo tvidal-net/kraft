@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 
 object MessageCodec {
 
-    private val messageTypes = register(RaftMessageType.values()) +
+    val messageTypes = register(RaftMessageType.values()) +
         register(ClientMessageType.values()) +
         register(TransportMessageType.values())
 
