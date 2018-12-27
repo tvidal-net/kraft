@@ -2,7 +2,7 @@ package uk.tvidal.kraft.storage.config
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
@@ -60,7 +60,7 @@ internal class FileNameTest {
         @Test
         internal fun `renames the file correctly`() {
 
-            val active = FileName("name", 123, ACTIVE)
+            val active = FileName("name", 123, WRITABLE)
             active.current(path).createNewFile()
             assertFileExists(active)
 

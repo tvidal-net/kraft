@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
+import uk.tvidal.kraft.storage.CorruptedFileException
+import uk.tvidal.kraft.storage.ModifyCommittedFileException
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
 import uk.tvidal.kraft.storage.index.IndexEntryRange
@@ -28,14 +30,14 @@ internal class KRaftDataTest {
 
     @Test
     internal fun `cannot open with empty buffer`() {
-        assertThrows<IllegalStateException> {
+        assertThrows<CorruptedFileException> {
             KRaftData(ByteBufferStream(0))
         }
     }
 
     @Test
     internal fun `cannot open if buffer has no header`() {
-        assertThrows<IllegalStateException> {
+        assertThrows<CorruptedFileException> {
             KRaftData(ByteBufferStream())
         }
     }
@@ -90,7 +92,7 @@ internal class KRaftDataTest {
         @Test
         internal fun `can read a range of entries`() {
             assertEquals(testRange, actual = data.write())
-            data.assertState(1L..11, ACTIVE)
+            data.assertState(1L..11, WRITABLE)
 
             assertEquals(testEntries, actual = data[testRange])
         }
@@ -105,7 +107,7 @@ internal class KRaftDataTest {
 
         @Test
         internal fun `read the header after open`() {
-            data.assertState(1L..0, ACTIVE)
+            data.assertState(1L..0, WRITABLE)
         }
 
         @Test
@@ -155,7 +157,7 @@ internal class KRaftDataTest {
             assertTrue { data.immutable }
             data.assertState(1L..11, COMMITTED)
 
-            assertThrows<IllegalStateException> {
+            assertThrows<ModifyCommittedFileException> {
                 data.close(COMMITTED)
             }
         }
@@ -164,20 +166,12 @@ internal class KRaftDataTest {
         internal fun `truncates the file correctly`() {
             data.truncateAt(8L)
             data.assertState(1L..7, TRUNCATED)
-
-            assertThrows<IllegalStateException> {
-                data.truncateAt(6L)
-            }
         }
 
         @Test
         internal fun `discards the file correctly`() {
             data.close(DISCARDED)
             data.assertState(1L..11, DISCARDED)
-
-            assertThrows<IllegalStateException> {
-                data.close(DISCARDED)
-            }
         }
 
         @Test

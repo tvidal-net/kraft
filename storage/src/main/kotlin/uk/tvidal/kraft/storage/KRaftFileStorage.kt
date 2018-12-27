@@ -1,8 +1,8 @@
 package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.FIRST_INDEX
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.CLOSED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.config.FileFactory
 import java.util.TreeMap
@@ -99,7 +99,7 @@ class KRaftFileStorage(
                 else -> return files[range]!!
             }
         }
-        throw IllegalArgumentException("Could not find file containing entry: $index")
+        throw IndexOutOfRangeException("Could not find file containing entry: $index")
     }
 
     override fun append(entries: KRaftEntries, fromIndex: Long): Long {
@@ -120,23 +120,28 @@ class KRaftFileStorage(
 
     private fun truncateAt(index: Long) {
         if (index > nextLogIndex) {
-            throw IllegalStateException("Cannot truncate after the current file")
+            throw TruncateOutOfRangeException("Cannot truncate after the current file")
         }
         while (index < currentFile.firstIndex) {
             val prev = currentFile.prev
             discard()
             if (prev == null) {
                 if (index > FIRST_INDEX) {
-                    throw IllegalStateException("Cannot truncate behind the first file!")
+                    throw TruncateOutOfRangeException("Cannot truncate behind the first file!")
                 }
                 lastLogIndex = 0L
                 createNewFile()
                 return
             }
+            files.remove(prev.range)
             currentFile = prev
         }
         if (index in currentFile) {
-            currentFile.truncateAt(index)
+            if (index > currentFile.firstIndex) {
+                files.remove(currentFile.range)
+                currentFile.truncateAt(index)
+            } else discard()
+
             lastLogIndex = index - 1
             createNewFile()
         }
@@ -144,7 +149,7 @@ class KRaftFileStorage(
 
     private fun createNewFile() {
         if (!currentFile.immutable)
-            currentFile.close(CLOSED)
+            currentFile.close(TRUNCATED)
 
         val range = currentFile.range
         files[range] = currentFile

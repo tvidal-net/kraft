@@ -37,7 +37,7 @@ class KRaftFile internal constructor(
     fun close(state: FileState) {
         with(file) {
             if (state == DISCARDED && data.committed) {
-                throw IllegalStateException("Cannot discard a committed file!")
+                throw ModifyCommittedFileException("Cannot discard a committed file!")
             }
             index.close()
             data.close(state)

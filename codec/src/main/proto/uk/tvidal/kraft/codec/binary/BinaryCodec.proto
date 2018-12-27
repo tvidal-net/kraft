@@ -37,8 +37,7 @@ enum EntryType {
 
 enum FileState {
     COMMITTED = 0;
-    ACTIVE = 1;
-    CLOSED = 2;
+    WRITABLE = 1;
     TRUNCATED = 7;
     DISCARDED = 8;
 }

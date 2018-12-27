@@ -9,13 +9,13 @@ import kotlin.test.assertEquals
 internal class KRaftFileStorageTest {
 
     @Nested
-    inner class LifeCycle {
+    inner class EmptyDirectory {
+
         val config = mockFileStorageConfig()
         val storage = KRaftFileStorage(config)
 
         @Test
         internal fun `test storage lifecycle`() {
-            // append 5 files
             val count = TEST_SIZE * 2
             var index = storage.write(count)
             assertEquals(FIRST_INDEX, actual = storage.firstLogIndex)
@@ -27,7 +27,13 @@ internal class KRaftFileStorageTest {
             // truncate the current file
             index = storage.write(1, index)
 
-            storage.write(1, index - TEST_SIZE * 2)
+            storage.write(3, index - TEST_SIZE * 2)
+        }
+
+        @Test
+        internal fun `truncate file at first index`() {
+            storage.write(TEST_SIZE * 3)
+            storage.write(5, FIRST_INDEX)
         }
     }
 

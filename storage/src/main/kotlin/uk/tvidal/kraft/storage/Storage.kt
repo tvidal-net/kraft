@@ -5,7 +5,7 @@ import uk.tvidal.kraft.MAGIC_NUMBER
 import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileHeader
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
@@ -57,7 +57,7 @@ fun ByteBufferStream.readHeader(): FileHeader = this {
 fun ByteBufferStream.writeHeader(
     firstIndex: Long = FIRST_INDEX,
     entryCount: Int = 0,
-    state: FileState = ACTIVE
+    state: FileState = WRITABLE
 ): ByteBufferStream = buffer.run {
 
     val actualOffset = if (isEmpty || position == 0) INITIAL_OFFSET else position

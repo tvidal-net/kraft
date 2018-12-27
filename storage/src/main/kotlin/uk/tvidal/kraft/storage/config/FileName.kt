@@ -1,7 +1,7 @@
 package uk.tvidal.kraft.storage.config
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
@@ -11,7 +11,7 @@ import java.nio.file.Path
 data class FileName(
     val name: String,
     val fileIndex: Int = 1,
-    val state: FileState = ACTIVE
+    val state: FileState = WRITABLE
 ) : Comparable<FileName> {
 
     companion object : KRaftLogging() {
@@ -43,7 +43,7 @@ data class FileName(
                     return FileName(
                         name = match.groupValues[1],
                         fileIndex = match.groupValues[2].toInt(),
-                        state = extensionParse[match.groupValues[3]] ?: ACTIVE
+                        state = extensionParse[match.groupValues[3]] ?: WRITABLE
                     )
                 }
             } catch (e: Exception) {
@@ -63,7 +63,7 @@ data class FileName(
         get() = fullName(INDEX_FILE)
 
     val next: FileName
-        get() = copy(fileIndex = fileIndex + 1, state = ACTIVE)
+        get() = copy(fileIndex = fileIndex + 1, state = WRITABLE)
 
     fun current(path: Path): File = path.resolve(current).toFile()
 

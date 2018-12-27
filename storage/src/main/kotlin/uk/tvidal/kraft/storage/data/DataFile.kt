@@ -1,7 +1,7 @@
 package uk.tvidal.kraft.storage.data
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.COMMITTED
 
 interface DataFile {
@@ -9,7 +9,7 @@ interface DataFile {
     val state: FileState
 
     val immutable: Boolean
-        get() = state != ACTIVE
+        get() = state != WRITABLE
 
     val committed: Boolean
         get() = state == COMMITTED

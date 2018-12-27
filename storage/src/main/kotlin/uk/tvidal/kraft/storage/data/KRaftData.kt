@@ -3,17 +3,20 @@ package uk.tvidal.kraft.storage.data
 import uk.tvidal.kraft.buffer.ByteBufferStream
 import uk.tvidal.kraft.codec.binary.BinaryCodec.DataEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.computeSerialisedSize
 import uk.tvidal.kraft.codec.binary.entryOf
 import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.logging.KRaftLogging
+import uk.tvidal.kraft.storage.CorruptedFileException
 import uk.tvidal.kraft.storage.INITIAL_OFFSET
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
+import uk.tvidal.kraft.storage.ModifyCommittedFileException
 import uk.tvidal.kraft.storage.MutableIndexRange
+import uk.tvidal.kraft.storage.WriteToImmutableFileException
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.index.IndexEntryRange
 import uk.tvidal.kraft.storage.isValid
@@ -39,12 +42,12 @@ class KRaftData internal constructor(
 
     override var range: LongRange = LongRange.EMPTY
 
-    override var state: FileState = ACTIVE
+    override var state: FileState = WRITABLE
         private set
 
     init {
         if (!validateHeader()) {
-            throw IllegalStateException("Invalid file header: $this")
+            throw CorruptedFileException("Invalid file header: $this")
         }
     }
 
@@ -62,7 +65,13 @@ class KRaftData internal constructor(
 
     private fun ensureWritable() {
         if (immutable) {
-            throw IllegalStateException("Cannot modify files in $state state")
+            throw WriteToImmutableFileException("Cannot modify files in $state state")
+        }
+    }
+
+    private fun ensureNotCommitted() {
+        if (committed) {
+            throw ModifyCommittedFileException("Cannot modify files in $state state")
         }
     }
 
@@ -136,19 +145,19 @@ class KRaftData internal constructor(
         newSize: Int = size,
         newState: FileState = state
     ) {
-        ensureWritable()
         buffer.writeHeader(firstIndex, newSize, newState)
         size = newSize
         state = newState
     }
 
     override fun truncateAt(index: Long) {
-        ensureWritable()
+        ensureNotCommitted()
         val count = index - firstIndex
         writeHeader(count.toInt(), TRUNCATED)
     }
 
     fun close(state: FileState) {
+        ensureNotCommitted()
         writeHeader(newState = state)
     }
 
