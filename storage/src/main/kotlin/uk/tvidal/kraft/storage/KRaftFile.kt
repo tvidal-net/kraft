@@ -2,12 +2,13 @@ package uk.tvidal.kraft.storage
 
 import uk.tvidal.kraft.ChainNode
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.storage.config.FileConfig
-import uk.tvidal.kraft.storage.config.FileName
+import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
+import uk.tvidal.kraft.storage.config.FileView
 import uk.tvidal.kraft.storage.data.DataFile
 
-class KRaftFile internal constructor(private val file: FileConfig) :
-    ChainNode<KRaftFile>,
+class KRaftFile internal constructor(
+    val file: FileView
+) : ChainNode<KRaftFile>,
     DataFile by file.data,
     MutableIndexRange by file.data {
 
@@ -15,8 +16,8 @@ class KRaftFile internal constructor(private val file: FileConfig) :
 
     override var prev: KRaftFile? = null
 
-    val nextFileName: FileName
-        get() = file.name.next
+    val index: Int
+        get() = file.name.fileIndex
 
     operator fun get(index: Long): KRaftEntry {
         val range = file.index[index]
@@ -33,7 +34,16 @@ class KRaftFile internal constructor(private val file: FileConfig) :
         return file.data[range]
     }
 
-    fun close(state: FileState) = file.close(state)
+    fun close(state: FileState) {
+        with(file) {
+            if (state == DISCARDED && data.committed) {
+                throw IllegalStateException("Cannot discard a committed file!")
+            }
+            index.close()
+            data.close(state)
+            rename(state)
+        }
+    }
 
     override fun toString() = "${file.name}/$state::$range"
 }

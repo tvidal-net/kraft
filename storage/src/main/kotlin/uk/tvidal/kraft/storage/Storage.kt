@@ -9,7 +9,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.ACTIVE
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.codec.binary.toProto
-import uk.tvidal.kraft.storage.config.FileStorageConfig
+import uk.tvidal.kraft.storage.config.FileFactoryImpl
 import java.io.File
 import java.util.zip.CRC32
 
@@ -44,7 +44,7 @@ fun fileStorage(
     dir: File = DEFAULT_FILE_PATH,
     size: Long = DEFAULT_FILE_SIZE
 ) = KRaftFileStorage(
-    FileStorageConfig(name, size, dir.toPath())
+    FileFactoryImpl(name, size, dir.toPath())
 )
 
 fun FileHeader.isValid(): Boolean = hasMagicNumber() && magicNumber == MAGIC_NUMBER_PROTO

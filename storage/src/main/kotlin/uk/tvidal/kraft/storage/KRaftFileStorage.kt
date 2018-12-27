@@ -4,20 +4,16 @@ import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.CLOSED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.logging.KRaftLogging
-import uk.tvidal.kraft.storage.config.FileStorageConfig
+import uk.tvidal.kraft.storage.config.FileFactory
 import java.util.TreeMap
 
 class KRaftFileStorage(
-    val config: FileStorageConfig
+    val config: FileFactory
 ) : KRaftStorage {
 
     internal companion object : KRaftLogging()
 
     internal val files = TreeMap<LongRange, KRaftFile>(longRangeComparator)
-        .apply { putAll(config.listFiles()) }
-
-    internal var currentFile: KRaftFile
-        private set
 
     override var firstLogIndex: Long = FIRST_INDEX
         private set
@@ -28,8 +24,24 @@ class KRaftFileStorage(
     override var lastLogTerm: Long = 0L
         get() = termAt(lastLogIndex)
 
+    internal var lastFileIndex: Int
+        private set
+
+    internal var currentFile: KRaftFile
+        private set
+
     init {
         log.info { "starting config=$config" }
+        files.putAll(config.open())
+        lastFileIndex = files.values
+            .map(KRaftFile::index)
+            .max() ?: 0
+
+        files.entries
+            .map { it.value }
+            .filter { it.state == DISCARDED }
+            .forEach { remove(it) }
+
         if (files.isNotEmpty()) {
             currentFile = files[files.lastKey()]!!
             firstLogIndex = files.firstKey().first
@@ -41,10 +53,7 @@ class KRaftFileStorage(
             else files.remove(currentFile.range)
         } else {
             // Empty directory, create the first file
-            currentFile = config.createFile(
-                name = config.firstFileName,
-                firstIndex = FIRST_INDEX
-            )
+            currentFile = config.create(FIRST_INDEX, ++lastFileIndex)
         }
     }
 
@@ -141,9 +150,9 @@ class KRaftFileStorage(
         files[range] = currentFile
 
         val prev = currentFile
-        currentFile = config.createFile(
-            name = currentFile.nextFileName,
-            firstIndex = nextLogIndex
+        currentFile = config.create(
+            firstIndex = nextLogIndex,
+            fileIndex = ++lastFileIndex
         )
         currentFile.prev = prev
         prev.next = currentFile
@@ -159,6 +168,7 @@ class KRaftFileStorage(
     private fun remove(file: KRaftFile) {
         file.removeFromChain()
         files.remove(file.range)
+        file.release()
         log.info { "removed file $file" }
     }
 

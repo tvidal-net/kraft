@@ -6,7 +6,7 @@ import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.storage.config.mockFileStorageConfig
 import kotlin.test.assertEquals
 
-internal class KRaftFileStorageTest : BaseFileTest() {
+internal class KRaftFileStorageTest {
 
     @Nested
     inner class LifeCycle {

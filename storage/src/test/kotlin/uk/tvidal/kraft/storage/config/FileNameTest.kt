@@ -48,7 +48,7 @@ internal class FileNameTest {
     internal fun `next file returns the correct id`() {
         val name = FileName("test", 10)
         val next = name.next
-        assertEquals(11, actual = next.id)
+        assertEquals(11, actual = next.fileIndex)
         assertEquals("test-11.kr", actual = next.current)
     }
 

@@ -10,7 +10,7 @@ import java.nio.file.Path
 
 data class FileName(
     val name: String,
-    val id: Int = 1,
+    val fileIndex: Int = 1,
     val state: FileState = ACTIVE
 ) : Comparable<FileName> {
 
@@ -42,7 +42,7 @@ data class FileName(
                 if (match != null) {
                     return FileName(
                         name = match.groupValues[1],
-                        id = match.groupValues[2].toInt(),
+                        fileIndex = match.groupValues[2].toInt(),
                         state = extensionParse[match.groupValues[3]] ?: ACTIVE
                     )
                 }
@@ -63,14 +63,14 @@ data class FileName(
         get() = fullName(INDEX_FILE)
 
     val next: FileName
-        get() = copy(id = id + 1, state = ACTIVE)
+        get() = copy(fileIndex = fileIndex + 1, state = ACTIVE)
 
     fun current(path: Path): File = path.resolve(current).toFile()
 
     fun index(path: Path): File = path.resolve(index).toFile()
 
     private fun fullName(extension: String?): String =
-        String.format(FORMAT, name, id, extension ?: DATA_FILE).toLowerCase()
+        String.format(FORMAT, name, fileIndex, extension ?: DATA_FILE).toLowerCase()
 
     internal fun rename(state: FileState, path: Path): FileName {
         val new = copy(state = state)
@@ -78,7 +78,7 @@ data class FileName(
         return new
     }
 
-    override fun compareTo(other: FileName): Int = id.compareTo(other.id)
+    override fun compareTo(other: FileName): Int = fileIndex.compareTo(other.fileIndex)
 
     override fun toString() = current
 }

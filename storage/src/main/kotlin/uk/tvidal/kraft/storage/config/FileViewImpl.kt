@@ -1,30 +1,30 @@
 package uk.tvidal.kraft.storage.config
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
-import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.storage.data.KRaftData
 import uk.tvidal.kraft.storage.index.KRaftIndex
 import java.io.File
 import java.nio.file.Path
 
-internal class FileConfig(
+internal class FileViewImpl(
     name: FileName,
     val firstIndex: Long,
     val fileLength: Long,
     val path: Path
-) {
-    internal var name: FileName = name
+) : FileView {
+
+    override var name: FileName = name
         private set
 
     internal val file: File
         get() = name.current(path)
 
-    internal val data: KRaftData = file.let {
+    override val data: KRaftData = file.let {
         if (it.exists()) KRaftData.open(file)
         else KRaftData.create(file, fileLength, firstIndex)
     }
 
-    internal val index = KRaftIndex(name.index(path))
+    override val index = KRaftIndex(name.index(path))
 
     init {
         if (index.isEmpty() && !data.isEmpty()) {
@@ -33,12 +33,7 @@ internal class FileConfig(
         }
     }
 
-    internal fun close(state: FileState) {
-        if (state == DISCARDED && data.committed) {
-            throw IllegalStateException("Cannot discard a committed file!")
-        }
-        index.close()
-        data.close(state)
+    override fun rename(state: FileState) {
         name = name.rename(state, path)
     }
 
