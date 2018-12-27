@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
-import uk.tvidal.kraft.storage.config.mockFileConfig
+import uk.tvidal.kraft.storage.config.mockFile
 import kotlin.test.assertEquals
 
 internal class KRaftFileTest {
@@ -12,7 +12,7 @@ internal class KRaftFileTest {
     @Test
     internal fun `create a file from an arbitrary index`() {
         val firstIndex = 1801L
-        val config = mockFileConfig(firstIndex = firstIndex)
+        val config = mockFile(firstIndex)
         val file = KRaftFile(config)
         assertEquals(firstIndex, actual = file.firstIndex)
     }
@@ -20,7 +20,7 @@ internal class KRaftFileTest {
     @Nested
     inner class LifeCycle {
 
-        val config = mockFileConfig()
+        val config = mockFile()
         val file = KRaftFile(config)
 
         @Test

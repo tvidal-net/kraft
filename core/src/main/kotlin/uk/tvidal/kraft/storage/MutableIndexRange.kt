@@ -17,7 +17,7 @@ interface MutableIndexRange : ClosedRange<Long> {
         }
 
     var size: Int
-        get() = (lastIndex - firstIndex + 1).toInt()
+        get() = range.size
         set (newSize) {
             lastIndex = firstIndex + newSize - 1
         }

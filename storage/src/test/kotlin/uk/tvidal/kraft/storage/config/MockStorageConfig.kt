@@ -11,11 +11,13 @@ import uk.tvidal.kraft.storage.index.MockIndexFile
 import uk.tvidal.kraft.storage.testFileLength
 import uk.tvidal.kraft.storage.writeHeader
 
-private const val MOCK_FILE_NAME = "test"
+const val MOCK_FILE_NAME = "test"
 
-internal fun mockFileConfig(
-    fileName: FileName = FileName(MOCK_FILE_NAME),
-    firstIndex: Long = FIRST_INDEX
+internal fun mockFileName(fileIndex: Int = FIRST_INDEX.toInt()) = FileName(MOCK_FILE_NAME, fileIndex)
+
+internal fun mockFile(
+    firstIndex: Long = FIRST_INDEX,
+    fileName: FileName = mockFileName()
 ): FileView {
 
     val buffer = ByteBufferStream(testFileLength)
@@ -38,13 +40,13 @@ internal fun mockFileConfig(
     }
 }
 
-internal fun mockFileStorageConfig() = mockk<FileFactory>().also {
-    every { it.open() } returns emptyMap()
+internal fun mockFileFactory() = mockk<FileFactory>().also {
+    every { it.open() } returns emptyList()
     every { it.create(any(), any()) } answers {
         KRaftFile(
-            mockFileConfig(
-                fileName = FileName(MOCK_FILE_NAME, secondArg()),
-                firstIndex = firstArg()
+            mockFile(
+                firstIndex = firstArg(),
+                fileName = mockFileName(secondArg())
             )
         )
     }

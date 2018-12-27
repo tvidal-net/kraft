@@ -47,3 +47,6 @@ private fun Long.toByteArray() = with(allocate(LONG_BYTES)) {
     putLong(0, this@toByteArray)
     array()
 }
+
+val LongRange.size: Int
+    get() = (last - first + 1).toInt()

@@ -13,6 +13,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.storage.CorruptedFileException
 import uk.tvidal.kraft.storage.ModifyCommittedFileException
+import uk.tvidal.kraft.storage.TEST_SIZE
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
 import uk.tvidal.kraft.storage.index.IndexEntryRange
@@ -61,8 +62,8 @@ internal class KRaftDataTest {
             ByteBufferStream(testFileLength)
                 .writeHeader()
         )
-        assertEquals(testRange, actual = data.write())
-        assertEquals(IndexEntryRange.EMPTY, actual = data.write())
+        assertEquals(testRange, actual = data.write(TEST_SIZE))
+        assertEquals(IndexEntryRange.EMPTY, actual = data.write(TEST_SIZE))
     }
 
     @Test
@@ -72,7 +73,7 @@ internal class KRaftDataTest {
                 .writeHeader()
         )
         val expected = testRange.take(8)
-        assertEquals(expected, actual = data.write().toList())
+        assertEquals(expected, actual = data.write(TEST_SIZE).toList())
     }
 
     @Test
@@ -91,7 +92,7 @@ internal class KRaftDataTest {
 
         @Test
         internal fun `can read a range of entries`() {
-            assertEquals(testRange, actual = data.write())
+            assertEquals(testRange, actual = data.write(TEST_SIZE))
             data.assertState(1L..11, WRITABLE)
 
             assertEquals(testEntries, actual = data[testRange])
@@ -99,7 +100,7 @@ internal class KRaftDataTest {
 
         @Test
         internal fun `can read a single entry`() {
-            val index = data.write().toList()
+            val index = data.write(TEST_SIZE).toList()
             val entries = testEntries.toList()
             assertEquals(entries[3], actual = data[index[3]])
             assertEquals(entries[7], actual = data[index[7]])
@@ -142,7 +143,7 @@ internal class KRaftDataTest {
 
         @BeforeEach
         internal fun setUp() {
-            data.write()
+            data.write(TEST_SIZE)
         }
 
         @Test

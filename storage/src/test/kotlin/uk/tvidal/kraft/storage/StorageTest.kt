@@ -13,12 +13,13 @@ const val TEST_SIZE = 11
 val testEntry = entryOf("12345678901", 11L)
 val testEntryBytes = computeSerialisedSize(testEntry.toProto())
 val testFileLength = INITIAL_OFFSET + TEST_SIZE * testEntryBytes
-
-val testEntries = (0 until TEST_SIZE)
-    .map { testEntry }
-    .let { entries(it) }
-
+val testEntries = entries()
 val testRange = testEntries.toIndex()
+
+fun entries(size: Int = TEST_SIZE) = KRaftEntries(
+    (0 until size)
+        .map { testEntry }
+)
 
 fun rangeOf(vararg entries: IndexEntry) = rangeOf(entries.toList())
 
@@ -49,7 +50,9 @@ fun indexEntry(
     .setBytes(bytes)
     .build()
 
-fun KRaftData.write(entries: KRaftEntries = testEntries) = append(entries)
+fun KRaftData.write(count: Int) = append(entries(count))
+fun KRaftFile.write(count: Int) = append(entries(count))
+fun KRaftFileStorage.writeAt(fromIndex: Long, count: Int) = append(entries(count), fromIndex)
 
 fun KRaftEntries.toIndex(
     fromIndex: Long = FIRST_INDEX,

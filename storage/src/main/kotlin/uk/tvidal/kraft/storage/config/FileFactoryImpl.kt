@@ -16,7 +16,6 @@ data class FileFactoryImpl(
         .mapNotNull(FileName.Companion::parseFrom)
         .map(this::openFile)
         .also { createLinks(it) }
-        .associateBy(KRaftFile::range)
 
     private fun openFile(name: FileName) = KRaftFile(
         file = FileViewImpl(name, Long.MAX_VALUE, fileLength, path)

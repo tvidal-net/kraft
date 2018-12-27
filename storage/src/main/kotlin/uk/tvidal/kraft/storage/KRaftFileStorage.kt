@@ -8,7 +8,7 @@ import uk.tvidal.kraft.storage.config.FileFactory
 import java.util.TreeMap
 
 class KRaftFileStorage(
-    val config: FileFactory
+    val factory: FileFactory
 ) : KRaftStorage {
 
     internal companion object : KRaftLogging()
@@ -31,16 +31,21 @@ class KRaftFileStorage(
         private set
 
     init {
-        log.info { "starting config=$config" }
-        files.putAll(config.open())
-        lastFileIndex = files.values
+        log.info { "starting config=$factory" }
+        val allFiles = factory.open()
+        lastFileIndex = allFiles
             .map(KRaftFile::index)
             .max() ?: 0
 
-        files.entries
-            .map { it.value }
-            .filter { it.state == DISCARDED }
-            .forEach { remove(it) }
+        // remove discarded
+        files.putAll(
+            allFiles.filter {
+                if (it.discarded) {
+                    it.release()
+                    false
+                } else true
+            }.associateBy(KRaftFile::range)
+        )
 
         if (files.isNotEmpty()) {
             currentFile = files[files.lastKey()]!!
@@ -53,7 +58,7 @@ class KRaftFileStorage(
             else files.remove(currentFile.range)
         } else {
             // Empty directory, create the first file
-            currentFile = config.create(FIRST_INDEX, ++lastFileIndex)
+            currentFile = factory.create(FIRST_INDEX, ++lastFileIndex)
         }
     }
 
@@ -151,11 +156,13 @@ class KRaftFileStorage(
         if (!currentFile.immutable)
             currentFile.close(TRUNCATED)
 
-        val range = currentFile.range
-        files[range] = currentFile
+        if (!currentFile.discarded) {
+            val range = currentFile.range
+            files[range] = currentFile
+        }
 
         val prev = currentFile
-        currentFile = config.create(
+        currentFile = factory.create(
             firstIndex = nextLogIndex,
             fileIndex = ++lastFileIndex
         )
