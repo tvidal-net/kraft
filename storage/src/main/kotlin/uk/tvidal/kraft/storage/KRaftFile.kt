@@ -14,7 +14,7 @@ class KRaftFile internal constructor(
 ) : Closeable,
     ChainNode<KRaftFile>,
     DataFile by file.data,
-    MutableIndexRange by file.index {
+    MutableIndexRange by file.data {
 
     internal companion object : KRaftLogging()
 

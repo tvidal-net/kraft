@@ -1,5 +1,6 @@
 package uk.tvidal.kraft
 
+import uk.tvidal.kraft.ansi.AnsiColor.ORANGE
 import uk.tvidal.kraft.client.consumer.LOG_HEAD
 import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.logging.KRaftLogger
@@ -54,7 +55,7 @@ fun main(args: Array<String>) {
     // */
 
     consumer(serverNode to address, index = LOG_HEAD) {
-        log.debug { "received: ${it.data}" }
+        log.info { ORANGE.format("consumer fromIndex=${it.firstIndex} ${it.data}") }
         true
     }
 }

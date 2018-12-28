@@ -1,25 +1,24 @@
 package uk.tvidal.kraft.ansi
 
-val hasAnsiSupport by lazy { System.console() != null && terminalColors() > 2 }
+internal val ansiReset = tput("sgr0")
+internal val ansiBold = tput("bold")
 
-internal val ansiReset by lazy { tput("sgr0") }
-internal val ansiBold by lazy { tput("bold") }
+internal const val ESC: Char = 0x1B.toChar()
 
-internal const val ESC = 0x1B.toChar()
+val terminalRows: Int = tput("lines").toInt()
 
-fun terminalRows() = tput("lines").toInt()
+val terminalColumns: Int = tput("cols").toInt()
 
-fun terminalColumns() = tput("cols").toInt()
+val terminalColors: Int = tput("colors").toInt()
 
-fun terminalColors() = tput("colors").toInt()
+val hasAnsiSupport = System.console() != null && terminalColors > 2
 
-internal fun tput(vararg args: String) = exec("tput", *args)
+internal fun tput(vararg args: Any) = exec("tput", "-T", "xterm-256color", *args.map(Any::toString).toTypedArray())
 
-private fun exec(vararg args: String) = ProcessBuilder()
+private fun exec(vararg args: String): String = ProcessBuilder()
     .redirectErrorStream(true)
     .command(*args)
     .start()!!
     .inputStream
-    .reader()
-    .buffered()
+    .bufferedReader()
     .use { it.readLine() }

@@ -54,5 +54,6 @@ abstract class ClusterServer internal constructor(
     override fun close() {
         stop()
         nodes.forEach(AutoCloseable::close)
+        log.info { "done" }
     }
 }

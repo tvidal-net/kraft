@@ -2,6 +2,7 @@ package uk.tvidal.kraft.storage.index
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 
 class IndexFileStream internal constructor(val file: File) : IndexFile {
@@ -37,7 +38,7 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
 
     private fun ensureOpen() {
         if (outputStream == null) {
-            outputStream = file.outputStream()
+            outputStream = FileOutputStream(file, true)
         }
     }
 

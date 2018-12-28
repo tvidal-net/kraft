@@ -1,5 +1,6 @@
 package uk.tvidal.kraft.server
 
+import uk.tvidal.kraft.FOREVER
 import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.util.concurrent.atomic.AtomicReference
@@ -41,8 +42,7 @@ class SingleThreadClusterServer internal constructor(
             log.info { "Stopping..." }
             currentThread
                 .getAndSet(null)
-                ?.join()
-            log.info { "Done" }
+                ?.join(FOREVER)
         }
     }
 

@@ -3,6 +3,7 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
+import uk.tvidal.kraft.createLinks
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.config.FileFactory
 import java.io.Closeable
@@ -51,6 +52,7 @@ class KRaftFileStorage(
             }.associateBy(KRaftFile::range)
         )
         validateFileSequence()
+        createLinks(files.values)
 
         if (files.isNotEmpty()) {
             currentFile = files[files.lastKey()]!!
@@ -88,12 +90,12 @@ class KRaftFileStorage(
         var bytes = byteLimit
         var index = fromIndex
         var file: KRaftFile? = fileSearch(fromIndex)
-        while (file != null && bytes > 0) {
+        while (file != null) {
             entries += file.read(index, bytes)
-            if (entries.isEmpty) break // next entry can't fit
             index += entries.size
             bytes -= entries.bytes
-            file = file.next
+            file = if (entries.isEmpty || index in file) null
+            else file.next
         }
         return entries
     }
@@ -104,7 +106,7 @@ class KRaftFileStorage(
             val file = fileSearch(index)
             val entry = file[index]
             val term = entry.term
-            log.debug { "termAt index=$index term=$term file=$file" }
+            log.trace { "termAt index=$index term=$term file=$file" }
             term
         }
         else -> throw IndexOutOfRangeException("Index $index is not within the available range")
@@ -209,6 +211,7 @@ class KRaftFileStorage(
 
     override fun close() {
         files.values.forEach(Closeable::close)
+        currentFile.close()
         files.clear()
     }
 

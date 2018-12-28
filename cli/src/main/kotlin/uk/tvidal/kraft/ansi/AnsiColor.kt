@@ -1,6 +1,6 @@
 package uk.tvidal.kraft.ansi
 
-enum class AnsiColor(private val id: Int) {
+enum class AnsiColor(color: Int) {
 
     BLACK(0),
     RED(1),
@@ -9,10 +9,17 @@ enum class AnsiColor(private val id: Int) {
     BLUE(4),
     MAGENTA(5),
     CYAN(6),
-    WHITE(7);
+    WHITE(7),
+    ORANGE(208);
 
-    private val fg by lazy { tput("setaf", id.toString()) }
-    private val bg by lazy { tput("setab", id.toString()) }
+    val fg = tput("setaf", color)
+    val bg = tput("setab", color)
 
     fun format(text: String) = if (hasAnsiSupport) ansiBold + fg + text + ansiReset else text
+
+    companion object {
+        init {
+            System.err.println("ansi support: $hasAnsiSupport")
+        }
+    }
 }
