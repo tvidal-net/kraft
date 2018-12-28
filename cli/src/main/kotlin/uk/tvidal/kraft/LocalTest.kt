@@ -2,6 +2,7 @@ package uk.tvidal.kraft
 
 import uk.tvidal.kraft.client.consumer.LOG_HEAD
 import uk.tvidal.kraft.config.KRaftServerConfig
+import uk.tvidal.kraft.logging.KRaftLogger
 import uk.tvidal.kraft.server.registerStopServerShutdownHook
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
@@ -17,9 +18,9 @@ private val random get() = ThreadLocalRandom.current()
 
 fun main(args: Array<String>) {
     logbackConsoleConfiguration()
+    val log = KRaftLogger {}
 
     val storagePath = File("/tmp/kraft")
-    if (storagePath.exists()) storagePath.deleteRecursively()
     storagePath.mkdirs()
 
     val nodes = raftNodes(2)
@@ -48,12 +49,12 @@ fun main(args: Array<String>) {
         )
 
         producer.publish(data)
-        sleep(random.nextInt(30, 300).toLong())
+        sleep(random.nextInt(30, 50).toLong())
     }
     // */
 
     consumer(serverNode to address, index = LOG_HEAD) {
-        println("received: ${it.data}")
+        log.debug { "received: ${it.data}" }
         true
     }
 }

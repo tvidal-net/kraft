@@ -12,7 +12,7 @@ class DataWindow(
     private val data = LinkedList<InflightData>()
 
     val consumed: Int
-        get() = data.sumBy { it.bytes }
+        get() = data.sumBy(InflightData::bytes)
 
     val available: Int
         get() = total - consumed

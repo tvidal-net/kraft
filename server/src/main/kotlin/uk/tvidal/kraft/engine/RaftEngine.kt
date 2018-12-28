@@ -14,6 +14,7 @@ import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
 import uk.tvidal.kraft.message.raft.VoteMessage
+import uk.tvidal.kraft.monitor.GarbageCollectorListener
 import uk.tvidal.kraft.storage.flush
 import java.lang.System.currentTimeMillis
 import java.time.Instant
@@ -22,7 +23,11 @@ abstract class RaftEngine internal constructor(
     config: KRaftServerConfig
 ) : RaftState, RaftMessageSender {
 
-    private companion object : KRaftLogging()
+    private companion object : KRaftLogging() {
+        init {
+            GarbageCollectorListener.install()
+        }
+    }
 
     val clientNode: RaftNode = clientNode()
 
@@ -112,7 +117,10 @@ abstract class RaftEngine internal constructor(
                 resetElectionTimeout(now)
                 log.warn { "[$self] checkElectionTimeout check took too long ($delay ms), resetting" }
                 null
-            } else CANDIDATE
+            } else {
+                log.info { "election timeout has elapsed" }
+                CANDIDATE
+            }
         } else null
     } finally {
         lastElectionTimeChecked = now
