@@ -3,6 +3,7 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.ChainNode
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
+import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.config.FileView
 import uk.tvidal.kraft.storage.data.DataFile
@@ -22,8 +23,15 @@ class KRaftFile internal constructor(
     val index: Int
         get() = file.name.fileIndex
 
+    init {
+        val format = "%,d"
+        val bytes = String.format(format, file.data.buffer.position)
+        val available = String.format(format, file.data.buffer.available)
+        val size = String.format(format, file.data.size)
+        log.info { "$javaClassName $this size=$size bytes=$bytes available=$available" }
+    }
+
     operator fun get(index: Long): KRaftEntry {
-        log.debug { "get index=$index" }
         val range = file.index[index]
         return file.data[range]
     }
@@ -36,7 +44,7 @@ class KRaftFile internal constructor(
 
     fun read(fromIndex: Long, byteLimit: Int): KRaftEntries {
         val range = file.index.read(fromIndex, byteLimit)
-        log.debug { "read range=$range fromIndex=$fromIndex byteLimit=$byteLimit" }
+        log.debug { "read $this range=$range fromIndex=$fromIndex byteLimit=$byteLimit" }
         return file.data[range]
     }
 

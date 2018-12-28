@@ -14,12 +14,14 @@ data class ClientAppendMessage(
     @Payload
     override val data: KRaftEntries,
 
-    var relay: RaftNode? = null,
-    val id: UUID? = null
+    var relay: RaftNode? = null
 
 ) : AbstractClientMessage(CLIENT_APPEND), DataMessage {
 
-    override fun text() = "id=$id relay=$relay data=$data"
+    @Transient
+    val id: UUID? = data.id
+
+    override fun text() = "relay=$relay data=$data"
 
     override fun toString() = super.toString()
 }

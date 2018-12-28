@@ -1,8 +1,8 @@
 package uk.tvidal.kraft.codec
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.MessageProto
-import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.decode
-import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.encode
+import uk.tvidal.kraft.codec.binary.toMessage
+import uk.tvidal.kraft.codec.binary.toProto
 import uk.tvidal.kraft.codec.json.JsonMessageReader
 import uk.tvidal.kraft.codec.json.JsonMessageWriter
 import uk.tvidal.kraft.iterable
@@ -35,13 +35,15 @@ object MessageCodec {
     )
 
     fun binaryReader(stream: InputStream) = iterable {
-        decode(
-            MessageProto.parseDelimitedFrom(stream)
-        )
+        MessageProto
+            .parseDelimitedFrom(stream)
+            .toMessage()
     }
 
     fun binaryWriter(stream: OutputStream): (Message) -> Unit = {
-        encode(it).writeDelimitedTo(stream)
+        it.toProto()
+            .writeDelimitedTo(stream)
+
         stream.flush()
     }
 }

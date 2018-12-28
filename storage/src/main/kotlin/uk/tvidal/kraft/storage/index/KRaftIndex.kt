@@ -2,6 +2,8 @@ package uk.tvidal.kraft.storage.index
 
 import uk.tvidal.kraft.FIRST_INDEX
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
+import uk.tvidal.kraft.javaClassName
+import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.MutableIndexRange
 import java.io.Closeable
 import java.io.File
@@ -12,9 +14,15 @@ class KRaftIndex internal constructor(
 
     constructor(file: File) : this(IndexFileStream(file))
 
+    internal companion object : KRaftLogging()
+
     private val data = LinkedHashMap<Long, IndexEntry>()
 
     override var range = readFile()
+
+    init {
+        log.debug { this }
+    }
 
     private fun readFile(): LongRange {
         var first: Long? = null
@@ -29,7 +37,7 @@ class KRaftIndex internal constructor(
 
     operator fun get(index: Long): IndexEntry = data[index]!!
 
-    fun read(fromIndex: Long, byteLimit: Int): IndexEntryRange {
+    fun read(fromIndex: Long, byteLimit: Int): IndexEntryRange = try {
         val list = mutableListOf<IndexEntry>()
         var available = byteLimit
         var index = fromIndex
@@ -41,7 +49,10 @@ class KRaftIndex internal constructor(
                 list.add(entry)
             } else break
         }
-        return IndexEntryRange(list)
+        IndexEntryRange(list)
+    } catch (e: Exception) {
+        log.error { "read ${e.javaClassName}: $this fromIndex=$fromIndex byteLimit=$byteLimit message=${e.message}" }
+        throw e
     }
 
     fun append(range: Iterable<IndexEntry>): Int =

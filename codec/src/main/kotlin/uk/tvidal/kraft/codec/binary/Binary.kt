@@ -14,11 +14,14 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.RaftNodeProto
 import uk.tvidal.kraft.codec.binary.BinaryCodec.UniqueID
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.storage.KRaftEntry
+import java.lang.reflect.Modifier.TRANSIENT
 import java.util.UUID
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
+import kotlin.reflect.jvm.javaField
 
 typealias MessageProperty<T> = KProperty1<out Message, T>
 
@@ -60,6 +63,7 @@ fun computeSerialisedSize(entry: MessageLite): Int {
     return messageBytes + sizeBytes
 }
 
+fun Message.toProto() = ProtoMessageCodec.encode(this)
 fun MessageProto.toMessage() = ProtoMessageCodec.decode(this)
 
 val KType.rawType: KClass<*>
@@ -71,3 +75,6 @@ fun <T> Gson.getAdapter(property: KCallable<T>): TypeAdapter<T> =
 
 val TypeToken<*>.kotlin
     get() = (rawType as Class<*>).kotlin
+
+val KProperty<*>.isTransient: Boolean
+    get() = (javaField?.modifiers ?: 0) and TRANSIENT != 0

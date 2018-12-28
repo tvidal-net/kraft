@@ -6,7 +6,9 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.WRITABLE
 import uk.tvidal.kraft.logging.KRaftLogging
 import java.io.File
+import java.lang.String.CASE_INSENSITIVE_ORDER
 import java.nio.file.Path
+import kotlin.text.RegexOption.IGNORE_CASE
 
 data class FileName(
     val name: String,
@@ -16,6 +18,8 @@ data class FileName(
 
     companion object : KRaftLogging() {
 
+        private val COMPARATOR: Comparator<String> = CASE_INSENSITIVE_ORDER
+
         private const val FORMAT = "%s-%d%s"
 
         private const val DATA_FILE = ".kr"
@@ -24,7 +28,7 @@ data class FileName(
         private const val COMMITTED_EXT = ".c"
         private const val DISCARDED_EXT = ".d"
 
-        private val regex = Regex("(\\w+)-(\\d+)(\\.\\w)?$INDEX_FILE?$")
+        private val regex = Regex("(\\w+)-(\\d+)(\\.\\w)?($INDEX_FILE?)$", IGNORE_CASE)
 
         private val extensionParse = mapOf(
             COMMITTED_EXT to COMMITTED,
@@ -38,7 +42,7 @@ data class FileName(
 
         fun parseFrom(fileName: String): FileName? {
             try {
-                val match = regex.matchEntire(fileName.trim().toLowerCase())
+                val match = regex.matchEntire(fileName.toLowerCase())
                 if (match != null) {
                     return FileName(
                         name = match.groupValues[1],
@@ -53,10 +57,15 @@ data class FileName(
         }
 
         fun isValidFileName(fileName: String, name: String): Boolean {
-            val lowerName = name.trim().toLowerCase()
-            return regex.matchEntire(fileName.trim().toLowerCase())
-                ?.let { it.groupValues[1] == lowerName } ?: false
+            val match = regex.matchEntire(fileName)
+            return match?.run {
+                equals(name, groupValues[1]) &&
+                    equals(DATA_FILE, groupValues[4])
+            } ?: false
         }
+
+        private fun equals(s1: String, s2: String): Boolean =
+            COMPARATOR.compare(s1, s2) == 0
     }
 
     val current: String

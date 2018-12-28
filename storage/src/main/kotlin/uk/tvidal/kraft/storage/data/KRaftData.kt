@@ -49,6 +49,7 @@ class KRaftData internal constructor(
         if (!validateHeader()) {
             throw CorruptedFileException("Invalid file header: $this")
         }
+        log.debug { this }
     }
 
     operator fun get(range: IndexEntryRange): KRaftEntries = entries(

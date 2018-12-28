@@ -1,16 +1,17 @@
 package uk.tvidal.kraft.codec.binary
 
+import com.github.salomonbrys.kotson.fromJson
+import com.google.gson.JsonObject
 import org.junit.jupiter.api.Test
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.client.clientNode
-import uk.tvidal.kraft.codec.binary.BinaryCodec.MessageProto
 import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.decode
 import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.encode
+import uk.tvidal.kraft.codec.json.gson
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
-import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
 import uk.tvidal.kraft.message.raft.VoteMessage
 import uk.tvidal.kraft.message.transport.ConnectMessage
@@ -18,7 +19,7 @@ import uk.tvidal.kraft.message.transport.HeartBeatMessage
 import uk.tvidal.kraft.storage.entries
 import uk.tvidal.kraft.storage.entryOf
 import java.lang.System.currentTimeMillis
-import java.util.UUID
+import kotlin.reflect.KCallable
 import kotlin.test.assertEquals
 
 internal class ProtoMessageCodecTest {
@@ -33,11 +34,12 @@ internal class ProtoMessageCodecTest {
         val prevIndex = 0xDDL
         val leaderCommitIndex = 0xCCL
         AppendMessage(from, term, prevTerm, prevIndex, leaderCommitIndex, data)
-            .assertEncodeDecode {
-                assertEquals(APPEND.name, actual = messageType)
-                assertEquals(2, actual = dataCount)
-                assertEquals(data, actual = entries(dataList.map(::entryOf)))
-            }
+            .assertEncodeDecode(
+                AppendMessage::term,
+                AppendMessage::prevTerm,
+                AppendMessage::prevIndex,
+                AppendMessage::leaderCommitIndex
+            )
     }
 
     @Test
@@ -45,7 +47,11 @@ internal class ProtoMessageCodecTest {
         val ack = true
         val matchIndex = 0xFEEL
         AppendAckMessage(from, term, ack, matchIndex)
-            .assertEncodeDecode()
+            .assertEncodeDecode(
+                AppendAckMessage::ack,
+                AppendAckMessage::term,
+                AppendAckMessage::matchIndex
+            )
     }
 
     @Test
@@ -53,22 +59,30 @@ internal class ProtoMessageCodecTest {
         val lastLogTerm = 0xDDL
         val lastLogIndex = 0xFEEL
         RequestVoteMessage(from, term, lastLogTerm, lastLogIndex)
-            .assertEncodeDecode()
+            .assertEncodeDecode(
+                RequestVoteMessage::term,
+                RequestVoteMessage::lastLogTerm,
+                RequestVoteMessage::lastLogIndex
+            )
     }
 
     @Test
     internal fun `test VoteMessage`() {
         val vote = false
         VoteMessage(from, term, vote)
-            .assertEncodeDecode()
+            .assertEncodeDecode(
+                VoteMessage::term,
+                VoteMessage::vote
+            )
     }
 
     @Test
     internal fun `test ClientAppendMessage`() {
         val relay = clientNode("Producer")
-        val id = UUID.randomUUID()
-        ClientAppendMessage(from, data, relay, id)
-            .assertEncodeDecode()
+        ClientAppendMessage(from, data, relay)
+            .assertEncodeDecode(
+                ClientAppendMessage::relay
+            )
     }
 
     @Test
@@ -82,15 +96,27 @@ internal class ProtoMessageCodecTest {
         val time = currentTimeMillis()
         val ping = false
         HeartBeatMessage(from, time, ping)
-            .assertEncodeDecode()
+            .assertEncodeDecode(
+                HeartBeatMessage::time,
+                HeartBeatMessage::ping
+            )
     }
 
-    private fun Message.assertEncodeDecode(block: MessageProto.() -> Unit = {}) {
+    private fun Message.assertEncodeDecode(vararg properties: MessageProperty<*>) {
         val encoded = encode(this)
         System.err.println(encoded)
-        block(encoded)
 
         val decoded = decode(encoded)
         assertEquals(this, actual = decoded)
+
+        val expected = properties
+            .map(KCallable<*>::name)
+            .toSet()
+
+        val actual = gson
+            .fromJson<JsonObject>(encoded.message)
+            .keySet()
+
+        assertEquals(expected, actual = actual, message = "MessageProto::message.keySet")
     }
 }

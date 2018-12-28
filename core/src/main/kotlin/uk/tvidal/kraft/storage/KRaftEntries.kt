@@ -1,5 +1,7 @@
 package uk.tvidal.kraft.storage
 
+import java.util.UUID
+
 class KRaftEntries(
     private val data: Collection<KRaftEntry>
 ) : Iterable<KRaftEntry> {
@@ -11,6 +13,9 @@ class KRaftEntries(
 
     val isEmpty: Boolean
         get() = data.isEmpty()
+
+    val id: UUID?
+        get() = data.firstOrNull()?.id
 
     fun copy(newTerm: Long): KRaftEntries = KRaftEntries(
         data = data.map { it.copy(newTerm) }
