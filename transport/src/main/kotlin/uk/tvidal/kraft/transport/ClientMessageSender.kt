@@ -3,6 +3,7 @@ package uk.tvidal.kraft.transport
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.javaClassName
 
 class ClientMessageSender(
     override val self: RaftNode,
@@ -24,5 +25,5 @@ class ClientMessageSender(
         client.write(message)
     }
 
-    override fun toString() = "${javaClass.simpleName}[$self => $node]"
+    override fun toString() = "$javaClassName[$self => $node]"
 }

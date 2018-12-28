@@ -7,8 +7,8 @@ import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.singleThreadPool
 import java.net.InetSocketAddress
 
-typealias SocketMessageReader = Iterable<Message?>
-typealias SocketMessageWriter = (Message) -> Unit
+typealias MessageReader = Iterable<Message>
+typealias MessageWriter = (Message) -> Unit
 
 val networkWriterThread = singleThreadPool("NetworkWriter")
 

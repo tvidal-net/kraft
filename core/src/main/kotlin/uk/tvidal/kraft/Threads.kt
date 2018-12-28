@@ -66,7 +66,7 @@ fun ExecutorService.retry(
     name: String? = null,
     block: () -> Unit
 ): Future<*> = submit {
-    val actualName = name ?: block.simpleClassName()
+    val actualName = name ?: block.javaClassName
     val log = KRaftLogger(block)
     while (delay.isRunning && flag()) {
         val started = currentTimeMillis()

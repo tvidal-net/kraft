@@ -1,28 +1,27 @@
 package uk.tvidal.kraft.transport.socket
 
-import uk.tvidal.kraft.iterable
+import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.javaClassName
 import java.io.Closeable
 
 interface KRaftConnection : Closeable {
 
-    fun read(): Iterable<Message>
+    val read: Iterable<Message>
     fun write(message: Message)
 
     companion object {
-        val NOOP = object : KRaftConnection {
-            override fun read(): Iterable<Message> {
-                TODO("not implemented")
-                iterable {  }
-            }
+        val NOOP: KRaftConnection = object : KRaftConnection, KRaftLogging() {
+
+            override val read: Iterable<Message> = emptyList()
 
             override fun write(message: Message) {
-                TODO("not implemented")
+                log.warn { "lost message $message" }
             }
 
-            override fun close() {
-                TODO("not implemented")
-            }
+            override fun close() {}
+
+            override fun toString() = "$javaClassName.NOOP"
         }
     }
 }

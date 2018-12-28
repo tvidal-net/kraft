@@ -48,9 +48,9 @@ object ProtoMessageCodec {
         return this
     }
 
-    fun decode(proto: MessageProto): Message? = MessageCodec[proto.messageType]?.let {
+    fun decode(proto: MessageProto): Message = MessageCodec[proto.messageType]?.let {
         decoders[it]?.decode(proto)
-    }
+    } ?: Message.EMPTY
 
     @Suppress("UNCHECKED_CAST")
     private class MessageDecoder(val type: MessageType) {

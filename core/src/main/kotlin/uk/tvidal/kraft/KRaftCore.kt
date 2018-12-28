@@ -16,9 +16,11 @@ const val FIRST_INDEX = 1L
 val MAGIC_NUMBER: UUID = UUID
     .fromString("acedBabe-dead-f00d-beef-180182c0ffee")
 
-fun Function<*>.qualifiedClassName() = javaClass.name.substringBefore('$')
+val Any.qualifiedClassName: String
+    get() = javaClass.name.substringBefore('$')
 
-fun Function<*>.simpleClassName() = qualifiedClassName().substringAfterLast('.')
+val Any.javaClassName: String
+    get() = qualifiedClassName.substringAfterLast('.')
 
 inline fun <T> iterable(
     crossinline hasNext: () -> Boolean = { true },

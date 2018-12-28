@@ -8,4 +8,10 @@ interface MessageType {
 
     val messageType: KClass<out Message>?
         get() = null
+
+    companion object {
+        val NONE = object : MessageType {
+            override val name = "NONE"
+        }
+    }
 }

@@ -13,7 +13,7 @@ class BlockingMessageReceiver(
 
     override fun poll(): Message? = queue.take()
 
-    override fun offer(message: Message?) = queue.offer(message)
+    override fun offer(message: Message) = queue.offer(message)
 
     override fun removeIf(predicate: (Message) -> Boolean) {
         queue.removeIf(predicate)

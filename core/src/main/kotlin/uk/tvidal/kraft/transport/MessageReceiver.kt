@@ -8,7 +8,7 @@ interface MessageReceiver {
 
     fun poll(): Message?
 
-    fun offer(message: Message?): Boolean
+    fun offer(message: Message): Boolean
 
     fun removeIf(predicate: (Message) -> Boolean)
 }

@@ -3,6 +3,7 @@ package uk.tvidal.kraft.transport
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.javaClassName
 import java.io.Closeable
 
 class ClusterMessageSender(
@@ -22,5 +23,5 @@ class ClusterMessageSender(
         client.close()
     }
 
-    override fun toString() = "${javaClass.simpleName}[$self => $node]"
+    override fun toString() = "$javaClassName[$self => $node]"
 }

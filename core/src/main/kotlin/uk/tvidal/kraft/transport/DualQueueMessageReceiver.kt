@@ -48,7 +48,7 @@ class DualQueueMessageReceiver(
         return messages.poll()
     }
 
-    override fun offer(message: Message?): Boolean = try {
+    override fun offer(message: Message): Boolean = try {
         when (message) {
             is RaftMessage -> raft.put(message)
             is ClientMessage -> client.put(message)

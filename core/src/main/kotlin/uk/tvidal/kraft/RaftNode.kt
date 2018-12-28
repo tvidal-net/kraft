@@ -6,7 +6,7 @@ data class RaftNode(
     val clientNode: Boolean = false
 ) {
     companion object {
-        val EMPTY = RaftNode(0, "")
+        val EMPTY = RaftNode(0, "EMPTY")
         private const val BYTE_MASK = 0xFF
     }
 

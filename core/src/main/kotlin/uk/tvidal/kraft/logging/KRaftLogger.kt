@@ -13,7 +13,7 @@ class KRaftLogger(val logger: Logger) {
 
     constructor(cls: KClass<*>) : this(loggerName(cls))
 
-    constructor(block: Function<*>) : this(block.qualifiedClassName())
+    constructor(block: Function<*>) : this(block.qualifiedClassName)
 
     companion object {
         private const val COMPANION_SUFFIX = ".Companion"

@@ -6,83 +6,86 @@ import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.TransportMessage
 import uk.tvidal.kraft.retry
+import uk.tvidal.kraft.transport.socket.SocketConnection
 import uk.tvidal.kraft.tryCatch
 import java.io.Closeable
+import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
 
 class ServerTransport(
-    val config: NetworkTransportConfig
+    config: NetworkTransportConfig
 ) : Closeable {
-    companion object : KRaftLogging()
+
+    internal companion object : KRaftLogging()
+
+    private val writerThread = config.writerThread
+    private val readerThread = config.readerThread
+    private val messages = config.messageReceiver
+    private val cluster = config.cluster
+    private val codec = config.codec
+
+    val self = config.self
 
     private val serverSocket = ServerSocket(config.host.port)
 
-    private val writers = ConcurrentHashMap<RaftNode, SocketMessageWriter>()
+    private val writers = ConcurrentHashMap<RaftNode, MessageWriter>()
 
     @Volatile
-    private var running: Boolean = true
-
-    val self: RaftNode
-        get() = config.self
+    var isActive: Boolean = true
+        private set
 
     init {
-        log.info { "Server [$self] waiting for connections on port ${config.host.port}" }
-        config.serverThread.retry(this::running, FOREVER, name = "Server") {
+        log.info { "[$self] waiting for connections on port ${config.host.port}" }
+        config.serverThread.retry(::isActive, FOREVER, name = toString()) {
             val socket = serverSocket.accept()
-            log.debug { "incoming connection ${socket.inetAddress}:${socket.port}" }
+            log.debug { "[$self] incoming connection ${socket.inetAddress}:${socket.port}" }
             read(socket)
         }
     }
 
     private fun read(socket: Socket) {
-        config.readerThread.retry(this::running, FOREVER, name = "Server ($socket)") {
-            config
-                .codec
-                .reader(socket)
+        val connection = SocketConnection(codec, socket)
+        readerThread.retry(::isActive, FOREVER, name = connection.toString()) {
+            connection.read
+                .asSequence()
+                .filter { validateClient(socket.inetAddress, it.from) }
                 .forEach { receiveMessage(socket, it) }
         }
     }
 
-    private fun receiveMessage(socket: Socket, message: Message?) {
-        if (message != null && checkValidClient(message.from, socket)) {
-            val from = message.from
-            writers.computeIfAbsent(from) {
-                clientConnected(from, socket)
-            }
-            if (message !is TransportMessage) {
-                config.messageReceiver.offer(message)
-            }
+    private fun receiveMessage(socket: Socket, message: Message) {
+        val from = message.from
+        writers.computeIfAbsent(from) {
+            log.info { "[$self] <- $from client connected $socket" }
+            codec.writer(socket)
+        }
+        if (message !is TransportMessage) {
+            messages.offer(message)
         }
     }
 
-    private fun checkValidClient(from: RaftNode, socket: Socket): Boolean {
-        val configAddress = config.cluster[from]?.address
-        val check = configAddress == null || configAddress == socket.inetAddress
-        if (!check) {
-            log.warn { "message in $socket pretending to be from $from (expected=$configAddress actual=${socket.inetAddress})" }
-        }
-        return check
-    }
-
-    private fun clientConnected(from: RaftNode, socket: Socket): SocketMessageWriter {
-        log.info { "Server [$self <- $from] client connected ($socket)" }
-        return config
-            .codec
-            .writer(socket)
+    private fun validateClient(address: InetAddress, from: RaftNode): Boolean {
+        val expected = cluster[from]?.address
+        return if (expected != null && expected != address) {
+            log.warn { "[$self] <- $from invalid address=$address expected=$expected" }
+            false
+        } else true
     }
 
     fun write(to: RaftNode, message: Message) {
-        config.writerThread.tryCatch {
+        writerThread.tryCatch {
             val writer = writers[to]
             if (writer != null) writer(message)
-            else log.warn { "$self attempted to send message to unknown node $to" }
+            else log.warn { "[$self] -> $to attempted to send message to unknown node" }
         }
     }
 
     override fun close() {
-        running = false
+        isActive = false
         serverSocket.close()
     }
+
+    override fun toString() = "$javaClass[$self]"
 }
