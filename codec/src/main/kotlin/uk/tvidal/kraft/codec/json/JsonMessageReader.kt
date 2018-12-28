@@ -19,7 +19,7 @@ class JsonMessageReader(reader: Reader) : Iterable<Message?> {
         override fun next(): Message? {
             val json = gson.fromJson<JsonElement>(reader)
             val name = json["type"].asString
-            val type = MessageCodec[name]
+            val type = MessageCodec[name]?.messageType
             return if (type == null) null
             else gson.fromJson<Message>(json, type.java)
         }

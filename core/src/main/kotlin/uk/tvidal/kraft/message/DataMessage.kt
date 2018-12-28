@@ -1,6 +1,8 @@
 package uk.tvidal.kraft.message
 
-interface DataMessage<T> {
+import uk.tvidal.kraft.storage.KRaftEntries
+
+interface DataMessage {
     @Payload
-    val data: T
+    val data: KRaftEntries
 }

@@ -6,7 +6,6 @@ message MessageProto {
     string message_type = 1;
     int32 version = 2;
     RaftNodeProto from = 3;
-    int64 term = 4;
     string message = 5;
     repeated DataEntry entries = 10;
 }

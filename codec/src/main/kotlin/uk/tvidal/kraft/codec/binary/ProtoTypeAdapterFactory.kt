@@ -4,8 +4,11 @@ import com.google.gson.Gson
 import com.google.gson.TypeAdapter
 import com.google.gson.TypeAdapterFactory
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.Payload
+import uk.tvidal.kraft.message.raft.RaftMessage
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
@@ -18,13 +21,40 @@ object ProtoTypeAdapterFactory : TypeAdapterFactory {
         val kClass = type.kotlin
         return if (Message::class.isSuperclassOf(kClass)) {
             val messageClass = kClass as KClass<out Message>
-            val properties: Map<MessageProperty<*>, TypeAdapter<Any?>> = messageClass
-                .declaredMemberProperties
-                .filter { it.findAnnotation<Payload>() == null }
+            val properties = extraAttributes(messageClass)
                 .associateWith { gson.getAdapter(it) }
 
-            val adapter = ProtoMessageAdapter(messageClass, properties)
-            return adapter as TypeAdapter<T>
+            return ProtoMessageAdapter(properties) as TypeAdapter<T>
         } else null
+    }
+
+    private fun extraAttributes(messageClass: KClass<out Message>) = messageClass
+        .declaredMemberProperties
+        .asSequence()
+        .let {
+            if (!RaftMessage::class.isSuperclassOf(messageClass)) it
+            else it + RaftMessage::term
+        }
+        .filter { it.findAnnotation<Payload>() == null }
+
+    private class ProtoMessageAdapter(
+        val properties: Map<MessageProperty<*>, TypeAdapter<Any?>>
+    ) : TypeAdapter<Message>() {
+
+        override fun write(writer: JsonWriter, message: Message?) {
+            writer.beginObject()
+            properties.forEach { property, adapter ->
+                val value = property.call(message)
+                if (value != null) {
+                    writer.name(property.name)
+                    adapter.write(writer, value)
+                }
+            }
+            writer.endObject()
+        }
+
+        override fun read(reader: JsonReader?): Message {
+            throw UnsupportedOperationException("This adapter is only used to write json")
+        }
     }
 }
