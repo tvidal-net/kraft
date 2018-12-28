@@ -142,6 +142,7 @@ class RaftServer internal constructor(
 
     override fun close() {
         log.info { "closing $this" }
+        transport.close()
         storage.close()
     }
 }

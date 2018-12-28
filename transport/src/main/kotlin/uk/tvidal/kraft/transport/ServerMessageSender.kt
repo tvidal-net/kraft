@@ -25,5 +25,7 @@ open class ServerMessageSender(
         server.write(node, message)
     }
 
+    override fun close() {}
+
     override fun toString() = "$javaClassName[$self -> $node]"
 }

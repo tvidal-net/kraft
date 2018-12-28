@@ -15,11 +15,5 @@ enum class AnsiColor(color: Int) {
     val fg = tput("setaf", color)
     val bg = tput("setab", color)
 
-    fun format(text: String) = if (hasAnsiSupport) ansiBold + fg + text + ansiReset else text
-
-    companion object {
-        init {
-            System.err.println("ansi support: $hasAnsiSupport")
-        }
-    }
+    fun format(text: String, force: Boolean = false) = if (force || hasAnsiSupport) ansiBold + fg + text + ansiReset else text
 }

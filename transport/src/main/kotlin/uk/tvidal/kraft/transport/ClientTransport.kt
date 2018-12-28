@@ -72,6 +72,7 @@ class ClientTransport(
     override fun close() {
         isActive = false
         connection.close()
+        log.info { "closed $this" }
     }
 
     override fun toString() = "$javaClassName[$self] -> $node"

@@ -2,8 +2,9 @@ package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.message.Message
+import java.io.Closeable
 
-interface MessageSender {
+interface MessageSender : Closeable {
 
     val self: RaftNode
 

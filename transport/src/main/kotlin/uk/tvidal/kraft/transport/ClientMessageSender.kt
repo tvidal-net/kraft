@@ -25,5 +25,9 @@ class ClientMessageSender(
         client.write(message)
     }
 
+    override fun close() {
+        client.close()
+    }
+
     override fun toString() = "$javaClassName[$self -> $node]"
 }

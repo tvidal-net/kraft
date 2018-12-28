@@ -87,6 +87,7 @@ class ServerTransport(
     override fun close() {
         isActive = false
         serverSocket.close()
+        log.info { "closed $this" }
     }
 
     override fun toString() = "$javaClassName[$self]"

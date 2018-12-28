@@ -4,13 +4,12 @@ import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
-import java.io.Closeable
 
 class ClusterMessageSender(
     node: RaftNode,
     server: ServerTransport,
     val client: ClientTransport
-) : ServerMessageSender(node, server), Closeable {
+) : ServerMessageSender(node, server) {
 
     internal companion object : KRaftLogging()
 

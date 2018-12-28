@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentMap
 
 class NetworkTransport(
     config: NetworkTransportConfig
-) : KRaftTransport, Closeable {
+) : KRaftTransport {
 
     override val self = config.self
 
@@ -40,8 +40,7 @@ class NetworkTransport(
 
     override fun close() {
         server.close()
-        clients
-            .values
+        clients.values
             .filterIsInstance<Closeable>()
             .forEach(Closeable::close)
     }

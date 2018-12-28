@@ -1,8 +1,9 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
+import java.io.Closeable
 
-interface KRaftTransport {
+interface KRaftTransport : Closeable {
 
     val self: RaftNode
 

@@ -14,7 +14,7 @@ const val BYTE_BYTES = java.lang.Byte.BYTES
 const val FIRST_INDEX = 1L
 
 val MAGIC_NUMBER: UUID = UUID
-    .fromString("acedBabe-dead-f00d-beef-180182c0ffee")
+    .fromString("deadBeef-aced-f00d-babe-180182c0ffee")
 
 val Any.qualifiedClassName: String
     get() = javaClass.name.substringBefore('$')
