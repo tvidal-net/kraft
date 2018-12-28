@@ -49,6 +49,7 @@ class KRaftFileStorage(
                 } else true
             }.associateBy(KRaftFile::range)
         )
+        validateFileSequence()
 
         if (files.isNotEmpty()) {
             currentFile = files[files.lastKey()]!!
@@ -61,6 +62,17 @@ class KRaftFileStorage(
         } else {
             // Empty directory, create the first file
             currentFile = factory.create(FIRST_INDEX, ++lastFileIndex)
+        }
+    }
+
+    private fun validateFileSequence() {
+        val files = files.values.toList()
+        for (i in 1 until files.size) {
+            val prev = files[i - 1]
+            val file = files[i]
+            if (prev.lastIndex != file.firstIndex - 1) {
+                throw FileSequenceGapException("There is an index gap between [$prev] -> [$file]")
+            }
         }
     }
 

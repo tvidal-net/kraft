@@ -11,4 +11,5 @@ class WriteToImmutableFileException(message: String) : KRaftFileStorageException
 class ModifyCommittedFileException(message: String) : KRaftFileStorageException(message)
 class TruncateOutOfRangeException(message: String) : KRaftFileStorageException(message)
 class IndexOutOfRangeException(message: String) : KRaftFileStorageException(message)
+class FileSequenceGapException(message: String) : KRaftFileStorageException(message)
 class CorruptedFileException(message: String) : KRaftFileStorageException(message)

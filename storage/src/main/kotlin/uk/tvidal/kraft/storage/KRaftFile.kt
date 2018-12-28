@@ -12,7 +12,7 @@ class KRaftFile internal constructor(
     val file: FileView
 ) : ChainNode<KRaftFile>,
     DataFile by file.data,
-    MutableIndexRange by file.data {
+    MutableIndexRange by file.index {
 
     internal companion object : KRaftLogging()
 
@@ -29,6 +29,12 @@ class KRaftFile internal constructor(
         val available = String.format(format, file.data.buffer.available)
         val size = String.format(format, file.data.size)
         log.info { "$javaClassName $this size=$size bytes=$bytes available=$available" }
+
+        val indexRange = file.index.range
+        val dataRange = file.data.range
+        if (indexRange != dataRange) {
+            throw CorruptedFileException("range Data($dataRange) does not match Index($indexRange)")
+        }
     }
 
     operator fun get(index: Long): KRaftEntry {
