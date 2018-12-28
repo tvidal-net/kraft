@@ -7,10 +7,12 @@ import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.config.FileView
 import uk.tvidal.kraft.storage.data.DataFile
+import java.io.Closeable
 
 class KRaftFile internal constructor(
     val file: FileView
-) : ChainNode<KRaftFile>,
+) : Closeable,
+    ChainNode<KRaftFile>,
     DataFile by file.data,
     MutableIndexRange by file.index {
 
@@ -63,6 +65,12 @@ class KRaftFile internal constructor(
             data.close(state)
             rename(state)
         }
+    }
+
+    override fun close() {
+        file.index.close()
+        file.data.buffer.release()
+        log.info { "closed $this" }
     }
 
     override fun toString() = "${file.name}/$state::$range"

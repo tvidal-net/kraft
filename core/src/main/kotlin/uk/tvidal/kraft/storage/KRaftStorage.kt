@@ -1,6 +1,8 @@
 package uk.tvidal.kraft.storage
 
-interface KRaftStorage {
+import java.io.Closeable
+
+interface KRaftStorage : Closeable {
 
     val firstLogIndex: Long
     val lastLogIndex: Long

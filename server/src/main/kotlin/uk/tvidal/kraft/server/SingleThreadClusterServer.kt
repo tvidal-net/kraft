@@ -39,8 +39,9 @@ class SingleThreadClusterServer internal constructor(
     override fun stop() {
         if (running) {
             log.info { "Stopping..." }
-            val currentThread = currentThread.getAndSet(null)
-            currentThread?.join()
+            currentThread
+                .getAndSet(null)
+                ?.join()
             log.info { "Done" }
         }
     }

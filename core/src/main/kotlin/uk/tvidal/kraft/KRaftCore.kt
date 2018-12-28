@@ -22,6 +22,12 @@ val Any.qualifiedClassName: String
 val Any.javaClassName: String
     get() = qualifiedClassName.substringAfterLast('.')
 
+inline fun <T> AutoCloseable.use(block: () -> T): T = try {
+    block()
+} finally {
+    close()
+}
+
 inline fun <T> iterable(
     crossinline hasNext: () -> Boolean = { true },
     crossinline iterator: () -> T

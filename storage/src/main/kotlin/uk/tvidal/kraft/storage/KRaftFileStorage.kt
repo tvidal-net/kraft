@@ -5,6 +5,7 @@ import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.TRUNCATED
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.config.FileFactory
+import java.io.Closeable
 import java.util.TreeMap
 
 class KRaftFileStorage(
@@ -204,6 +205,11 @@ class KRaftFileStorage(
         files.remove(file.range)
         file.release()
         log.info { "removed file $file" }
+    }
+
+    override fun close() {
+        files.values.forEach(Closeable::close)
+        files.clear()
     }
 
     override fun toString() = "($firstLogIndex..$lastLogIndex) file=$currentFile"

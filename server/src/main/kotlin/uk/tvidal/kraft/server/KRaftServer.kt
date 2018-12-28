@@ -1,6 +1,6 @@
 package uk.tvidal.kraft.server
 
-interface KRaftServer {
+interface KRaftServer : AutoCloseable {
 
     fun start()
 

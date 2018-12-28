@@ -21,7 +21,7 @@ import java.time.Instant
 
 abstract class RaftEngine internal constructor(
     config: KRaftServerConfig
-) : RaftState, RaftMessageSender {
+) : RaftState, RaftMessageSender, AutoCloseable {
 
     private companion object : KRaftLogging() {
         init {
@@ -31,7 +31,7 @@ abstract class RaftEngine internal constructor(
 
     val clientNode: RaftNode = clientNode()
 
-    override val cluster = config.cluster
+    final override val cluster = config.cluster
 
     override val transport = config.transport
     protected val storage = config.storage
@@ -222,6 +222,8 @@ abstract class RaftEngine internal constructor(
     internal abstract fun computeCommitIndex()
 
     internal abstract fun run(now: Long)
+
+    abstract fun execute(block: () -> Unit)
 
     abstract fun publish(payload: ByteArray)
 

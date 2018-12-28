@@ -7,6 +7,10 @@ class LoopToleranceController(
     private val clock: () -> Long = System::currentTimeMillis
 ) {
 
+    internal companion object {
+        const val LOOP_TOLERANCE_MILLIS = 16L
+    }
+
     private var start = currentTimeMillis()
 
     fun yield(): Long {

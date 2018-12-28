@@ -7,7 +7,7 @@ import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.engine.RaftServer
 import uk.tvidal.kraft.loadResource
 import uk.tvidal.kraft.logging.KRaftLogging
-import java.lang.Thread.yield
+import java.lang.Thread.sleep
 import java.util.concurrent.ThreadLocalRandom
 
 abstract class ClusterServer internal constructor(
@@ -37,7 +37,7 @@ abstract class ClusterServer internal constructor(
 
     protected fun waitForLeader() {
         while (leader == null) {
-            yield()
+            sleep(1L)
         }
     }
 
@@ -49,5 +49,10 @@ abstract class ClusterServer internal constructor(
 
     override fun publish(payload: ByteArray) {
         (leader ?: randomNode).publish(payload)
+    }
+
+    override fun close() {
+        stop()
+        nodes.forEach(AutoCloseable::close)
     }
 }

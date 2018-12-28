@@ -1,8 +1,10 @@
 package uk.tvidal.kraft.server
 
+import uk.tvidal.kraft.FOREVER
 import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.engine.RaftEngine
 import uk.tvidal.kraft.fixedThreadPool
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 class MultiThreadClusterServer internal constructor(
     clusterConfig: List<KRaftServerConfig>,
@@ -12,11 +14,8 @@ class MultiThreadClusterServer internal constructor(
     private val executor = fixedThreadPool(KRAFT_THREAD_NAME, size)
 
     override fun start() {
-        val work = nodes.map {
-            Runnable { loop(it) }
-        }
-        work.forEach {
-            executor.submit(it)
+        nodes.forEach {
+            executor.submit { loop(it) }
         }
         logo()
     }
@@ -24,6 +23,7 @@ class MultiThreadClusterServer internal constructor(
     override fun stop() {
         log.info { "Stopping..." }
         executor.shutdownNow()
+        executor.awaitTermination(FOREVER, MILLISECONDS)
         log.info { "Done" }
     }
 

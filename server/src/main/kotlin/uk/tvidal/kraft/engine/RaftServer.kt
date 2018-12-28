@@ -11,6 +11,7 @@ import uk.tvidal.kraft.message.client.ConsumerRegisterMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.RaftMessage
 import uk.tvidal.kraft.storage.entryOf
+import java.util.concurrent.SynchronousQueue
 
 class RaftServer internal constructor(
     config: KRaftServerConfig
@@ -24,6 +25,12 @@ class RaftServer internal constructor(
     private val consumers = RaftConsumerState(transport, storage, commitIndex)
 
     private val messages = config.transport.receiver()
+
+    private val execute = SynchronousQueue<Runnable>()
+
+    override fun execute(block: () -> Unit) {
+        execute.offer(Runnable { block() })
+    }
 
     override fun publish(payload: ByteArray) {
         messages.offer(
@@ -74,6 +81,7 @@ class RaftServer internal constructor(
             }
             val newRole = role.run(now, this)
             updateRole(now, newRole)
+            execute.poll()?.run()
         } catch (e: Throwable) {
             updateRole(now, ERROR)
             throw e
@@ -130,5 +138,9 @@ class RaftServer internal constructor(
         storage.commit(index)
         followers.values.forEach(RaftFollower::commit)
         consumers.commit(index)
+    }
+
+    override fun close() {
+        storage.close()
     }
 }
