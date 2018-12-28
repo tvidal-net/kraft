@@ -3,6 +3,7 @@ package uk.tvidal.kraft.storage
 import uk.tvidal.kraft.ChainNode
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState
 import uk.tvidal.kraft.codec.binary.BinaryCodec.FileState.DISCARDED
+import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.storage.config.FileView
 import uk.tvidal.kraft.storage.data.DataFile
 
@@ -12,6 +13,8 @@ class KRaftFile internal constructor(
     DataFile by file.data,
     MutableIndexRange by file.data {
 
+    internal companion object : KRaftLogging()
+
     override var next: KRaftFile? = null
 
     override var prev: KRaftFile? = null
@@ -20,17 +23,20 @@ class KRaftFile internal constructor(
         get() = file.name.fileIndex
 
     operator fun get(index: Long): KRaftEntry {
+        log.debug { "get index=$index" }
         val range = file.index[index]
         return file.data[range]
     }
 
     fun append(entries: KRaftEntries): Int {
+        log.debug { "append entries=$entries" }
         val range = file.data.append(entries)
         return file.index.append(range)
     }
 
     fun read(fromIndex: Long, byteLimit: Int): KRaftEntries {
         val range = file.index.read(fromIndex, byteLimit)
+        log.debug { "read range=$range fromIndex=$fromIndex byteLimit=$byteLimit" }
         return file.data[range]
     }
 

@@ -10,73 +10,77 @@ import uk.tvidal.kraft.tryCatch
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.util.concurrent.CompletableFuture
 
 class ClientTransport(
     val node: RaftNode,
-    val config: NetworkTransportConfig
+    config: NetworkTransportConfig
 ) : Closeable {
-    companion object : KRaftLogging()
 
-    private val host get() = config[node]
+    internal companion object : KRaftLogging()
+
+    private val writerThread = config.writerThread
+    private val readerThread = config.readerThread
+    private val messages = config.messageReceiver
+    private val codec = config.codec
+    private val self = config.self
+    private val host = config[node]
 
     @Volatile
-    private var running: Boolean = true
+    var isOpen: Boolean = true
+        private set
 
     @Volatile
-    private var connection: SocketConnection? = null
-
-    private val reader get() = connection!!.reader
-    private val messages get() = config.messageReceiver
-
-    private val writer: SocketMessageWriter
-        get() = (connection ?: connect()).writer
+    private lateinit var connection: SocketConnection
 
     init {
-        write(ConnectMessage(config.self))
+        connect()
     }
 
     fun write(message: Message) {
-        config.writerThread.tryCatch {
-            writer(message)
+        writerThread.tryCatch {
+            connection.write(message)
         }
     }
 
-    private fun connect(): SocketConnection {
-        val name = "Client [${config.self} -> $node]"
-        val future = CompletableFuture<SocketConnection>()
-        config.readerThread.retry(this::running, FOREVER, name = name) {
+    private fun connect() {
+        val name = "Client[$self] => $node"
+        readerThread.retry(this::isOpen, FOREVER, name = name) {
+            log.debug { "$name connecting $host" }
             connection = SocketConnection(host)
-            log.info { "$name connected to ${connection!!.socket}" }
-            if (!future.isDone) future.complete(connection)
-            reader.forEach(this::receiveMessage)
+
+            log.info { "$name connected $connection" }
+            with(connection) {
+                write(ConnectMessage(self))
+                reader.forEach(::receiveMessage)
+            }
         }
-        return future.get()
     }
 
     private fun receiveMessage(message: Message?) {
         val from = message?.from
         if (message?.from != node) {
-            log.warn { "message in ${connection?.socket} pretending to be from $from" }
+            log.warn { "message in $connection pretending to be from $from" }
             return
         }
         messages.offer(message)
     }
 
     override fun close() {
-        running = false
-        val cnn = connection
-        connection = null
-        cnn?.close()
+        isOpen = false
+        if (this::connection.isInitialized) {
+            connection.close()
+        }
     }
 
     private inner class SocketConnection(host: InetSocketAddress) : Closeable {
-        val socket = Socket(host.address, host.port)
-        val reader = config.codec.reader(socket)
-        val writer = config.codec.writer(socket)
+        private val socket = Socket(host.address, host.port)
+        val reader = codec.reader(socket)
+        val write = codec.writer(socket)
 
         override fun close() {
             socket.close()
         }
+
+        override fun toString() = socket.toString()
     }
 }

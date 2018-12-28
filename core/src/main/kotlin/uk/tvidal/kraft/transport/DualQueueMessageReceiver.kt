@@ -42,7 +42,7 @@ class DualQueueMessageReceiver(
 
     override fun poll(): Message? {
         if (messages.isEmpty()) {
-            raft.drainTo(messages, maxDrainCount - messages.size)
+            raft.drainTo(messages, maxDrainCount)
             client.drainTo(messages, maxDrainCount - messages.size)
         }
         return messages.poll()
@@ -52,7 +52,7 @@ class DualQueueMessageReceiver(
         when (message) {
             is RaftMessage -> raft.put(message)
             is ClientMessage -> client.put(message)
-            else -> log.warn { "received an invalid message: $message" }
+            else -> log.warn { "received an unknown message type: $message" }
         }
         true
     } catch (e: InterruptedException) {
