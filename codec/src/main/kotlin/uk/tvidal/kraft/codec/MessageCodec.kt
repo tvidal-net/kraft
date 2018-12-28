@@ -40,5 +40,8 @@ object MessageCodec {
         )
     }
 
-    fun binaryWriter(stream: OutputStream): (Message) -> Unit = { encode(it).writeDelimitedTo(stream) }
+    fun binaryWriter(stream: OutputStream): (Message) -> Unit = {
+        encode(it).writeDelimitedTo(stream)
+        stream.flush()
+    }
 }

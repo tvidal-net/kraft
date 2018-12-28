@@ -7,5 +7,5 @@ abstract class AbstractRaftMessage(
 ) : AbstractMessage(), RaftMessage {
 
     override val headerText: String
-        get() = "$type T$term ($from)"
+        get() = "$type T$term ::$from"
 }

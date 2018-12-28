@@ -14,4 +14,6 @@ data class RequestVoteMessage(
 ) : AbstractRaftMessage(REQUEST_VOTE) {
 
     override fun text() = "lastLogTerm=$lastLogTerm lastLogIndex=$lastLogIndex"
+
+    override fun toString() = super.toString()
 }

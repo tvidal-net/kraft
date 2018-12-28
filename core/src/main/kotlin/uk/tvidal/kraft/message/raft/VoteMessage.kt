@@ -13,4 +13,6 @@ data class VoteMessage(
 ) : AbstractRaftMessage(VOTE) {
 
     override fun text() = "vote=$vote"
+
+    override fun toString() = super.toString()
 }

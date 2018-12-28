@@ -10,4 +10,6 @@ data class ConsumerRegisterMessage(
 ) : AbstractClientMessage(CONSUMER_REGISTER) {
 
     override fun text() = "fromIndex=$fromIndex maxBytes=$maxBytes"
+
+    override fun toString() = super.toString()
 }

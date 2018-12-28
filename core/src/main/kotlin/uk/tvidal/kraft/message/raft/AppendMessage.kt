@@ -22,4 +22,6 @@ data class AppendMessage(
 
     override fun text() = "prevIndex=$prevIndex prevTerm=$prevTerm " +
         "leaderCommitIndex=$leaderCommitIndex data=$data"
+
+    override fun toString() = super.toString()
 }

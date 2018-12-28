@@ -10,8 +10,6 @@ class NetworkTransport(
 ) : KRaftTransport, Closeable {
 
     override val self = config.self
-    private val cluster = config.cluster
-    private val codec = config.codec
 
     private val server = ServerTransport(config)
 
@@ -20,8 +18,8 @@ class NetworkTransport(
     private val clients: ConcurrentMap<RaftNode, MessageSender> = ConcurrentHashMap(
         config
             .others
-            .associate {
-                it to ClusterMessageSender(
+            .associateWith {
+                ClusterMessageSender(
                     node = it,
                     server = server,
                     client = ClientTransport(it, config)
@@ -29,8 +27,13 @@ class NetworkTransport(
             }
     )
 
-    override fun sender(node: RaftNode): MessageSender = clients.computeIfAbsent(node) {
-        ServerMessageSender(node, server)
+    override fun sender(node: RaftNode): MessageSender {
+        if (node == self) {
+            throw IllegalArgumentException("[$self] -> $node attempt to get message sender to itself")
+        }
+        return clients.computeIfAbsent(node) {
+            ServerMessageSender(node, server)
+        }
     }
 
     override fun receiver() = messages

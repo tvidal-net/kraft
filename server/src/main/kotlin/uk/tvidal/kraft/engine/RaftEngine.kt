@@ -118,7 +118,6 @@ abstract class RaftEngine internal constructor(
                 log.warn { "[$self] checkElectionTimeout check took too long ($delay ms), resetting" }
                 null
             } else {
-                log.info { "election timeout has elapsed" }
                 CANDIDATE
             }
         } else null
@@ -188,10 +187,10 @@ abstract class RaftEngine internal constructor(
         vote(candidate, grantVote)
     }
 
-    internal fun processVote(msg: VoteMessage): RaftRole? {
-        log.info { "[$self] processVote T$term (${msg.from}) [vote=${msg.vote} term=${msg.term}]" }
-        if (msg.vote) {
-            votesReceived += msg.from
+    internal fun processVote(message: VoteMessage): RaftRole? {
+        log.info { "[$self] processVote T$term $message" }
+        if (message.vote) {
+            votesReceived += message.from
             if (votesReceived.size >= cluster.majority) {
                 return LEADER
             }

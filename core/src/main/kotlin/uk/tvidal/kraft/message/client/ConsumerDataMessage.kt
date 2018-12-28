@@ -14,4 +14,6 @@ data class ConsumerDataMessage(
         get() = firstIndex + data.size - 1
 
     override fun text() = "from=$firstIndex $data"
+
+    override fun toString() = super.toString()
 }

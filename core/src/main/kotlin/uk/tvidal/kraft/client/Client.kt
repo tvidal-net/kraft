@@ -24,7 +24,7 @@ private fun localNetworkSiteAddress(): InetAddress {
     } catch (e: Exception) {
         log.error(e)
     }
-    return Inet4Address.getLocalHost()
+    return InetAddress.getLoopbackAddress()
 }
 
 val localNetworkSiteAddress = localNetworkSiteAddress()

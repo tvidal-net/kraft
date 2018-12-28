@@ -33,9 +33,15 @@ enum class RaftRole {
     },
 
     CANDIDATE {
+        override fun run(now: Long, raft: RaftEngine): RaftRole? =
+            raft.checkElectionTimeout(now)
+
         override fun enterRole(now: Long, raft: RaftEngine) {
             raft.startElection(now)
         }
+
+        override fun requestVote(now: Long, msg: RequestVoteMessage, raft: RaftEngine): RaftRole? =
+            reset()
 
         override fun vote(now: Long, msg: VoteMessage, raft: RaftEngine) = raft.processVote(msg)
 

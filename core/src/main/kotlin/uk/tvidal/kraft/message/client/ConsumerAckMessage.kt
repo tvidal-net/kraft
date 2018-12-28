@@ -9,4 +9,6 @@ data class ConsumerAckMessage(
 ) : AbstractClientMessage(CONSUMER_ACK) {
 
     override fun text() = "index=$index"
+
+    override fun toString() = super.toString()
 }

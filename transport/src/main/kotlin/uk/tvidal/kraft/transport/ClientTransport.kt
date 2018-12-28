@@ -37,7 +37,7 @@ class ClientTransport(
 
     init {
         with(config) {
-            connect(codec, host)
+            connect(codec, cluster[node]!!)
         }
     }
 
@@ -63,7 +63,7 @@ class ClientTransport(
 
     private fun receiveMessage(message: Message) {
         if (message.from != node) {
-            log.warn { "[$self] => $node dropping unknown message $message" }
+            log.warn { "[$self] -> $node dropping unknown message $message" }
             return
         }
         messages.offer(message)
@@ -74,5 +74,5 @@ class ClientTransport(
         connection.close()
     }
 
-    override fun toString() = "$javaClassName[$self] => $node"
+    override fun toString() = "$javaClassName[$self] -> $node"
 }

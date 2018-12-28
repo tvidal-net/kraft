@@ -9,4 +9,6 @@ data class ClientErrorMessage(
 ) : AbstractClientMessage(CLIENT_ERROR) {
 
     override fun text() = error
+
+    override fun toString() = super.toString()
 }

@@ -20,4 +20,6 @@ data class ClientAppendMessage(
 ) : AbstractClientMessage(CLIENT_APPEND), DataMessage {
 
     override fun text() = "id=$id relay=$relay data=$data"
+
+    override fun toString() = super.toString()
 }

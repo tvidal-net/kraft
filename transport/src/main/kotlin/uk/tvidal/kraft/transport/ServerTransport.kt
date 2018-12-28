@@ -2,6 +2,7 @@ package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.RetryDelay.Companion.FOREVER
+import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.TransportMessage
@@ -48,10 +49,11 @@ class ServerTransport(
     private fun read(socket: Socket) {
         val connection = SocketConnection(codec, socket)
         readerThread.retry(::isActive, FOREVER, name = connection.toString()) {
-            connection.read
-                .asSequence()
-                .filter { validateClient(socket.inetAddress, it.from) }
-                .forEach { receiveMessage(socket, it) }
+            for (message in connection.read) {
+                if (validateClient(socket.inetAddress, message.from)) {
+                    receiveMessage(socket, message)
+                }
+            }
         }
     }
 
@@ -77,7 +79,7 @@ class ServerTransport(
     fun write(to: RaftNode, message: Message) {
         writerThread.tryCatch {
             val writer = writers[to]
-            if (writer != null) writer(message)
+            if (writer != null) writer.invoke(message)
             else log.warn { "[$self] -> $to attempted to send message to unknown node" }
         }
     }
@@ -87,5 +89,5 @@ class ServerTransport(
         serverSocket.close()
     }
 
-    override fun toString() = "$javaClass[$self]"
+    override fun toString() = "$javaClassName[$self]"
 }

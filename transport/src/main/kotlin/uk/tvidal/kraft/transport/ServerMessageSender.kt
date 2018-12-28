@@ -1,9 +1,9 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
-import uk.tvidal.kraft.javaClassName
 
 open class ServerMessageSender(
     override val node: RaftNode,
@@ -16,14 +16,14 @@ open class ServerMessageSender(
         get() = server.self
 
     override fun send(message: Message) {
-        log.debug { "[$self] => $node send $message" }
+        log.debug { "[$self] -> $node send $message" }
         server.write(node, message)
     }
 
     override fun respond(message: Message) {
-        log.debug { "[$self] => $node respond $message" }
+        log.debug { "[$self] -> $node respond $message" }
         server.write(node, message)
     }
 
-    override fun toString() = "$javaClassName[$self => $node]"
+    override fun toString() = "$javaClassName[$self -> $node]"
 }
