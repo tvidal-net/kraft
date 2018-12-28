@@ -3,14 +3,14 @@ package uk.tvidal.kraft.message.raft
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.message.raft.RaftMessageType.VOTE
 
-class VoteMessage(
+data class VoteMessage(
 
-    from: RaftNode,
-    term: Long,
+    override val from: RaftNode,
+    final override val term: Long,
 
     val vote: Boolean
 
-) : AbstractRaftMessage(VOTE, from, term) {
+) : AbstractRaftMessage(VOTE) {
 
     override fun text() = "vote=$vote"
 }

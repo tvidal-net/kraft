@@ -7,9 +7,9 @@ import uk.tvidal.kraft.message.client.ClientMessageType.CLIENT_APPEND
 import uk.tvidal.kraft.storage.KRaftEntries
 import java.util.UUID
 
-class ClientAppendMessage(
+data class ClientAppendMessage(
 
-    from: RaftNode,
+    override val from: RaftNode,
 
     @Payload
     override val data: KRaftEntries,
@@ -17,7 +17,7 @@ class ClientAppendMessage(
     var relay: RaftNode? = null,
     val id: UUID? = null
 
-) : AbstractClientMessage(CLIENT_APPEND, from), DataMessage {
+) : AbstractClientMessage(CLIENT_APPEND), DataMessage {
 
     override fun text() = "id=$id relay=$relay data=$data"
 }

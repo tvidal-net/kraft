@@ -18,3 +18,12 @@ val MAGIC_NUMBER: UUID = UUID
 fun Function<*>.qualifiedClassName() = javaClass.name.substringBefore('$')
 
 fun Function<*>.simpleClassName() = qualifiedClassName().substringAfterLast('.')
+
+inline fun <T> iterable(
+    crossinline hasNext: () -> Boolean = { true },
+    crossinline iterator: () -> T
+): Iterable<T> = object : Iterable<T>, Iterator<T> {
+    override fun iterator() = this
+    override fun hasNext() = hasNext()
+    override fun next() = iterator()
+}

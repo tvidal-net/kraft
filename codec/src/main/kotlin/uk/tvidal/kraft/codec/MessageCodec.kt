@@ -1,7 +1,12 @@
 package uk.tvidal.kraft.codec
 
+import uk.tvidal.kraft.codec.binary.BinaryCodec.MessageProto
+import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.decode
+import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.encode
 import uk.tvidal.kraft.codec.json.JsonMessageReader
 import uk.tvidal.kraft.codec.json.JsonMessageWriter
+import uk.tvidal.kraft.iterable
+import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.MessageType
 import uk.tvidal.kraft.message.client.ClientMessageType
 import uk.tvidal.kraft.message.raft.RaftMessageType
@@ -28,4 +33,12 @@ object MessageCodec {
     fun jsonWriter(stream: OutputStream) = JsonMessageWriter(
         stream.writer()
     )
+
+    fun binaryReader(stream: InputStream) = iterable {
+        decode(
+            MessageProto.parseDelimitedFrom(stream)
+        )
+    }
+
+    fun binaryWriter(stream: OutputStream): (Message) -> Unit = { encode(it).writeDelimitedTo(stream) }
 }

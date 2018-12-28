@@ -8,8 +8,8 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import uk.tvidal.kraft.message.Message
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSuperclassOf
 
 object ProtoTypeAdapterFactory : TypeAdapterFactory {
@@ -29,7 +29,7 @@ object ProtoTypeAdapterFactory : TypeAdapterFactory {
     private fun extraAttributes(messageClass: KClass<out Message>) = messageClass
         .declaredMemberProperties
         .asSequence()
-        .filterNot(KProperty<*>::isOpen)
+        .filterNot { it.isOpen && it.findAnnotation<Transient>() == null }
 
     private class ProtoMessageAdapter(
         val properties: Map<MessageProperty<*>, TypeAdapter<Any?>>

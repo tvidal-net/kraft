@@ -13,13 +13,12 @@ data class AppendMessage(
 
     val prevTerm: Long,
     val prevIndex: Long,
-
     val leaderCommitIndex: Long,
 
     @Payload
     override val data: KRaftEntries
 
-) : AbstractRaftMessage(APPEND, from, term), DataMessage {
+) : AbstractRaftMessage(APPEND), DataMessage {
 
     override fun text() = "prevIndex=$prevIndex prevTerm=$prevTerm " +
         "leaderCommitIndex=$leaderCommitIndex data=$data"

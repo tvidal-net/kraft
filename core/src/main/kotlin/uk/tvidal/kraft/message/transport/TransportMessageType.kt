@@ -7,5 +7,6 @@ enum class TransportMessageType(
     override val messageType: KClass<out TransportMessage>? = null
 ) : MessageType {
 
-    CONNECT(ConnectMessage::class);
+    CONNECT(ConnectMessage::class),
+    HEARTBEAT(HeartBeatMessage::class);
 }

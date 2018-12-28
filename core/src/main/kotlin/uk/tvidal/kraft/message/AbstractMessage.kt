@@ -1,14 +1,6 @@
 package uk.tvidal.kraft.message
 
-import uk.tvidal.kraft.RaftNode
-
-abstract class AbstractMessage(
-
-    @Transient
-    override val type: MessageType,
-    override val from: RaftNode
-
-) : Message {
+abstract class AbstractMessage : Message {
 
     protected open val headerText: String
         get() = "$type ($from)"
