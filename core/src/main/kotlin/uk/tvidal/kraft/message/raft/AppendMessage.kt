@@ -6,10 +6,10 @@ import uk.tvidal.kraft.message.Payload
 import uk.tvidal.kraft.message.raft.RaftMessageType.APPEND
 import uk.tvidal.kraft.storage.KRaftEntries
 
-class AppendMessage(
+data class AppendMessage(
 
-    from: RaftNode,
-    term: Long,
+    override val from: RaftNode,
+    final override val term: Long,
 
     val prevTerm: Long,
     val prevIndex: Long,

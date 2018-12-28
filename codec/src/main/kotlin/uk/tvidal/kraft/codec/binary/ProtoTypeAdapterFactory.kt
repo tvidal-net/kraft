@@ -7,11 +7,9 @@ import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import uk.tvidal.kraft.message.Message
-import uk.tvidal.kraft.message.Payload
-import uk.tvidal.kraft.message.raft.RaftMessage
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSuperclassOf
 
 object ProtoTypeAdapterFactory : TypeAdapterFactory {
@@ -31,11 +29,7 @@ object ProtoTypeAdapterFactory : TypeAdapterFactory {
     private fun extraAttributes(messageClass: KClass<out Message>) = messageClass
         .declaredMemberProperties
         .asSequence()
-        .let {
-            if (!RaftMessage::class.isSuperclassOf(messageClass)) it
-            else it + RaftMessage::term
-        }
-        .filter { it.findAnnotation<Payload>() == null }
+        .filterNot(KProperty<*>::isOpen)
 
     private class ProtoMessageAdapter(
         val properties: Map<MessageProperty<*>, TypeAdapter<Any?>>

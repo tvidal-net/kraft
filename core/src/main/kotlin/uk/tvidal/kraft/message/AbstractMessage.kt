@@ -6,7 +6,7 @@ abstract class AbstractMessage(
 
     @Transient
     override val type: MessageType,
-    final override val from: RaftNode
+    override val from: RaftNode
 
 ) : Message {
 

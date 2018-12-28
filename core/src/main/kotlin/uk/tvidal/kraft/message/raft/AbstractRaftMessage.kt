@@ -4,11 +4,9 @@ import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.message.AbstractMessage
 
 abstract class AbstractRaftMessage(
-
-    final override val type: RaftMessageType,
-    from: RaftNode,
-    final override val term: Long
-
+    override val type: RaftMessageType,
+    override val from: RaftNode,
+    override val term: Long
 ) : AbstractMessage(type, from), RaftMessage {
 
     override val headerText: String

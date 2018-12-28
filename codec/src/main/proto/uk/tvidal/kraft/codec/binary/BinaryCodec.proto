@@ -7,7 +7,7 @@ message MessageProto {
     int32 version = 2;
     RaftNodeProto from = 3;
     string message = 5;
-    repeated DataEntry entries = 10;
+    repeated DataEntry data = 10;
 }
 
 message DataEntry {
@@ -50,8 +50,8 @@ enum EntryType {
 }
 
 enum FileState {
-    COMMITTED = 0;
-    WRITABLE = 1;
+    WRITABLE = 0;
+    COMMITTED = 1;
     TRUNCATED = 7;
     DISCARDED = 8;
 }

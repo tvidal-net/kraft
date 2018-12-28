@@ -43,7 +43,7 @@ object ProtoMessageCodec {
     private fun MessageProto.Builder.setPayload(message: Message): MessageProto.Builder {
         if (message is DataMessage) {
             val payload = DataMessage::data.call(message)
-            payload.forEach { addEntries(it.toProto()) }
+            payload.forEach { addData(it.toProto()) }
         }
         return this
     }
@@ -89,7 +89,7 @@ object ProtoMessageCodec {
             }
         }
 
-        private fun MessageProto.entries(): KRaftEntries = entriesList
+        private fun MessageProto.entries(): KRaftEntries = dataList
             .map(::entryOf)
             .let { entries(it) }
     }
