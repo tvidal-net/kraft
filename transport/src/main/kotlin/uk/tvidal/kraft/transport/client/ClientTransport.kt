@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.transport
+package uk.tvidal.kraft.transport.client
 
 import uk.tvidal.kraft.HEARTBEAT_TIMEOUT
 import uk.tvidal.kraft.RaftNode
@@ -12,6 +12,7 @@ import uk.tvidal.kraft.message.transport.ConnectMessage
 import uk.tvidal.kraft.message.transport.HeartBeatMessage
 import uk.tvidal.kraft.message.transport.TransportMessage
 import uk.tvidal.kraft.retry
+import uk.tvidal.kraft.transport.config.NetworkTransportConfig
 import uk.tvidal.kraft.transport.socket.KRaftConnection
 import uk.tvidal.kraft.transport.socket.KRaftConnection.Companion.NOOP
 import uk.tvidal.kraft.transport.socket.SocketConnection

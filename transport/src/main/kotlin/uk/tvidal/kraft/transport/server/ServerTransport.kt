@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.transport
+package uk.tvidal.kraft.transport.server
 
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.RetryDelay.Companion.FOREVER
@@ -8,6 +8,8 @@ import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.HeartBeatMessage
 import uk.tvidal.kraft.message.transport.TransportMessage
 import uk.tvidal.kraft.retry
+import uk.tvidal.kraft.transport.MessageWriter
+import uk.tvidal.kraft.transport.config.NetworkTransportConfig
 import uk.tvidal.kraft.transport.socket.SocketConnection
 import uk.tvidal.kraft.tryCatch
 import java.io.Closeable

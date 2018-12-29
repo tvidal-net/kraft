@@ -1,9 +1,11 @@
-package uk.tvidal.kraft.transport
+package uk.tvidal.kraft.transport.config
 
 import uk.tvidal.kraft.HEARTBEAT_TIMEOUT
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.codec.ProtoCodecFactory
 import uk.tvidal.kraft.codec.SocketCodecFactory
+import uk.tvidal.kraft.transport.DualQueueMessageReceiver
+import uk.tvidal.kraft.transport.MessageReceiver
 import java.net.InetSocketAddress
 
 class NetworkTransportConfig(
@@ -12,7 +14,9 @@ class NetworkTransportConfig(
     val heartBeatTimeout: Int = HEARTBEAT_TIMEOUT,
     val codec: SocketCodecFactory = ProtoCodecFactory,
     val messageReceiver: MessageReceiver = DualQueueMessageReceiver(),
-    val threadPoolConfig: NetworkTransportThreadPoolConfig = NetworkTransportThreadPoolConfig(self)
+    val threadPoolConfig: NetworkTransportThreadPoolConfig = NetworkTransportThreadPoolConfig(
+        self
+    )
 ) {
     operator fun get(node: RaftNode) = cluster[node]!!
 

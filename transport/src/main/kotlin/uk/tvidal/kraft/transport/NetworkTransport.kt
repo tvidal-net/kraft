@@ -1,6 +1,11 @@
 package uk.tvidal.kraft.transport
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.transport.client.ClientTransport
+import uk.tvidal.kraft.transport.config.NetworkTransportConfig
+import uk.tvidal.kraft.transport.server.ClusterMessageSender
+import uk.tvidal.kraft.transport.server.ServerMessageSender
+import uk.tvidal.kraft.transport.server.ServerTransport
 import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -16,8 +21,7 @@ class NetworkTransport(
     private val messages = config.messageReceiver
 
     private val clients: ConcurrentMap<RaftNode, MessageSender> = ConcurrentHashMap(
-        config
-            .others
+        config.others
             .associateWith {
                 ClusterMessageSender(
                     node = it,

@@ -5,6 +5,9 @@ import uk.tvidal.kraft.client.clientNode
 import uk.tvidal.kraft.client.localNetworkSiteAddress
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.singleThreadPool
+import uk.tvidal.kraft.transport.client.ClientMessageSender
+import uk.tvidal.kraft.transport.client.ClientTransport
+import uk.tvidal.kraft.transport.config.NetworkTransportConfig
 import java.net.InetSocketAddress
 
 typealias MessageReader = Iterable<Message>
