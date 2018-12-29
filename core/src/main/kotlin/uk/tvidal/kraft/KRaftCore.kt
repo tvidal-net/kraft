@@ -6,6 +6,10 @@ import java.util.UUID
 const val DEFAULT_CLUSTER_NAME = "KRaft"
 const val MAX_CLUSTER_NAME_LENGTH = 16
 
+const val FOREVER = 253402300799999L // 9999-12-31 23:59:59.999
+const val NEVER = -1L
+const val NOW = 0L
+
 const val HEARTBEAT_TIMEOUT = 500
 
 const val LONG_BYTES = java.lang.Long.BYTES

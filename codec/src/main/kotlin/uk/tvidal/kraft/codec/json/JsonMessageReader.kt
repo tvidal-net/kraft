@@ -6,7 +6,6 @@ import com.google.gson.JsonElement
 import com.google.gson.stream.JsonReader
 import uk.tvidal.kraft.codec.MessageCodec
 import uk.tvidal.kraft.message.Message
-import uk.tvidal.kraft.message.Message.Companion.EMPTY
 import java.io.Reader
 
 class JsonMessageReader(reader: Reader) : Iterable<Message> {
@@ -17,10 +16,10 @@ class JsonMessageReader(reader: Reader) : Iterable<Message> {
         val json = gson.fromJson<JsonElement>(reader)
         val name = json["type"].asString
         val type = MessageCodec[name]?.messageType!!
-        var message = EMPTY
-        while (message == EMPTY) {
-            message = gson.fromJson<Message>(json, type.java)
+        var message: Message? = null
+        while (message == null) {
+            message = gson.fromJson<Message?>(json, type.java)
+                ?.also { yield(it) }
         }
-        yield(message)
     }
 }

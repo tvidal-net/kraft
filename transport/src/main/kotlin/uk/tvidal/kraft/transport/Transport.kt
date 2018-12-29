@@ -16,8 +16,8 @@ const val BASE_PORT = 1800
 fun localCluster(
     nodes: Collection<RaftNode>,
     basePort: Int = BASE_PORT
-): Map<RaftNode, InetSocketAddress> = nodes.associate {
-    it to InetSocketAddress(localNetworkSiteAddress, basePort + it.index)
+): Map<RaftNode, InetSocketAddress> = nodes.associateWith {
+    InetSocketAddress(localNetworkSiteAddress, basePort + it.index)
 }
 
 fun networkTransportConfig(cluster: Map<RaftNode, InetSocketAddress>) = cluster.map { (node, _) ->

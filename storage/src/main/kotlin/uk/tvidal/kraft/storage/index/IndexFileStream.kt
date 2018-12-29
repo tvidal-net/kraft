@@ -2,6 +2,7 @@ package uk.tvidal.kraft.storage.index
 
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.OutputStream
 
@@ -53,7 +54,7 @@ class IndexFileStream internal constructor(val file: File) : IndexFile {
 
     private class IndexIterator(file: File, val index: Long = Long.MAX_VALUE) : Iterator<IndexEntry> {
 
-        private val inputStream = file.inputStream()
+        private val inputStream = FileInputStream(file)
         private var next = read()
 
         override fun hasNext() = next?.let {

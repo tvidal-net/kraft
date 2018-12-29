@@ -1,6 +1,8 @@
 package uk.tvidal.kraft.config
 
 import uk.tvidal.kraft.HEARTBEAT_TIMEOUT
+import uk.tvidal.kraft.NEVER
+import uk.tvidal.kraft.NOW
 import java.util.Random
 
 data class TimeoutConfig(
@@ -11,12 +13,14 @@ data class TimeoutConfig(
 ) {
     private val random = Random()
 
-    internal val randomElectionTimeout: Int
+    private val randomElectionTimeout: Int
         get() = random.nextInt(maxElectionTimeout - minElectionTimeout + 1) + minElectionTimeout
 
-    internal fun nextElectionTime(now: Long) = now + randomElectionTimeout
+    internal fun nextElectionTime(now: Long): Long = now + randomElectionTimeout
 
-    internal fun firstElectionTime(now: Long) = nextElectionTime(now) +
-        if (firstElectionTimeout <= 0) 0
-        else firstElectionTimeout - minElectionTimeout
+    internal fun firstElectionTime(now: Long): Long = when (firstElectionTimeout.toLong()) {
+        NEVER -> NEVER
+        NOW -> now
+        else -> now + firstElectionTimeout + randomElectionTimeout - minElectionTimeout
+    }
 }

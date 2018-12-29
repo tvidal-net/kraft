@@ -101,7 +101,6 @@ class KRaftFileStorage(
     }
 
     override fun termAt(index: Long): Long = when (index) {
-        0L -> 0L
         in range -> {
             val file = fileSearch(index)
             val entry = file[index]
@@ -109,7 +108,7 @@ class KRaftFileStorage(
             log.trace { "termAt index=$index term=$term file=$file" }
             term
         }
-        else -> throw IndexOutOfRangeException("Index $index is not within the available range")
+        else -> 0L
     }
 
     private fun fileSearch(index: Long): KRaftFile {

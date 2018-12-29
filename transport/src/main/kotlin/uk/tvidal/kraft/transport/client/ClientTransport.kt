@@ -89,7 +89,7 @@ class ClientTransport(
     private fun heartbeat(message: HeartBeatMessage) {
         latency = currentTimeMillis() - message.time
         val text = "[$self] -> $node heartbeat latency=${latency}ms"
-        if (latency < heartbeat.getDelay(MILLISECONDS)) log.debug(text)
+        if (latency < heartbeat.getDelay(MILLISECONDS)) log.trace(text)
         else log.warn(text)
     }
 

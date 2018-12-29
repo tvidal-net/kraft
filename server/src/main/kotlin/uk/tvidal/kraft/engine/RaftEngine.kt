@@ -35,13 +35,22 @@ abstract class RaftEngine internal constructor(
 
     override val transport = config.transport
     protected val storage = config.storage
-    protected val timeout = config.timeout
+    private val timeout = config.timeout
     internal val sizes = config.sizes
+
+    final override val lastLogTerm
+        get() = storage.lastLogTerm
+
+    final override val lastLogIndex
+        get() = storage.lastLogIndex
+
+    final override val nextLogIndex
+        get() = storage.nextLogIndex
 
     final override var role = if (cluster.single) LEADER else FOLLOWER
         protected set
 
-    final override var term = 0L
+    final override var term = lastLogTerm
         protected set
 
     final override var leaderCommitIndex = 0L
@@ -56,15 +65,6 @@ abstract class RaftEngine internal constructor(
 
     final override var logConsistent = false
         private set
-
-    final override val lastLogTerm
-        get() = storage.lastLogTerm
-
-    final override val lastLogIndex
-        get() = storage.lastLogIndex
-
-    final override val nextLogIndex
-        get() = storage.nextLogIndex
 
     final override var leader: RaftNode? = null
         private set
