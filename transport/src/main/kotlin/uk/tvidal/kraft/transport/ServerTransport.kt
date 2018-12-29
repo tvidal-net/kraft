@@ -5,12 +5,13 @@ import uk.tvidal.kraft.RetryDelay.Companion.FOREVER
 import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.transport.HeartBeatMessage
 import uk.tvidal.kraft.message.transport.TransportMessage
 import uk.tvidal.kraft.retry
 import uk.tvidal.kraft.transport.socket.SocketConnection
 import uk.tvidal.kraft.tryCatch
 import java.io.Closeable
-import java.net.InetAddress
+import java.lang.System.currentTimeMillis
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ConcurrentHashMap
@@ -21,6 +22,7 @@ class ServerTransport(
 
     internal companion object : KRaftLogging()
 
+    private val heartbeatTimeout = config.heartBeatTimeout
     private val writerThread = config.writerThread
     private val readerThread = config.readerThread
     private val messages = config.messageReceiver
@@ -47,33 +49,48 @@ class ServerTransport(
     }
 
     private fun read(socket: Socket) {
-        val connection = SocketConnection(codec, socket)
-        readerThread.retry(::isActive, FOREVER, name = connection.toString()) {
-            for (message in connection.read) {
-                if (validateClient(socket.inetAddress, message.from)) {
-                    receiveMessage(socket, message)
+        readerThread.retry(::isActive, FOREVER, name = socket.toString()) {
+            SocketConnection(codec, socket).use { connection ->
+                for (message in connection.read) {
+                    if (validateClient(socket, message.from)) {
+                        receiveMessage(message)
+                    }
                 }
             }
         }
     }
 
-    private fun receiveMessage(socket: Socket, message: Message) {
-        val from = message.from
-        writers.computeIfAbsent(from) {
-            log.info { "[$self] <- $from client connected $socket" }
-            codec.writer(socket)
-        }
-        if (message !is TransportMessage) {
-            messages.offer(message)
-        }
-    }
-
-    private fun validateClient(address: InetAddress, from: RaftNode): Boolean {
+    private fun validateClient(socket: Socket, from: RaftNode): Boolean {
+        val address = socket.inetAddress
         val expected = cluster[from]?.address
         return if (expected != null && expected != address) {
             log.warn { "[$self] <- $from invalid address=$address expected=$expected" }
             false
-        } else true
+        } else {
+            writers.computeIfAbsent(from) {
+                log.info { "[$self] <- $from client connected $socket" }
+                codec.writer(socket)
+            }
+            true
+        }
+    }
+
+    private fun receiveMessage(message: Message) {
+        when (message) {
+            is HeartBeatMessage -> heartbeat(message)
+            !is TransportMessage -> messages.offer(message)
+        }
+    }
+
+    private fun heartbeat(message: HeartBeatMessage) {
+        if (message.ping) {
+            val response = message.copy(self, ping = false)
+            writers[message.from]?.invoke(response)
+        }
+        val lag = currentTimeMillis() - message.time
+        if (lag > heartbeatTimeout) {
+            log.warn { "[$self] <- ${message.from} time skew is ${lag}ms" }
+        }
     }
 
     fun write(to: RaftNode, message: Message) {

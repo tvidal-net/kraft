@@ -5,9 +5,12 @@ import java.lang.System.currentTimeMillis
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -26,8 +29,8 @@ fun threadFactory(name: String) = object : ThreadFactory {
     override fun newThread(it: Runnable) = daemonThread("$name-$next", it)
 }
 
-fun singleThreadPool(name: String): ExecutorService =
-    Executors.newSingleThreadExecutor { daemonThread(name, it) }
+fun singleThreadPool(name: String): ScheduledExecutorService =
+    Executors.newSingleThreadScheduledExecutor { daemonThread(name, it) }
 
 fun fixedThreadPool(name: String, size: Int): ExecutorService = ThreadPoolExecutor(
     size, size,
@@ -45,6 +48,14 @@ fun cachedThreadPool(
     SynchronousQueue(),
     threadFactory(name)
 )
+
+fun ScheduledExecutorService.every(period: Int, block: () -> Unit): ScheduledFuture<*> {
+    val log = KRaftLogger(block)
+    val longPeriod = period.toLong()
+    return scheduleAtFixedRate({
+        log.tryCatch(false, block)
+    }, longPeriod, longPeriod, MILLISECONDS)
+}
 
 fun <T> ExecutorService.tryCatch(block: () -> T): Future<T> = submit<T> {
     KRaftLogger(block)

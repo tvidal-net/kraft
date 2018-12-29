@@ -1,20 +1,26 @@
 package uk.tvidal.kraft.transport
 
+import uk.tvidal.kraft.HEARTBEAT_TIMEOUT
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.RetryDelay.Companion.FOREVER
 import uk.tvidal.kraft.codec.SocketCodecFactory
+import uk.tvidal.kraft.every
 import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.logging.KRaftLogging
 import uk.tvidal.kraft.message.Message
 import uk.tvidal.kraft.message.transport.ConnectMessage
+import uk.tvidal.kraft.message.transport.HeartBeatMessage
+import uk.tvidal.kraft.message.transport.TransportMessage
 import uk.tvidal.kraft.retry
 import uk.tvidal.kraft.transport.socket.KRaftConnection
 import uk.tvidal.kraft.transport.socket.KRaftConnection.Companion.NOOP
 import uk.tvidal.kraft.transport.socket.SocketConnection
 import uk.tvidal.kraft.tryCatch
 import java.io.Closeable
+import java.lang.System.currentTimeMillis
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 class ClientTransport(
     val node: RaftNode,
@@ -34,6 +40,13 @@ class ClientTransport(
 
     @Volatile
     private var connection: KRaftConnection = NOOP
+
+    private val heartbeat = writerThread.every(HEARTBEAT_TIMEOUT) {
+        connection.write(HeartBeatMessage(self))
+    }
+
+    var latency: Long = 0L
+        private set
 
     init {
         with(config) {
@@ -66,11 +79,22 @@ class ClientTransport(
             log.warn { "[$self] -> $node dropping unknown message $message" }
             return
         }
-        messages.offer(message)
+        when (message) {
+            is HeartBeatMessage -> heartbeat(message)
+            !is TransportMessage -> messages.offer(message)
+        }
+    }
+
+    private fun heartbeat(message: HeartBeatMessage) {
+        latency = currentTimeMillis() - message.time
+        val text = "[$self] -> $node heartbeat latency=${latency}ms"
+        if (latency < heartbeat.getDelay(MILLISECONDS)) log.debug(text)
+        else log.warn(text)
     }
 
     override fun close() {
         isActive = false
+        heartbeat.cancel(false)
         connection.close()
         log.info { "closed $this" }
     }

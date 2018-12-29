@@ -1,9 +1,10 @@
 package uk.tvidal.kraft.config
 
+import uk.tvidal.kraft.HEARTBEAT_TIMEOUT
 import java.util.Random
 
 data class TimeoutConfig(
-    val heartbeatTimeout: Int = 500,
+    val heartbeatTimeout: Int = HEARTBEAT_TIMEOUT,
     val minElectionTimeout: Int = heartbeatTimeout * 3,
     val maxElectionTimeout: Int = minElectionTimeout * 2,
     val firstElectionTimeout: Int = 0
