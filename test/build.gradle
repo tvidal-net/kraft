@@ -1,4 +1,3 @@
 dependencies {
     implementation project(':kraft-core')
-    testImplementation project(':kraft-server')
 }

@@ -1,7 +1,8 @@
 package uk.tvidal.kraft
 
-annotation class Description(
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.annotation.AnnotationTarget.CLASS
 
-    val text: String
-
-)
+@Target(CLASS)
+@Retention(RUNTIME)
+annotation class Description(val value: String)

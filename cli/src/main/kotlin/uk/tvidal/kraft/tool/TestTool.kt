@@ -1,4 +1,4 @@
-package uk.tvidal.kraft.tools
+package uk.tvidal.kraft.tool
 
 import joptsimple.OptionParser
 import joptsimple.OptionSet

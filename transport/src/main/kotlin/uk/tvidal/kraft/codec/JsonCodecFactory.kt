@@ -10,5 +10,5 @@ object JsonCodecFactory : SocketCodecFactory {
 
     override fun reader(socket: Socket): MessageReader = jsonReader(socket.getInputStream())
 
-    override fun writer(socket: Socket): MessageWriter = jsonWriter(socket.getOutputStream())::write
+    override fun writer(socket: Socket): MessageWriter = jsonWriter(socket.getOutputStream())
 }

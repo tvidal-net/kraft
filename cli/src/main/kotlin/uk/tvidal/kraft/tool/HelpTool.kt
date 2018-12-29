@@ -1,25 +1,30 @@
-package uk.tvidal.kraft.tools
+package uk.tvidal.kraft.tool
 
 import joptsimple.OptionParser
 import joptsimple.OptionSet
-import uk.tvidal.kraft.DEFAULT_MARGIN
-import uk.tvidal.kraft.DEFAULT_WIDTH
 import uk.tvidal.kraft.Description
 import uk.tvidal.kraft.ERROR_SIMPLE
 import uk.tvidal.kraft.HELP_DESCRIPTION
 import uk.tvidal.kraft.KRaftTool
-import uk.tvidal.kraft.SPACE
 import uk.tvidal.kraft.TOOLS
+import uk.tvidal.kraft.tool.help.DEFAULT_MARGIN
+import uk.tvidal.kraft.tool.help.DEFAULT_WIDTH
+import uk.tvidal.kraft.tool.help.SPACE
 import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
 
 @Description(HELP_DESCRIPTION)
 class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     init {
-        parser.formatHelpWith {
-            val width = (TOOLS.keys.map { it.length + 4 }.max() ?: DEFAULT_WIDTH) + DEFAULT_MARGIN
+        parser.formatHelpWith { parser ->
+            val maxWidth = TOOLS.keys
+                .map { it.length + 4 }
+                .max()
 
-            StringBuffer().run {
+            val width = (maxWidth ?: DEFAULT_WIDTH) + DEFAULT_MARGIN
+
+            buildString {
                 appendln("Usage: kraft <tool-name> [args] (or --help)")
                 appendln()
                 appendln("Available Tools:")
@@ -27,15 +32,12 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
                     append(" - $toolName:".padEnd(width, SPACE))
                     appendln(toolClass.description)
                 }
-                String(this)
             }
         }
     }
 
-    private val KClass<*>.description
-        get() = annotations
-            .filterIsInstance<Description>()
-            .firstOrNull()?.text ?: simpleName!!
+    private val KClass<*>.description: String
+        get() = findAnnotation<Description>()?.value ?: simpleName!!
 
     override fun execute(op: OptionSet): Int {
         parser.printHelpOn(System.err)

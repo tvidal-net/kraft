@@ -8,7 +8,6 @@ mainClassName = 'uk.tvidal.kraft.LocalTestKt'
 dependencies {
     implementation project(':kraft-core')
     implementation project(':kraft-server')
-    implementation project(':kraft-local')
     implementation project(':kraft-codec')
     implementation project(':kraft-client')
     implementation project(':kraft-transport')

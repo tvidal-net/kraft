@@ -1,4 +1,4 @@
-package uk.tvidal.kraft
+package uk.tvidal.kraft.tool.help
 
 import joptsimple.HelpFormatter
 import joptsimple.OptionDescriptor
@@ -16,7 +16,10 @@ internal object KRaftHelpFormatter : HelpFormatter {
         val options = allOptions.values
             .filterNot { it.representsNonOptions() }
 
-        val width = maxOf(colWidth(options.map { it.text }), MIN_WIDTH)
+        val width = maxOf(
+            colWidth(options.map { it.text }),
+            MIN_WIDTH
+        )
         fun appendColumn(text: String) {
             append(text.padEnd(width, SPACE))
         }

@@ -8,6 +8,5 @@ include ':server'
 include ':storage'
 include ':test'
 include ':transport'
-include ':local'
 
 rootProject.children.each { it.name = "kraft-${it.name}" }

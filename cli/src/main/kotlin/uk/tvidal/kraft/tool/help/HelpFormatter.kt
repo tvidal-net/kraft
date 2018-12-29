@@ -1,4 +1,4 @@
-package uk.tvidal.kraft
+package uk.tvidal.kraft.tool.help
 
 const val DASH = '-'
 const val SPACE = ' '
