@@ -17,9 +17,9 @@ import kotlin.reflect.full.findAnnotation
 class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     init {
-        parser.formatHelpWith { parser ->
+        parser.formatHelpWith {
             val maxWidth = TOOLS.keys
-                .map { it.length + 4 }
+                .map { key -> key.length + 4 }
                 .max()
 
             val width = (maxWidth ?: DEFAULT_WIDTH) + DEFAULT_MARGIN

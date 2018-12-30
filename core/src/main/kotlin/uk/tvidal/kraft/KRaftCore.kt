@@ -2,6 +2,8 @@ package uk.tvidal.kraft
 
 import java.lang.String.format
 import java.util.UUID
+import java.util.concurrent.TimeUnit
+import kotlin.math.round
 
 const val DEFAULT_CLUSTER_NAME = "KRaft"
 const val MAX_CLUSTER_NAME_LENGTH = 16
@@ -41,16 +43,4 @@ inline fun <T> iterable(
     override fun iterator() = this
     override fun hasNext() = hasNext()
     override fun next() = iterator()
-}
-
-fun duration(millis: Long): String {
-    val duration: Pair<String, Double> = when {
-        // Hours
-        millis > 7_200_000 -> "h" to millis / 3_600_000.0
-        // Minutes
-        millis > 120_000L -> "m" to millis / 60_000.0
-        // Seconds
-        else -> "s" to millis / 1000.0
-    }
-    return format("%.4g%s", duration.second, duration.first)
 }

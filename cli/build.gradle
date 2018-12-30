@@ -3,7 +3,7 @@ plugins {
     id "com.github.johnrengelman.shadow" version "4.0.3"
 }
 
-mainClassName = 'uk.tvidal.kraft.LocalTestKt'
+mainClassName = 'uk.tvidal.kraft.ApplicationKt'
 
 dependencies {
     implementation project(':kraft-core')

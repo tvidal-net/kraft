@@ -6,14 +6,11 @@ import joptsimple.OptionParser
 import joptsimple.OptionSet
 import uk.tvidal.kraft.ansi.AnsiColor.RED
 import uk.tvidal.kraft.ansi.AnsiColor.YELLOW
-import uk.tvidal.kraft.tool.help.EMPTY
-import uk.tvidal.kraft.tool.help.KRaftHelpFormatter
 import java.lang.System.exit
 import java.lang.System.getProperty
 import java.lang.System.setProperty
-import kotlin.reflect.full.isSuperclassOf
+import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
-import kotlin.text.RegexOption.IGNORE_CASE
 
 const val SUCCESS = 0
 const val ERROR_SIMPLE = 1
@@ -30,11 +27,10 @@ val ERROR = RED.format("[ERROR]")
 @Suppress("UnstableApiUsage")
 private val CLASS_PATH = ClassPath.from(ClassLoader.getSystemClassLoader())!!
 
-private val REGEX_TOOL = Regex("Tool$", IGNORE_CASE)
-private val REGEX_CAMEL = Regex("([a-z])([A-Z])")
-private const val REPLACE_CAMEL = "\$1-\$2"
+const val TOOLS_PACKAGE = "uk.tvidal.kraft.tool"
 
-private const val TOOLS_PACKAGE = "uk.tvidal.kraft.tool"
+private val toolNameFix = Regex("Tool?$")
+private val camelCaseFix = Regex("([a-z][A-Z])")
 
 var logbackConfigurationFile: String
     get() = getProperty(LOGBACK_CONFIG)
@@ -43,42 +39,39 @@ var logbackConfigurationFile: String
     }
 
 val TOOLS = CLASS_PATH.getTopLevelClasses(TOOLS_PACKAGE)
-    .filter { REGEX_TOOL.containsMatchIn(it.name) }
-    .map { it.load().kotlin }
-    .filter { KRaftTool::class.isSuperclassOf(it) }
-    .associateBy {
-        it.simpleName!!
-            .let { REGEX_TOOL.replace(it, EMPTY) }
-            .let { REGEX_CAMEL.replace(it, REPLACE_CAMEL) }
-            .toLowerCase()
-    }
+    .map { jClass -> jClass.load().kotlin }
+    .filterIsInstance<KClass<out KRaftTool>>()
+    .associateBy(::toolName)
 
-private fun optionParser(allowsUnrecognizedOptions: Boolean = false) = OptionParser().apply {
+private fun toolName(kClass: KClass<out KRaftTool>): String = kClass
+    .simpleName!!
+    .replace(toolNameFix, "")
+    .replace(camelCaseFix, "\$1-\$2")
+    .toLowerCase()
+
+fun optionParser(allowsUnrecognizedOptions: Boolean = false) = OptionParser().apply {
     if (allowsUnrecognizedOptions) allowsUnrecognizedOptions()
     accepts(HELP, HELP_DESCRIPTION).forHelp()
-    formatHelpWith(KRaftHelpFormatter)
 }
 
-private fun createTool(toolName: String, parser: OptionParser): KRaftTool {
-    val toolClass = TOOLS[toolName]!!
-    val ctor = toolClass.primaryConstructor!!
-    val tool = ctor.call(parser)
-    return tool as KRaftTool
-}
+private fun createTool(toolName: String, parser: OptionParser): KRaftTool = TOOLS[toolName]
+    ?.primaryConstructor
+    ?.call(parser)!!
 
-private fun executeTool(toolName: String, vararg args: String): Int {
+private fun OptionParser.printHelp(): Int = printHelpOn(System.err)
+    .let { ERROR_SIMPLE }
+
+private fun executeTool(toolName: String, args: List<String> = emptyList()): Int {
     val parser = optionParser()
-    val printHelp = { parser.printHelpOn(System.err); ERROR_SIMPLE }
 
     val tool = createTool(toolName, parser)
     return try {
-        val op = parser.parse(*args)
-
-        if (op.has(HELP)) printHelp()
+        val op = parser.parse(*args.toTypedArray())
+        if (op.has(HELP)) parser.printHelp()
         else tool.execute(op)
     } catch (e: OptionException) {
         System.err.println("$ERROR ${e.message}\n")
-        printHelp()
+        parser.printHelp()
     } catch (e: Throwable) {
         e.printStackTrace()
         ERROR_SEVERE
@@ -87,11 +80,11 @@ private fun executeTool(toolName: String, vararg args: String): Int {
 
 fun execute(op: OptionSet): Int {
     val args = op.nonOptionArguments().filterIsInstance<String>()
-    val toolName = args.getOrNull(0) ?: HELP
+    val toolName = args.firstOrNull() ?: HELP
 
     return if (TOOLS.containsKey(toolName)) {
         val toolArgs = if (op.has(HELP)) listOf("--$HELP") else args.drop(1)
-        executeTool(toolName, *toolArgs.toTypedArray())
+        executeTool(toolName, toolArgs)
     } else {
         System.err.println("$ERROR The tool '${YELLOW.format(toolName)}' does not exist.\n")
         executeTool(HELP)

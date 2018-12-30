@@ -15,5 +15,5 @@ enum class AnsiColor(color: Int) {
     val fg = tput("setaf", color)
     val bg = tput("setab", color)
 
-    fun format(text: String, force: Boolean = false) = if (force || hasAnsiSupport) ansiBold + fg + text + ansiReset else text
+    fun format(text: Any?, force: Boolean = false) = if (force || hasAnsiSupport) "$ansiBold$fg$text$ansiReset" else text.toString()
 }

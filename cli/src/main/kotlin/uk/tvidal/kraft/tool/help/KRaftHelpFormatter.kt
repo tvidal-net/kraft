@@ -2,6 +2,8 @@ package uk.tvidal.kraft.tool.help
 
 import joptsimple.HelpFormatter
 import joptsimple.OptionDescriptor
+import uk.tvidal.kraft.Description
+import uk.tvidal.kraft.HELP_DESCRIPTION
 
 internal object KRaftHelpFormatter : HelpFormatter {
 
@@ -20,6 +22,7 @@ internal object KRaftHelpFormatter : HelpFormatter {
             colWidth(options.map { it.text }),
             MIN_WIDTH
         )
+
         fun appendColumn(text: String) {
             append(text.padEnd(width, SPACE))
         }

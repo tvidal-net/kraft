@@ -28,7 +28,7 @@ class KRaftData internal constructor(
     val buffer: ByteBufferStream
 ) : MutableIndexRange, DataFile {
 
-    internal companion object : KRaftLogging() {
+    companion object : KRaftLogging() {
 
         fun open(file: File) = KRaftData(
             ByteBufferStream(file, file.length())

@@ -22,8 +22,8 @@ data class FileName(
 
         private const val FORMAT = "%s-%d%s"
 
-        private const val DATA_FILE = ".kr"
-        private const val INDEX_FILE = ".krx"
+        const val DATA_FILE = ".kr"
+        const val INDEX_FILE = ".krx"
 
         private const val COMMITTED_EXT = ".c"
         private const val DISCARDED_EXT = ".d"
@@ -56,11 +56,11 @@ data class FileName(
             return null
         }
 
-        fun isValidFileName(fileName: String, name: String): Boolean {
+        fun isValidFileName(fileName: String, name: String, ext: String = DATA_FILE): Boolean {
             val match = regex.matchEntire(fileName)
             return match?.run {
                 equals(name, groupValues[1]) &&
-                    equals(DATA_FILE, groupValues[4])
+                    equals(ext, groupValues[4])
             } ?: false
         }
 

@@ -52,7 +52,7 @@ val producer = producer(serverNode to address)
 singleThreadPool("KRaftProducerThread").loop {
 
     val now = Instant.now()
-    val entryCount = random.nextInt(5, 51)
+    val entryCount = random.nextInt(1, 50)
     val data = entries(
         (0 until entryCount).map {
             entryOf("$now Message $it ")
@@ -60,7 +60,7 @@ singleThreadPool("KRaftProducerThread").loop {
     )
 
     producer.publish(data)
-    sleep(random.nextInt(30, 50).toLong())
+    sleep(random.nextInt(300, 500).toLong())
 }
 
 consumer(serverNode to address, index = LOG_HEAD) {
