@@ -27,6 +27,10 @@ class MultiThreadClusterServer internal constructor(
         log.info { "Done" }
     }
 
+    override fun join() {
+        executor.awaitTermination(FOREVER, MILLISECONDS)
+    }
+
     private fun loop(raft: RaftEngine) {
         val thread = Thread.currentThread()
         while (!thread.isInterrupted) {

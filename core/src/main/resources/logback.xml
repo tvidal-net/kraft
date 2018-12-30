@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" debug="false" xmlns="http://ch.qos.logback/xml/ns/logback"
+    xsi:schemaLocation="http://ch.qos.logback/xml/ns/logback https://raw.githubusercontent.com/enricopulatzo/logback-XSD/master/src/main/xsd/logback.xsd"
+    packagingData="true">
+
+    <appender name="NOP" class="ch.qos.logback.core.helpers.NOPAppender" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{HH:mm:ss.SSS} %boldCyan(%5level) [%magenta(%thread)] %blue(%26logger{0}) %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${logback.logFile:-kraft.log}</file>
+        <encoder>
+            <pattern>%date{HH:mm:ss.SSS} %level{1} [%thread] %logger{1} %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="uk.tvidal" level="${logback.level:-DEBUG}" />
+
+    <root level="INFO">
+        <appender-ref ref="${logback.appender:-NOP}" />
+    </root>
+
+</configuration>

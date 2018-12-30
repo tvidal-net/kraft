@@ -46,6 +46,10 @@ class SingleThreadClusterServer internal constructor(
         }
     }
 
+    override fun join() {
+        currentThread.get()?.run { join() }
+    }
+
     private fun loop() {
         var nodeIndex = 0
         while (running) {

@@ -7,4 +7,6 @@ interface KRaftServer : AutoCloseable {
     fun stop()
 
     fun publish(payload: ByteArray)
+
+    fun join()
 }

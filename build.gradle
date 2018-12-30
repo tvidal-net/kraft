@@ -58,7 +58,7 @@ subprojects {
 
         // add :kraft-core:testRuntime to all other subprojects
         if (name != 'kraft-test') {
-            testRuntimeOnly project(':kraft-test')
+            testImplementation project(':kraft-test')
         }
     }
 

@@ -8,9 +8,8 @@ import uk.tvidal.kraft.ansi.AnsiColor.YELLOW
 import uk.tvidal.kraft.tool.CatTool
 import uk.tvidal.kraft.tool.ConsumerTool
 import uk.tvidal.kraft.tool.HelpTool
+import uk.tvidal.kraft.tool.TestTool
 import java.lang.System.exit
-import java.lang.System.getProperty
-import java.lang.System.setProperty
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
@@ -21,9 +20,6 @@ const val ERROR_SEVERE = 127
 const val HELP = "help"
 const val HELP_DESCRIPTION = "Prints usage information"
 
-private const val LOGBACK_CONFIG = "logback.configurationFile"
-private const val LOGBACK_CONSOLE = "logback-console.xml"
-
 private val ERROR = RED("[ERROR]")
 
 private val toolNameFix = Regex("Tool?$")
@@ -32,18 +28,9 @@ private val camelCaseFix = Regex("([a-z][A-Z])")
 internal val tools: Map<String, KClass<out KRaftTool>> = listOf(
     HelpTool::class,
     CatTool::class,
-    ConsumerTool::class
+    ConsumerTool::class,
+    TestTool::class
 ).associateBy(::toolName)
-
-var logbackConfigurationFile: String
-    get() = getProperty(LOGBACK_CONFIG)
-    set(value) {
-        setProperty(LOGBACK_CONFIG, value)
-    }
-
-fun logbackConsoleConfiguration() {
-    logbackConfigurationFile = LOGBACK_CONSOLE
-}
 
 private fun toolName(kClass: KClass<out KRaftTool>): String = kClass
     .simpleName!!
@@ -97,9 +84,12 @@ fun execute(op: OptionSet): Int {
 }
 
 fun main(args: Array<String>) {
-    logbackConsoleConfiguration()
     val parser = optionParser(true)
+    LogConfig(parser)
+
     val op = parser.parse(*args)
+    LogConfig(op)
+
     val ret = execute(op)
     exit(ret)
 }
