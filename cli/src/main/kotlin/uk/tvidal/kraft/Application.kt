@@ -18,7 +18,7 @@ const val ERROR_SIMPLE = 1
 const val ERROR_SEVERE = 127
 
 const val HELP = "help"
-const val HELP_DESCRIPTION = "Prints usage information"
+const val HELP_DESCRIPTION = "print usage information"
 
 private val ERROR = RED("[ERROR]")
 
@@ -41,11 +41,13 @@ private fun toolName(kClass: KClass<out KRaftTool>): String = kClass
 fun optionParser(allowsUnrecognizedOptions: Boolean = false) = OptionParser().apply {
     if (allowsUnrecognizedOptions) allowsUnrecognizedOptions()
     accepts(HELP, HELP_DESCRIPTION).forHelp()
-}
+}.also { LogConfig(it) }
 
 private fun createTool(kClass: KClass<out KRaftTool>, parser: OptionParser): KRaftTool = kClass
     .primaryConstructor!!
     .call(parser)
+
+private fun help() = executeTool(HelpTool::class)
 
 private fun OptionParser.printHelp(): Int = printHelpOn(System.err)
     .let { ERROR_SIMPLE }
@@ -72,21 +74,19 @@ private fun executeTool(kClass: KClass<out KRaftTool>, args: Collection<String> 
 fun execute(op: OptionSet): Int {
     val args = op.extraArguments()
     val toolName = args.firstOrNull()
-        ?: return executeTool(HelpTool::class)
+        ?: return help()
 
     return if (tools.containsKey(toolName)) {
         val toolArgs = if (op.has(HELP)) listOf("--$HELP") else args.drop(1)
         executeTool(toolName, toolArgs)
     } else {
         System.err.println("$ERROR The tool '${YELLOW(toolName)}' does not exist.\n")
-        executeTool(HelpTool::class)
+        help()
     }
 }
 
 fun main(args: Array<String>) {
     val parser = optionParser(true)
-    LogConfig(parser)
-
     val op = parser.parse(*args)
     LogConfig(op)
 

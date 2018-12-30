@@ -1,9 +1,6 @@
 package uk.tvidal.kraft
 
-import java.lang.String.format
 import java.util.UUID
-import java.util.concurrent.TimeUnit
-import kotlin.math.round
 
 const val DEFAULT_CLUSTER_NAME = "KRaft"
 const val MAX_CLUSTER_NAME_LENGTH = 16
@@ -13,11 +10,6 @@ const val NEVER = -1L
 const val NOW = 0L
 
 const val HEARTBEAT_TIMEOUT = 500
-
-const val LONG_BYTES = java.lang.Long.BYTES
-const val INT_BYTES = java.lang.Integer.BYTES
-const val SHORT_BYTES = java.lang.Short.BYTES
-const val BYTE_BYTES = java.lang.Byte.BYTES
 
 const val FIRST_INDEX = 1L
 

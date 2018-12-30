@@ -2,6 +2,7 @@ package uk.tvidal.kraft
 
 import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.server.ClusterServer
+import uk.tvidal.kraft.server.KRaftServer
 import uk.tvidal.kraft.server.LoopToleranceController
 import uk.tvidal.kraft.server.LoopToleranceController.Companion.LOOP_TOLERANCE_MILLIS
 import uk.tvidal.kraft.server.MultiThreadClusterServer
@@ -28,7 +29,7 @@ fun multiThreadClusterServer(
     loopToleranceMillis: Long = LOOP_TOLERANCE_MILLIS
 ): ClusterServer = MultiThreadClusterServer(clusterConfig, LoopToleranceController(loopToleranceMillis))
 
-fun loadResource(path: String): List<String> = String::class.java
-    .getResourceAsStream(path)!!
+fun textResource(path: String): List<String> = KRaftServer::class.java.getResource(path)!!
+    .openStream()
     .reader()
     .readLines()

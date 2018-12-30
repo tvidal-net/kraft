@@ -19,9 +19,9 @@ object LocalTest {
     private const val PATH = "/tmp/kraft"
 
     private fun firstElectionTimeout(node: RaftNode): Int = when (node.index) {
-        LEADER -> NOW
-        else -> NEVER
-    }.toInt()
+        LEADER -> NOW.toInt()
+        else -> Int.MAX_VALUE
+    }
 
     @JvmStatic
     fun main(vararg args: String) {

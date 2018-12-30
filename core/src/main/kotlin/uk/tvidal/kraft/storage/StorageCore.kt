@@ -1,6 +1,5 @@
 package uk.tvidal.kraft.storage
 
-import uk.tvidal.kraft.LONG_BYTES
 import java.nio.ByteBuffer
 import java.nio.ByteBuffer.allocate
 import java.nio.ByteBuffer.wrap
@@ -11,6 +10,8 @@ private val EMPTY_PAYLOAD = ByteArray(0)
 private val EMPTY_ENTRY = KRaftEntry(EMPTY_PAYLOAD, 0L)
 
 private val EMPTY_ENTRIES = KRaftEntries(emptyList())
+
+const val LONG_BYTES = java.lang.Long.BYTES
 
 fun emptyEntry() = EMPTY_ENTRY
 
