@@ -13,7 +13,9 @@ val terminalColors: Int = tput("colors").toInt()
 
 val hasAnsiSupport = System.console() != null && terminalColors > 2
 
-internal fun tput(vararg args: Any) = exec("tput", "-T", "xterm-256color", *args.map(Any::toString).toTypedArray())
+private const val term = "xterm-256color"
+
+internal fun tput(vararg args: Any) = exec("tput", "-T", term, *args.map(Any::toString).toTypedArray())
 
 private fun exec(vararg args: String): String = ProcessBuilder()
     .redirectErrorStream(true)

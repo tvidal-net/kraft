@@ -3,7 +3,7 @@ plugins {
     id 'org.springframework.boot' version '2.1.1.RELEASE'
 }
 
-mainClassName = 'uk.tvidal.kraft.ApplicationKt'
+mainClassName = 'uk.tvidal.kraft.KRaftApplication'
 
 dependencies {
     implementation project(':kraft-core')
@@ -19,6 +19,8 @@ dependencies {
 }
 
 bootJar {
-    launchScript()
     version null
+    launchScript {
+        script = file("src/main/script/launch-script.sh")
+    }
 }

@@ -2,8 +2,6 @@ package uk.tvidal.kraft.tool.help
 
 import joptsimple.HelpFormatter
 import joptsimple.OptionDescriptor
-import uk.tvidal.kraft.Description
-import uk.tvidal.kraft.HELP_DESCRIPTION
 
 internal object KRaftHelpFormatter : HelpFormatter {
 

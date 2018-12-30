@@ -2,11 +2,11 @@ package uk.tvidal.kraft.tool
 
 import joptsimple.OptionParser
 import joptsimple.OptionSet
+import uk.tvidal.kraft.KRaftApplication.ERROR_SIMPLE
+import uk.tvidal.kraft.KRaftApplication.HELP_DESCRIPTION
+import uk.tvidal.kraft.KRaftApplication.tools
 import uk.tvidal.kraft.Description
-import uk.tvidal.kraft.ERROR_SIMPLE
-import uk.tvidal.kraft.HELP_DESCRIPTION
 import uk.tvidal.kraft.KRaftTool
-import uk.tvidal.kraft.tools
 import uk.tvidal.kraft.tool.help.DEFAULT_MARGIN
 import uk.tvidal.kraft.tool.help.DEFAULT_WIDTH
 import uk.tvidal.kraft.tool.help.SPACE

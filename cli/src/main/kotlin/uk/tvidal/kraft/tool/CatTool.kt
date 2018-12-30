@@ -23,7 +23,7 @@ import uk.tvidal.kraft.storage.data.KRaftData
 import uk.tvidal.kraft.storage.index.KRaftIndex
 import java.io.File
 
-@Description("View the contents of a kraft data or index file")
+@Description("show the contents of a kraft data or index file")
 class CatTool(parser: OptionParser) : KRaftTool {
 
     companion object {
