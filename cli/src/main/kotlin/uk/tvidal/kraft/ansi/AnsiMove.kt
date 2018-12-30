@@ -1,8 +1,6 @@
 package uk.tvidal.kraft.ansi
 
-import joptsimple.internal.Strings.EMPTY
-
-enum class AnsiMove(private val id: Char) {
+enum class AnsiMove(private val ch: Char) {
 
     UP('A'),
     DOWN('B'),
@@ -14,5 +12,25 @@ enum class AnsiMove(private val id: Char) {
     SAVE('s'),
     RESTORE('u');
 
-    fun move(n: Int, force: Boolean = false) = if (force || hasAnsiSupport) "$ESC[$n$id" else EMPTY
+    companion object {
+        private inline fun ansi(block: () -> String) {
+            print(block())
+        }
+
+        fun up(n: Int) = ansi { "$ESC[$n$UP" }
+
+        fun down(n: Int) = ansi { "$ESC[$n$DOWN" }
+
+        fun clearLine() = ansi { "$ESC[2$CLEAR" }
+
+        fun column(n: Int) = ansi { "$ESC[$n$COL" }
+
+        fun pos(row: Int = 0, col: Int = 0) = ansi { "$ESC[$row;$col$ROW" }
+
+        fun save() = ansi { "$ESC[$SAVE" }
+
+        fun restore() = ansi { "$ESC[$RESTORE" }
+    }
+
+    override fun toString() = ch.toString()
 }

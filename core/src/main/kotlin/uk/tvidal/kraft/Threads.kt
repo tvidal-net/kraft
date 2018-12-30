@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
@@ -49,12 +50,16 @@ fun cachedThreadPool(
     threadFactory(name)
 )
 
-fun ScheduledExecutorService.every(period: Int, block: () -> Unit): ScheduledFuture<*> {
+fun ScheduledExecutorService.every(
+    period: Int,
+    unit: TimeUnit = MILLISECONDS,
+    block: () -> Unit
+): ScheduledFuture<*> {
     val log = KRaftLogger(block)
     val longPeriod = period.toLong()
     return scheduleAtFixedRate({
         log.tryCatch(false, block)
-    }, longPeriod, longPeriod, MILLISECONDS)
+    }, longPeriod, longPeriod, unit)
 }
 
 fun <T> ExecutorService.tryCatch(block: () -> T): Future<T> = submit<T> {
