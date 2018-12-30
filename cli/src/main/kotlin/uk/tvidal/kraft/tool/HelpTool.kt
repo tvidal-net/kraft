@@ -6,7 +6,7 @@ import uk.tvidal.kraft.Description
 import uk.tvidal.kraft.ERROR_SIMPLE
 import uk.tvidal.kraft.HELP_DESCRIPTION
 import uk.tvidal.kraft.KRaftTool
-import uk.tvidal.kraft.TOOLS
+import uk.tvidal.kraft.tools
 import uk.tvidal.kraft.tool.help.DEFAULT_MARGIN
 import uk.tvidal.kraft.tool.help.DEFAULT_WIDTH
 import uk.tvidal.kraft.tool.help.SPACE
@@ -18,7 +18,7 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
 
     init {
         parser.formatHelpWith {
-            val maxWidth = TOOLS.keys
+            val maxWidth = tools.keys
                 .map { key -> key.length + 4 }
                 .max()
 
@@ -28,7 +28,7 @@ class HelpTool(private val parser: OptionParser) : KRaftTool {
                 appendln("Usage: kraft <tool-name> [args] (or --help)")
                 appendln()
                 appendln("Available Tools:")
-                for ((toolName, toolClass) in TOOLS) {
+                for ((toolName, toolClass) in tools) {
                     append(" - $toolName:".padEnd(width, SPACE))
                     appendln(toolClass.description)
                 }

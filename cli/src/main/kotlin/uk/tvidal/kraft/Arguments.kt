@@ -4,9 +4,9 @@ import joptsimple.ArgumentAcceptingOptionSpec
 import joptsimple.OptionParser
 import joptsimple.OptionSet
 
-private const val SEPARATOR = ','
+const val SEPARATOR = ','
 
-fun OptionSet.otherArguments(): List<String> = nonOptionArguments()
+fun OptionSet.extraArguments(): List<String> = nonOptionArguments()
     .filterIsInstance<String>()
 
 fun OptionParser.option(description: String, vararg options: String) =

@@ -5,6 +5,7 @@ import joptsimple.OptionSet
 import joptsimple.OptionSpec
 import uk.tvidal.kraft.Description
 import uk.tvidal.kraft.KRaftTool
+import uk.tvidal.kraft.SEPARATOR
 import uk.tvidal.kraft.ansi.AnsiColor.BLACK
 import uk.tvidal.kraft.ansi.AnsiColor.BLUE
 import uk.tvidal.kraft.ansi.AnsiColor.CYAN
@@ -12,10 +13,10 @@ import uk.tvidal.kraft.ansi.AnsiColor.MAGENTA
 import uk.tvidal.kraft.ansi.AnsiColor.YELLOW
 import uk.tvidal.kraft.codec.binary.BinaryCodec.IndexEntry
 import uk.tvidal.kraft.codec.binary.uuid
+import uk.tvidal.kraft.extraArguments
 import uk.tvidal.kraft.intArgument
 import uk.tvidal.kraft.longArgument
 import uk.tvidal.kraft.option
-import uk.tvidal.kraft.otherArguments
 import uk.tvidal.kraft.storage.config.FileName.Companion.DATA_FILE
 import uk.tvidal.kraft.storage.config.FileName.Companion.INDEX_FILE
 import uk.tvidal.kraft.storage.data.KRaftData
@@ -24,6 +25,10 @@ import java.io.File
 
 @Description("View the contents of a kraft data or index file")
 class CatTool(parser: OptionParser) : KRaftTool {
+
+    companion object {
+        val colors = listOf(MAGENTA, YELLOW, BLACK, CYAN, BLUE)
+    }
 
     private val opFromIndex = parser
         .longArgument("from index", "fromIndex")
@@ -42,7 +47,7 @@ class CatTool(parser: OptionParser) : KRaftTool {
 
     override fun execute(op: OptionSet): Int {
 
-        for (fileName in op.otherArguments()) {
+        for (fileName in op.extraArguments()) {
             catFile(op, fileName.toLowerCase())
         }
         return 0
@@ -64,22 +69,22 @@ class CatTool(parser: OptionParser) : KRaftTool {
                 val range = op.range(it)
                 if (!op.has(opNoHeader)) {
                     csv(
-                        MAGENTA.format("file"),
-                        YELLOW.format("index"),
-                        BLACK.format("id"),
-                        CYAN.format("offset"),
-                        BLUE.format("bytes"),
+                        "file",
+                        "index",
+                        "id",
+                        "offset",
+                        "bytes",
                         "checksum"
                     )
                 }
                 for (index in range) {
                     it[index].run {
                         csv(
-                            MAGENTA.format(file),
-                            YELLOW.format(index),
-                            BLACK.format(uuid(id)),
-                            CYAN.format(offset),
-                            BLUE.format(bytes)
+                            file,
+                            index,
+                            uuid(id),
+                            offset,
+                            bytes
                         )
                     }
                 }
@@ -97,27 +102,29 @@ class CatTool(parser: OptionParser) : KRaftTool {
         KRaftData.open(file).let {
 
             if (op.printEntries) {
-                val data = it.rebuildIndex().associateBy(IndexEntry::getIndex)
+                val indexData = it.rebuildIndex()
+                    .associateBy(IndexEntry::getIndex)
+
                 val range = op.range(it)
                 if (!op.has(opNoHeader)) {
                     csv(
-                        MAGENTA.format("file"),
-                        YELLOW.format("index"),
-                        BLACK.format("id"),
-                        CYAN.format("offset"),
-                        BLUE.format("bytes"),
+                        "file",
+                        "index",
+                        "id",
+                        "offset",
+                        "bytes",
                         "payload"
                     )
                 }
                 for (index in range) {
-                    val indexEntry = data[index]!!
+                    val indexEntry = indexData[index]!!
                     val entry = it[indexEntry]
                     csv(
-                        MAGENTA.format(file),
-                        YELLOW.format(index),
-                        BLACK.format(entry.id),
-                        CYAN.format(indexEntry.offset),
-                        BLUE.format(indexEntry.bytes),
+                        file,
+                        index,
+                        entry.id,
+                        indexEntry.offset,
+                        indexEntry.bytes,
                         String(entry.payload)
                     )
                 }
@@ -131,8 +138,14 @@ class CatTool(parser: OptionParser) : KRaftTool {
         }
     }
 
-    private fun csv(vararg s: Any) {
-        println(s.joinToString("\t", transform = Any::toString))
+    private fun csv(vararg args: Any) {
+        for (i in 0 until args.size) {
+            if (i > 0) print(SEPARATOR)
+            val arg = args[i]
+            val text = if (i < colors.size) colors[i](arg) else arg
+            print(text)
+        }
+        println()
     }
 
     private fun OptionSet.range(default: ClosedRange<Long>): LongRange {

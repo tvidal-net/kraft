@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-    id "com.github.johnrengelman.shadow" version "4.0.3"
+    id 'org.springframework.boot' version '2.1.1.RELEASE'
 }
 
 mainClassName = 'uk.tvidal.kraft.ApplicationKt'
@@ -13,8 +13,12 @@ dependencies {
     implementation project(':kraft-transport')
     implementation project(':kraft-storage')
 
-    implementation("com.google.guava:guava:$guavaVersion") { transitive = false }
     implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
 
     runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
+}
+
+bootJar {
+    launchScript()
+    version null
 }

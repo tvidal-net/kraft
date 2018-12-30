@@ -1,11 +1,13 @@
 package uk.tvidal.kraft
 
-import com.google.common.reflect.ClassPath
 import joptsimple.OptionException
 import joptsimple.OptionParser
 import joptsimple.OptionSet
 import uk.tvidal.kraft.ansi.AnsiColor.RED
 import uk.tvidal.kraft.ansi.AnsiColor.YELLOW
+import uk.tvidal.kraft.tool.CatTool
+import uk.tvidal.kraft.tool.ConsumerTool
+import uk.tvidal.kraft.tool.HelpTool
 import java.lang.System.exit
 import java.lang.System.getProperty
 import java.lang.System.setProperty
@@ -20,17 +22,18 @@ const val HELP = "help"
 const val HELP_DESCRIPTION = "Prints usage information"
 
 private const val LOGBACK_CONFIG = "logback.configurationFile"
-const val LOGBACK_CONSOLE = "logback-console.xml"
+private const val LOGBACK_CONSOLE = "logback-console.xml"
 
-val ERROR = RED.format("[ERROR]")
-
-@Suppress("UnstableApiUsage")
-private val CLASS_PATH = ClassPath.from(ClassLoader.getSystemClassLoader())!!
-
-const val TOOLS_PACKAGE = "uk.tvidal.kraft.tool"
+private val ERROR = RED("[ERROR]")
 
 private val toolNameFix = Regex("Tool?$")
 private val camelCaseFix = Regex("([a-z][A-Z])")
+
+internal val tools: Map<String, KClass<out KRaftTool>> = listOf(
+    HelpTool::class,
+    CatTool::class,
+    ConsumerTool::class
+).associateBy(::toolName)
 
 var logbackConfigurationFile: String
     get() = getProperty(LOGBACK_CONFIG)
@@ -38,10 +41,9 @@ var logbackConfigurationFile: String
         setProperty(LOGBACK_CONFIG, value)
     }
 
-val TOOLS = CLASS_PATH.getTopLevelClasses(TOOLS_PACKAGE)
-    .map { jClass -> jClass.load().kotlin }
-    .filterIsInstance<KClass<out KRaftTool>>()
-    .associateBy(::toolName)
+fun logbackConsoleConfiguration() {
+    logbackConfigurationFile = LOGBACK_CONSOLE
+}
 
 private fun toolName(kClass: KClass<out KRaftTool>): String = kClass
     .simpleName!!
@@ -54,17 +56,19 @@ fun optionParser(allowsUnrecognizedOptions: Boolean = false) = OptionParser().ap
     accepts(HELP, HELP_DESCRIPTION).forHelp()
 }
 
-private fun createTool(toolName: String, parser: OptionParser): KRaftTool = TOOLS[toolName]
-    ?.primaryConstructor
-    ?.call(parser)!!
+private fun createTool(kClass: KClass<out KRaftTool>, parser: OptionParser): KRaftTool = kClass
+    .primaryConstructor!!
+    .call(parser)
 
 private fun OptionParser.printHelp(): Int = printHelpOn(System.err)
     .let { ERROR_SIMPLE }
 
-private fun executeTool(toolName: String, args: List<String> = emptyList()): Int {
-    val parser = optionParser()
+private fun executeTool(toolName: String, args: Collection<String>) =
+    executeTool(tools[toolName]!!, args)
 
-    val tool = createTool(toolName, parser)
+private fun executeTool(kClass: KClass<out KRaftTool>, args: Collection<String> = emptyList()): Int {
+    val parser = optionParser()
+    val tool = createTool(kClass, parser)
     return try {
         val op = parser.parse(*args.toTypedArray())
         if (op.has(HELP)) parser.printHelp()
@@ -79,20 +83,17 @@ private fun executeTool(toolName: String, args: List<String> = emptyList()): Int
 }
 
 fun execute(op: OptionSet): Int {
-    val args = op.nonOptionArguments().filterIsInstance<String>()
-    val toolName = args.firstOrNull() ?: HELP
+    val args = op.extraArguments()
+    val toolName = args.firstOrNull()
+        ?: return executeTool(HelpTool::class)
 
-    return if (TOOLS.containsKey(toolName)) {
+    return if (tools.containsKey(toolName)) {
         val toolArgs = if (op.has(HELP)) listOf("--$HELP") else args.drop(1)
         executeTool(toolName, toolArgs)
     } else {
-        System.err.println("$ERROR The tool '${YELLOW.format(toolName)}' does not exist.\n")
-        executeTool(HELP)
+        System.err.println("$ERROR The tool '${YELLOW(toolName)}' does not exist.\n")
+        executeTool(HelpTool::class)
     }
-}
-
-fun logbackConsoleConfiguration() {
-    logbackConfigurationFile = LOGBACK_CONSOLE
 }
 
 fun main(args: Array<String>) {
