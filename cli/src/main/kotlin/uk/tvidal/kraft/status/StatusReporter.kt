@@ -8,6 +8,7 @@ import uk.tvidal.kraft.ansi.AnsiMove
 import uk.tvidal.kraft.ansi.hasAnsiSupport
 import uk.tvidal.kraft.ansi.terminalColumns
 import uk.tvidal.kraft.engine.RaftEngine
+import uk.tvidal.kraft.engine.RaftState
 import uk.tvidal.kraft.every
 import uk.tvidal.kraft.javaClassName
 import uk.tvidal.kraft.server.ClusterServer
@@ -20,16 +21,14 @@ class StatusReporter(private val cluster: ClusterServer) {
 
     private val width = terminalColumns / cluster.nodes.size
 
-    private val actions = listOf(
-        ::node,
-        ::role,
-        ::storage,
-        ::commit
-    )
+    companion object {
+        private const val lines = 4
+    }
 
     init {
         if (hasAnsiSupport) {
-            repeat(actions.size) { println() }
+            AnsiMove.scroll(lines + 1)
+            AnsiMove.up(lines)
             executor.every(100) { report() }
         }
     }
@@ -39,50 +38,27 @@ class StatusReporter(private val cluster: ClusterServer) {
     }
 
     private fun report() {
-        AnsiMove.save()
-        AnsiMove.up(actions.size)
-        actions.forEach { it() }
-        AnsiMove.restore()
-    }
-
-    private fun node() {
-        forEachNode {
-            it.label("Node")
-                .append(BLUE(self))
+        val nodes = cluster.nodes.map(RaftEngine::safeState)
+        AnsiMove {
+            forEachNode(nodes) { node() }
+            forEachNode(nodes) { role() }
+            forEachNode(nodes) { log() }
+            forEachNode(nodes) { commit() }
         }
     }
 
-    private fun role() {
-        forEachNode {
-            it.label("Role")
-                .append(CYAN(role))
-        }
-    }
+    private fun RaftState.node() = "Node" to BLUE(self)
+    private fun RaftState.role() = "Role" to CYAN(role)
+    private fun RaftState.log() = "Index" to YELLOW("$lastLogIndex T$lastLogTerm")
+    private fun RaftState.commit() = "Commit" to MAGENTA("$commitIndex (${leaderCommitIndex - commitIndex})")
 
-    private fun storage() {
-        forEachNode {
-            it.label("Index")
-                .append(YELLOW("$lastLogIndex T$lastLogTerm"))
-        }
-    }
-
-    private fun commit() {
-        forEachNode {
-            it.label("Commit")
-                .append(MAGENTA("$commitIndex (${leaderCommitIndex - commitIndex})"))
-        }
-    }
-
-    private fun StringBuilder.label(text: Any, size: Int = 12) = append(format("%${size}s: ", text))
-
-    private fun forEachNode(block: RaftEngine.(StringBuilder) -> Unit) {
+    private fun forEachNode(nodes: List<RaftState>, block: RaftState.() -> Pair<String, String>) {
         AnsiMove.clearLine()
-        cluster.nodes.forEachIndexed { i, raft ->
+        nodes.forEachIndexed { i, state ->
             val col = i * width + 1
             AnsiMove.column(col)
-            val sb = StringBuilder()
-            block(raft, sb)
-            print(sb)
+            val (label, value) = block(state)
+            print(format("%12s: %s", label, value))
         }
         println()
     }

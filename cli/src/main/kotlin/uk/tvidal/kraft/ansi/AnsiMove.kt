@@ -9,6 +9,7 @@ enum class AnsiMove(private val ch: Char) {
     COL('G'),
     ROW('H'),
     CLEAR('K'),
+    SCROLL('S'),
     SAVE('s'),
     RESTORE('u');
 
@@ -17,9 +18,9 @@ enum class AnsiMove(private val ch: Char) {
             print(block())
         }
 
-        fun up(n: Int) = ansi { "$ESC[$n$UP" }
+        fun up(n: Int = 1) = ansi { "$ESC[$n$UP" }
 
-        fun down(n: Int) = ansi { "$ESC[$n$DOWN" }
+        fun down(n: Int = 1) = ansi { "$ESC[$n$DOWN" }
 
         fun clearLine() = ansi { "$ESC[2$CLEAR" }
 
@@ -27,9 +28,20 @@ enum class AnsiMove(private val ch: Char) {
 
         fun pos(row: Int = 0, col: Int = 0) = ansi { "$ESC[$row;$col$ROW" }
 
+        fun scroll(n: Int = 1) = ansi { "$ESC[$n$SCROLL" }
+
         fun save() = ansi { "$ESC[$SAVE" }
 
         fun restore() = ansi { "$ESC[$RESTORE" }
+
+        operator fun invoke(block: () -> Unit) {
+            save()
+            try {
+                block()
+            } finally {
+                restore()
+            }
+        }
     }
 
     override fun toString() = ch.toString()

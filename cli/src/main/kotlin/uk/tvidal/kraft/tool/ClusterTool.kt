@@ -98,12 +98,13 @@ class ClusterTool(parser: OptionParser) : KRaftTool {
 
         var count = 0
         val producer = producer(serverNode to address)
+
         singleThreadPool("KRaftProducerThread").loop {
 
             val random = ThreadLocalRandom.current()
 
             val now = Instant.now()
-            val entryCount = random.nextInt(1, 50)
+            val entryCount = random.nextInt(800, 1200)
             val data = entries(
                 (0 until entryCount).map {
                     entryOf("""{"id":${++count},"time":"$now"}""")
@@ -111,12 +112,14 @@ class ClusterTool(parser: OptionParser) : KRaftTool {
             )
 
             producer.publish(data)
-            sleep(random.nextInt(50, 500).toLong())
+            sleep(random.nextInt(10, 50).toLong())
         }
 
+        /*
         consumer(serverNode to address, index = LOG_HEAD) {
             log.info { "consumer fromIndex=${it.firstIndex} ${it.data}" }
             true
         }
+        // */
     }
 }

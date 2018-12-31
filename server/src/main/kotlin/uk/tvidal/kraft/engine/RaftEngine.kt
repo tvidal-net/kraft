@@ -18,6 +18,7 @@ import uk.tvidal.kraft.monitor.GarbageCollectorListener
 import uk.tvidal.kraft.storage.flush
 import java.lang.System.currentTimeMillis
 import java.time.Instant
+import java.util.concurrent.CompletableFuture
 
 abstract class RaftEngine internal constructor(
     config: KRaftServerConfig
@@ -44,7 +45,7 @@ abstract class RaftEngine internal constructor(
     final override val lastLogIndex
         get() = storage.lastLogIndex
 
-    final override val nextLogIndex
+    val nextLogIndex
         get() = storage.nextLogIndex
 
     final override var role = if (cluster.single) LEADER else FOLLOWER
@@ -74,8 +75,7 @@ abstract class RaftEngine internal constructor(
 
     override val votesReceived: MutableSet<RaftNode> = mutableSetOf()
 
-    var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
-        private set
+    private var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
 
     private var lastElectionTimeChecked: Long = Long.MAX_VALUE
 
@@ -85,6 +85,14 @@ abstract class RaftEngine internal constructor(
 
     internal val heartbeatWindow: Int
         get() = timeout.heartbeatTimeout
+
+    fun safeState(): RaftState {
+        val future = CompletableFuture<RaftState>()
+        execute {
+            future.complete(ImmutableRaftState(this))
+        }
+        return future.get()
+    }
 
     internal fun startElection(now: Long) {
         log.trace { "[$self] startElection T$term" }

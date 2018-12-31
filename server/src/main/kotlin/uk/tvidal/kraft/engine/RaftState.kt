@@ -14,7 +14,6 @@ interface RaftState {
     val logConsistent: Boolean
     val lastLogTerm: Long
     val lastLogIndex: Long
-    val nextLogIndex: Long
 
     val leader: RaftNode?
     val votedFor: RaftNode?

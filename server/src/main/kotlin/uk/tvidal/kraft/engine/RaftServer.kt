@@ -29,7 +29,7 @@ class RaftServer internal constructor(
     private val execute = SynchronousQueue<Runnable>()
 
     override fun execute(block: () -> Unit) {
-        execute.offer(Runnable(block))
+        execute.put(Runnable(block))
     }
 
     override fun publish(payload: ByteArray) {
