@@ -24,7 +24,7 @@ class RaftServer internal constructor(
     private companion object : KRaftLogging()
 
     private val followers = others
-        .associate { it to RaftFollower(this, sender(it)) }
+        .associateWith { RaftFollower(this, sender(it)) }
 
     private val consumers = RaftConsumerState(transport, storage, commitIndex)
 
@@ -81,7 +81,7 @@ class RaftServer internal constructor(
         messages.removeIf { it is RaftMessage && it.term < newTerm }
     }
 
-    override fun run(now: Long) {
+    override fun work(now: Long) {
         try {
             val msg = messages.poll()
             when (msg) {
@@ -91,7 +91,7 @@ class RaftServer internal constructor(
                 is ConsumerRegisterMessage -> consumers.register(msg)
                 is ConsumerAckMessage -> consumers.ack(msg)
             }
-            val newRole = role.run(now, this)
+            val newRole = role.work(now, this)
             updateRole(now, newRole)
             execute.poll()?.run()
         } catch (e: Throwable) {
@@ -118,7 +118,7 @@ class RaftServer internal constructor(
     }
 
     override fun heartbeatFollowers(now: Long) {
-        followers.values.forEach { it.run(now) }
+        followers.values.forEach { it.work(now) }
     }
 
     override fun resetFollowers() {

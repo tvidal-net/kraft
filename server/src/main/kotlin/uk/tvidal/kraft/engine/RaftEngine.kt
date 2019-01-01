@@ -79,7 +79,8 @@ abstract class RaftEngine internal constructor(
 
     override val votesReceived: MutableSet<RaftNode> = mutableSetOf()
 
-    private var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
+    var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
+        private set
 
     private var lastElectionTimeChecked: Long = Long.MAX_VALUE
 
@@ -236,11 +237,11 @@ abstract class RaftEngine internal constructor(
 
     internal abstract fun computeCommitIndex()
 
-    internal abstract fun run(now: Long)
+    abstract fun work(now: Long)
 
     abstract fun execute(block: () -> Unit)
 
     abstract fun publish(payload: ByteArray)
 
-    override fun toString() = "${RaftEngine::class.simpleName}($self) $storage"
+    override fun toString() = "[$self] $role $storage"
 }

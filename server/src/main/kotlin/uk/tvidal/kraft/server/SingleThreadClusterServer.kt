@@ -55,7 +55,7 @@ class SingleThreadClusterServer internal constructor(
         while (running) {
             val raft = nodes[nodeIndex]
             try {
-                raft.run(
+                raft.work(
                     now = loopTolerance.yield()
                 )
             } catch (e: Exception) {

@@ -36,7 +36,7 @@ class MultiThreadClusterServer internal constructor(
         while (!thread.isInterrupted) {
             try {
                 val now = loopTolerance.yield()
-                raft.run(now)
+                raft.work(now)
             } catch (e: Exception) {
                 log.error(e) { "Error while processing ${raft.self}" }
             }

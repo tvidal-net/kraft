@@ -10,7 +10,7 @@ import uk.tvidal.kraft.message.raft.VoteMessage
 enum class RaftRole {
 
     FOLLOWER {
-        override fun run(now: Long, raft: RaftEngine): RaftRole? =
+        override fun work(now: Long, raft: RaftEngine): RaftRole? =
             raft.checkElectionTimeout(now)
 
         override fun enterRole(now: Long, raft: RaftEngine) {
@@ -33,7 +33,7 @@ enum class RaftRole {
     },
 
     CANDIDATE {
-        override fun run(now: Long, raft: RaftEngine): RaftRole? =
+        override fun work(now: Long, raft: RaftEngine): RaftRole? =
             raft.checkElectionTimeout(now)
 
         override fun enterRole(now: Long, raft: RaftEngine) {
@@ -49,7 +49,7 @@ enum class RaftRole {
     },
 
     LEADER {
-        override fun run(now: Long, raft: RaftEngine): RaftRole? {
+        override fun work(now: Long, raft: RaftEngine): RaftRole? {
             raft.heartbeatFollowers(now)
             return null
         }
@@ -81,7 +81,7 @@ enum class RaftRole {
 
     protected open fun reset(): RaftRole? = FOLLOWER
 
-    internal open fun run(now: Long, raft: RaftEngine): RaftRole? = null
+    internal open fun work(now: Long, raft: RaftEngine): RaftRole? = null
 
     internal fun enter(now: Long, raft: RaftEngine) {
         log.info { "[${raft.self}] Enter $name T${raft.term}" }

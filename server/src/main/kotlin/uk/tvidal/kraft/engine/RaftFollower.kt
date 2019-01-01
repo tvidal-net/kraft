@@ -52,7 +52,7 @@ class RaftFollower internal constructor(
         nextHeartbeatTime = NOW
     }
 
-    internal fun run(now: Long) {
+    fun work(now: Long) {
         if (streaming) {
             val available = min(raft.sizes.batchSize, window.available)
             val data = raft.read(nextIndex, available)

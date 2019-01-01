@@ -5,12 +5,12 @@ import uk.tvidal.kraft.engine.RaftEngine
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.engine.RaftServer
-import uk.tvidal.kraft.textResource
 import uk.tvidal.kraft.logging.KRaftLogging
+import uk.tvidal.kraft.textResource
 import java.lang.Thread.sleep
 import java.util.concurrent.ThreadLocalRandom
 
-abstract class ClusterServer internal constructor(
+abstract class ClusterServer(
     clusterConfig: List<KRaftServerConfig>
 ) : KRaftServer {
 
@@ -34,7 +34,7 @@ abstract class ClusterServer internal constructor(
     val randomNode: RaftEngine
         get() = nodes[random.nextInt(nodes.size)]
 
-    protected fun waitForLeader() {
+    open fun waitForLeader() {
         while (leader == null) {
             sleep(1L)
         }
