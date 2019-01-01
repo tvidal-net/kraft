@@ -21,7 +21,7 @@ data class ClientAppendMessage(
     @Transient
     val id: UUID? = data.id
 
-    override fun text() = "relay=$relay data=$data"
+    override fun text() = "relay=$relay id=$id data=$data"
 
     override fun toString() = super.toString()
 }

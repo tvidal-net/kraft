@@ -41,7 +41,7 @@ class RaftServer internal constructor(
         )
     }
 
-    internal fun clientAppend(message: ClientAppendMessage) {
+    private fun clientAppend(message: ClientAppendMessage) {
         val currentLeader = leader
         if (role == LEADER) {
             val entries = message.data.copy(term)

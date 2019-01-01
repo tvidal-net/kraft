@@ -8,7 +8,7 @@ enum class ClientMessageType(
 ) : MessageType {
 
     CLIENT_APPEND(ClientAppendMessage::class),
-    CLIENT_APPEND_ACK,
+    CLIENT_APPEND_ACK(ClientAppendAckMessage::class),
 
     CONSUMER_REGISTER(ConsumerRegisterMessage::class),
     CONSUMER_DATA(ConsumerDataMessage::class),
