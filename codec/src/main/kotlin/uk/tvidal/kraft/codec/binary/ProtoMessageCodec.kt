@@ -9,6 +9,7 @@ import com.google.gson.JsonObject
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.codec.MessageCodec
 import uk.tvidal.kraft.codec.binary.BinaryCodec.MessageProto
+import uk.tvidal.kraft.codec.json.adapter.LongRangeAdapter
 import uk.tvidal.kraft.codec.json.adapter.RaftNodeAdapter
 import uk.tvidal.kraft.message.DataMessage
 import uk.tvidal.kraft.message.Message
@@ -25,6 +26,7 @@ object ProtoMessageCodec {
 
     private val gson: Gson = GsonBuilder()
         .registerTypeAdapter<RaftNode>(RaftNodeAdapter())
+        .registerTypeAdapter<LongRange>(LongRangeAdapter())
         .registerTypeAdapterFactory(ProtoTypeAdapterFactory)
         .create()
 

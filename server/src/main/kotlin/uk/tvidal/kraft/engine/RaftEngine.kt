@@ -10,6 +10,7 @@ import uk.tvidal.kraft.engine.RaftRole.CANDIDATE
 import uk.tvidal.kraft.engine.RaftRole.FOLLOWER
 import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.logging.KRaftLogging
+import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
@@ -70,6 +71,9 @@ abstract class RaftEngine internal constructor(
     final override var leader: RaftNode? = null
         private set
 
+    val hasLeader: Boolean
+        get() = leader != null
+
     final override var votedFor: RaftNode? = null
         private set
 
@@ -78,6 +82,9 @@ abstract class RaftEngine internal constructor(
     private var nextElectionTime = timeout.firstElectionTime(currentTimeMillis())
 
     private var lastElectionTimeChecked: Long = Long.MAX_VALUE
+
+    protected val ClientAppendMessage.ackExpected: Boolean
+        get() = ackType.ackExpected && id != null
 
     init {
         log.info { "Starting: $this (election=${Instant.ofEpochMilli(nextElectionTime)})" }

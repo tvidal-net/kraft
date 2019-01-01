@@ -1,11 +1,15 @@
 package uk.tvidal.kraft.engine
 
+import uk.tvidal.kraft.client.producer.ClientAckType.CLUSTER_COMMIT
+import uk.tvidal.kraft.client.producer.ClientAckType.LEADER_WRITE
 import uk.tvidal.kraft.config.KRaftServerConfig
 import uk.tvidal.kraft.consumer.RaftConsumerState
 import uk.tvidal.kraft.engine.RaftRole.ERROR
 import uk.tvidal.kraft.engine.RaftRole.LEADER
 import uk.tvidal.kraft.logging.KRaftLogging
+import uk.tvidal.kraft.message.client.ClientAppendAckMessage
 import uk.tvidal.kraft.message.client.ClientAppendMessage
+import uk.tvidal.kraft.message.client.ClientErrorType.LEADER_NOT_FOUND
 import uk.tvidal.kraft.message.client.ConsumerAckMessage
 import uk.tvidal.kraft.message.client.ConsumerRegisterMessage
 import uk.tvidal.kraft.message.raft.AppendAckMessage
@@ -19,7 +23,7 @@ class RaftServer internal constructor(
 
     private companion object : KRaftLogging()
 
-    val followers = others
+    private val followers = others
         .associate { it to RaftFollower(this, sender(it)) }
 
     private val consumers = RaftConsumerState(transport, storage, commitIndex)
@@ -42,20 +46,27 @@ class RaftServer internal constructor(
     }
 
     private fun clientAppend(message: ClientAppendMessage) {
-        val currentLeader = leader
         if (role == LEADER) {
             val entries = message.data.copy(term)
-            val lastLogIndex = storage.append(entries = entries)
+            val firstIndex = nextLogIndex
+            val lastIndex = storage.append(entries)
+            clientAppendAck(message, firstIndex..lastIndex)
             log.debug { "[$self] clientAppend lastLogIndex=$lastLogIndex msg=$message" }
             if (isSingleNodeCluster) {
                 log.debug { "[$self] commit log=$storage from=$commitIndex leaderCommitIndex=$lastLogIndex" }
                 commit(lastLogIndex)
             }
-        } else if (currentLeader != null) {
-            message.relay = self
-            sender(currentLeader)
-                .send(message)
+        } else if (hasLeader) {
+            message.relay(leader!!)
+        } else if (message.ackExpected) {
+            message.nack(LEADER_NOT_FOUND)
         }
+    }
+
+    private fun clientAppendAck(message: ClientAppendMessage, range: LongRange) {
+        if (!message.ackExpected) return
+        else if (message.ackType == LEADER_WRITE) message.ack(range)
+        else if (message.ackType == CLUSTER_COMMIT) TODO()
     }
 
     override fun processAck(msg: AppendAckMessage) {
@@ -76,6 +87,7 @@ class RaftServer internal constructor(
             when (msg) {
                 is RaftMessage -> processMessage(now, msg)
                 is ClientAppendMessage -> clientAppend(msg)
+                is ClientAppendAckMessage -> msg.relay()
                 is ConsumerRegisterMessage -> consumers.register(msg)
                 is ConsumerAckMessage -> consumers.ack(msg)
             }

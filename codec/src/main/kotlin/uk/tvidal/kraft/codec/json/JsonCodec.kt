@@ -9,12 +9,14 @@ import com.google.gson.stream.JsonToken.NULL
 import uk.tvidal.kraft.RaftNode
 import uk.tvidal.kraft.codec.json.adapter.KRaftEntriesAdapter
 import uk.tvidal.kraft.codec.json.adapter.KRaftEntryAdapter
+import uk.tvidal.kraft.codec.json.adapter.LongRangeAdapter
 import uk.tvidal.kraft.codec.json.adapter.RaftNodeAdapter
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.storage.KRaftEntry
 
 val gson = GsonBuilder()
     .registerTypeAdapter<RaftNode>(RaftNodeAdapter())
+    .registerTypeAdapter<LongRange>(LongRangeAdapter())
     .registerTypeAdapter<KRaftEntry>(KRaftEntryAdapter())
     .registerTypeAdapter<KRaftEntries>(KRaftEntriesAdapter())
     .setPrettyPrinting()

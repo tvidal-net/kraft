@@ -4,12 +4,13 @@ import uk.tvidal.kraft.client.AbstractKRaftClient
 import uk.tvidal.kraft.message.client.ClientAppendMessage
 import uk.tvidal.kraft.storage.KRaftEntries
 import uk.tvidal.kraft.transport.MessageSender
+import java.util.UUID
 import java.util.concurrent.CompletableFuture.completedFuture
 import java.util.concurrent.Future
 
 class KRaftProducerImpl internal constructor(
     server: MessageSender,
-    override val mode: ProducerMode
+    override val mode: ClientAckType
 ) : AbstractKRaftClient(server), KRaftProducer {
 
     override fun publish(entries: KRaftEntries): Future<ProducerResponse> {
@@ -17,11 +18,12 @@ class KRaftProducerImpl internal constructor(
         server.send(message)
         return completedFuture(
             ProducerResponse(
-                id = null,
+                id = UUID.randomUUID(),
                 mode = mode,
                 node = server.node,
+                error = null,
                 leader = null,
-                index = null,
+                range = null,
                 term = null
             )
         )

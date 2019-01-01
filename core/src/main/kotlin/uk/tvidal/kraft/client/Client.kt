@@ -29,9 +29,7 @@ private fun localNetworkSiteAddress(): InetAddress {
 
 val localNetworkSiteAddress = localNetworkSiteAddress()
 
-fun InetAddress.toInt(): Int = with(wrap(address)) {
-    getInt(0)
-}
+fun InetAddress.toInt(): Int = with(wrap(address)) { int }
 
 fun clientNode(name: String = "Client", inetAddress: InetAddress = localNetworkSiteAddress) =
     RaftNode(inetAddress.toInt(), name, true)

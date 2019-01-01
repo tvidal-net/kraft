@@ -1,6 +1,9 @@
 package uk.tvidal.kraft.engine
 
 import uk.tvidal.kraft.RaftNode
+import uk.tvidal.kraft.message.client.ClientAppendAckMessage
+import uk.tvidal.kraft.message.client.ClientAppendMessage
+import uk.tvidal.kraft.message.client.ClientErrorType
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
@@ -31,4 +34,16 @@ internal interface RaftMessageSender : RaftState {
 
     fun vote(to: RaftNode, vote: Boolean) = sender(to)
         .respond(VoteMessage(self, term, vote))
+
+    fun ClientAppendMessage.relay(leader: RaftNode) = sender(leader)
+        .send(ClientAppendMessage(self, data, from, ackType))
+
+    fun ClientAppendMessage.ack(range: LongRange) = sender(from)
+        .send(ClientAppendAckMessage(self, id!!, null, leader, range, term, relay))
+
+    fun ClientAppendMessage.nack(error: ClientErrorType) = sender(from)
+        .send(ClientAppendAckMessage(self, id!!, error, leader, null, term, relay))
+
+    fun ClientAppendAckMessage.relay() = sender(relay!!)
+        .send(ClientAppendAckMessage(self, id, error, leader, range, term, null))
 }

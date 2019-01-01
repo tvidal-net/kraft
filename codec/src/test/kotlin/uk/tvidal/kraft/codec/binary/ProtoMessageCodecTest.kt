@@ -9,7 +9,9 @@ import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.decode
 import uk.tvidal.kraft.codec.binary.ProtoMessageCodec.encode
 import uk.tvidal.kraft.codec.json.gson
 import uk.tvidal.kraft.message.Message
+import uk.tvidal.kraft.message.client.ClientAppendAckMessage
 import uk.tvidal.kraft.message.client.ClientAppendMessage
+import uk.tvidal.kraft.message.client.ClientErrorType.LEADER_NOT_FOUND
 import uk.tvidal.kraft.message.raft.AppendAckMessage
 import uk.tvidal.kraft.message.raft.AppendMessage
 import uk.tvidal.kraft.message.raft.RequestVoteMessage
@@ -81,7 +83,24 @@ internal class ProtoMessageCodecTest {
         val relay = clientNode("Producer")
         ClientAppendMessage(from, data, relay)
             .assertEncodeDecode(
-                ClientAppendMessage::relay
+                ClientAppendMessage::relay,
+                ClientAppendMessage::ackType
+            )
+    }
+
+    @Test
+    internal fun `test ClientAppendAckMessage`() {
+        val relay = clientNode("Producer")
+        val leader = from
+        val range = 0xAAL..0xEEL
+        ClientAppendAckMessage(from, data.id!!, LEADER_NOT_FOUND, leader, range, term, relay)
+            .assertEncodeDecode(
+                ClientAppendAckMessage::id,
+                ClientAppendAckMessage::error,
+                ClientAppendAckMessage::leader,
+                ClientAppendAckMessage::range,
+                ClientAppendAckMessage::term,
+                ClientAppendAckMessage::relay
             )
     }
 

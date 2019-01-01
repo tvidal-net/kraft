@@ -5,10 +5,10 @@ import uk.tvidal.kraft.client.consumer.ConsumerReceiver
 import uk.tvidal.kraft.client.consumer.KRaftConsumer
 import uk.tvidal.kraft.client.consumer.KRaftConsumerImpl
 import uk.tvidal.kraft.client.consumer.LOG_TAIL
+import uk.tvidal.kraft.client.producer.ClientAckType
+import uk.tvidal.kraft.client.producer.ClientAckType.FIRE_AND_FORGET
 import uk.tvidal.kraft.client.producer.KRaftProducer
 import uk.tvidal.kraft.client.producer.KRaftProducerImpl
-import uk.tvidal.kraft.client.producer.ProducerMode
-import uk.tvidal.kraft.client.producer.ProducerMode.FIRE_AND_FORGET
 import uk.tvidal.kraft.transport.BlockingMessageReceiver
 import uk.tvidal.kraft.transport.messageSender
 import java.net.InetSocketAddress
@@ -18,7 +18,7 @@ val consumerThreadPool = cachedThreadPool("KRaftConsumer")
 
 fun producer(
     server: Pair<RaftNode, InetSocketAddress>,
-    mode: ProducerMode = FIRE_AND_FORGET,
+    mode: ClientAckType = FIRE_AND_FORGET,
     self: RaftNode = clientNode("Producer")
 ): KRaftProducer = KRaftProducerImpl(
     server = messageSender(server, self),

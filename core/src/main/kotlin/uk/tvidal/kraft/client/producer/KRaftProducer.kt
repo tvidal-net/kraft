@@ -10,7 +10,7 @@ import java.util.concurrent.Future
 
 interface KRaftProducer : KRaftClient {
 
-    val mode: ProducerMode
+    val mode: ClientAckType
 
     fun publish(payload: String, term: Long = 0L, charset: Charset = defaultCharset()) = publish(entryOf(payload, term, charset))
 
