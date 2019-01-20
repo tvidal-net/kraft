@@ -14,8 +14,7 @@ data class RaftNode(
 
         fun parseFrom(text: String): RaftNode {
             try {
-                val values = text.split(colon)
-                val (cluster, index) = values
+                val (cluster, index) = text.split(colon)
                 val clientNode = dot in index
                 val parsedIndex = parseIndex(index, clientNode)
                 return RaftNode(parsedIndex, cluster, clientNode)

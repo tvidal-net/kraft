@@ -49,5 +49,5 @@ private fun Long.toByteArray() = with(allocate(LONG_BYTES)) {
     array()
 }
 
-val LongRange.size: Int
-    get() = (last - first + 1).toInt()
+val ClosedRange<Long>.size: Int
+    get() = (endInclusive - start + 1).toInt()

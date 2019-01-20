@@ -36,13 +36,13 @@ message FileHeader {
 
 message RaftNodeProto {
     bool client_node = 1;
-    int32 index = 2;
+    sint32 index = 2;
     string cluster = 3;
 }
 
 message UniqueID {
-    fixed64 low = 1;
-    fixed64 high = 2;
+    sint64 low = 1;
+    sint64 high = 2;
 }
 
 enum EntryType {

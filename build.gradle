@@ -56,7 +56,7 @@ subprojects {
         testRuntimeOnly "org.slf4j:slf4j-api:$slf4jVersion"
         testRuntimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
 
-        // add :kraft-core:testRuntime to all other subprojects
+        // add :kraft-test to all other sub-projects
         if (name != 'kraft-test') {
             testImplementation project(':kraft-test')
         }
